@@ -173,7 +173,7 @@ export default function ComprasPage() {
                     <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8">
                         <div className="space-y-2">
                             <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tighter">Lista de Compras</h1>
-                            <p className="text-slate-400 font-bold uppercase text-[10px] tracking-[0.3em]">Gestão inteligente do seu lar</p>
+                            <p className="text-slate-400 font-bold uppercase text-[10px] tracking-[0.3em]">Gestão inteligente do nosso lar</p>
                         </div>
                         
                         <div className="flex items-center gap-3 w-full lg:w-auto">

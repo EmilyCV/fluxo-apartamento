@@ -71,10 +71,10 @@ const AMBIENTES: Ambiente[] = ["1. Cozinha", "2. Sala", "3. Varanda", "4. Banhei
 const CATEGORIAS: Categoria[] = ["1. Reforma", "2. Eletros", "3. Utensílios", "4. Enxoval"];
 
 const SUB_CATEGORIAS: Record<Categoria, SubCategoria[]> = {
-    "1. Reforma": ["1.1 Móveis planejados", "1.2 Móveis convencionais", "1.3 Materiais"],
-    "2. Eletros": ["2.1 Eletrodomésticos", "2.2 Eletroportáteis"],
-    "3. Utensílios": ["3.1 Utensílios cozinha", "3.2 Utensílios limpeza", "3.3 Utensílios gerais", "3.4 Utensílios higiene"],
-    "4. Enxoval": ["4.1 Casa e banho", "4.2 Cama"]
+    "1. Reforma": ["Móveis planejados", "Móveis convencionais", "Materiais"],
+    "2. Eletros": ["Eletrodomésticos", "Eletroportáteis"],
+    "3. Utensílios": ["Utensílios cozinha", "Utensílios limpeza", "Utensílios gerais", "Utensílios higiene"],
+    "4. Enxoval": ["Casa e banho", "Cama"]
 };
 
 const PRIORIDADES: Prioridade[] = ["Comprar agora", "Quando der", "Pode esperar", "Aguardando projeto", "Adquirido"];

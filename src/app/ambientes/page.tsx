@@ -42,7 +42,7 @@ export default function AmbientesPage() {
                     <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tighter">
                         Cômodos
                     </h1>
-                    <p className="text-slate-400 font-medium italic mt-1">Organize seus sonhos por ambiente.</p>
+                    <p className="text-slate-400 font-medium italic mt-1">Organize nossos sonhos por ambiente.</p>
                 </header>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">

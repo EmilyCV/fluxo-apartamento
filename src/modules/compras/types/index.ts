@@ -15,20 +15,20 @@ export type Categoria =
 
 export type SubCategoria = 
     // Reforma
-    | "1.1 Móveis planejados" 
-    | "1.2 Móveis convencionais" 
-    | "1.3 Materiais"
+    | "Móveis planejados" 
+    | "Móveis convencionais" 
+    | "Materiais"
     // Eletros
-    | "2.1 Eletrodomésticos" 
-    | "2.2 Eletroportáteis"
+    | "Eletrodomésticos" 
+    | "Eletroportáteis"
     // Utensílios
-    | "3.1 Utensílios cozinha" 
-    | "3.2 Utensílios limpeza" 
-    | "3.3 Utensílios gerais" 
-    | "3.4 Utensílios higiene"
+    | "Utensílios cozinha" 
+    | "Utensílios limpeza" 
+    | "Utensílios gerais" 
+    | "Utensílios higiene"
     // Enxoval
-    | "4.1 Casa e banho" 
-    | "4.2 Cama";
+    | "Casa e banho" 
+    | "Cama";
 
 export type Prioridade = 
     | "Comprar agora" 
