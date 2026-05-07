@@ -8,7 +8,8 @@ import {
     Prioridade, 
     CompraItem 
 } from '../types';
-import { X, Save, Calculator, Link as LinkIcon } from 'lucide-react';
+import { X, Save, Calculator, Link as LinkIcon, Trash2 } from 'lucide-react';
+import { comprasService } from '../services/comprasService';
 
 interface ItemFormProps {
     onSave: (item: Omit<CompraItem, "id" | "createdAt" | "updatedAt">, id?: string) => Promise<void>;
@@ -47,6 +48,21 @@ export function ItemForm({ onSave, onClose, initialData }: ItemFormProps) {
 
     const valorTotal = formData.quantidade * formData.valorUnitario;
 
+    const handleDelete = async () => {
+        if (!initialData?.id) return;
+        if (confirm('Tem certeza que deseja excluir este item?')) {
+            setLoading(true);
+            try {
+                await comprasService.deleteItem(initialData.id);
+                onClose();
+            } catch (error) {
+                console.error("Erro ao deletar:", error);
+            } finally {
+                setLoading(false);
+            }
+        }
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
@@ -75,9 +91,21 @@ export function ItemForm({ onSave, onClose, initialData }: ItemFormProps) {
                         </h2>
                         <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em]">Detalhes da Compra</p>
                     </div>
-                    <button onClick={onClose} className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400 hover:text-slate-900 transition-all active:scale-90 shadow-sm border border-white">
-                        <X className="w-6 h-6" />
-                    </button>
+                    <div className="flex items-center gap-3">
+                        {initialData && (
+                            <button 
+                                type="button"
+                                onClick={handleDelete}
+                                className="w-12 h-12 bg-red-50 rounded-2xl flex items-center justify-center text-red-400 hover:text-red-600 transition-all active:scale-90 shadow-sm border border-white"
+                                title="Excluir Item"
+                            >
+                                <Trash2 className="w-5 h-5" />
+                            </button>
+                        )}
+                        <button onClick={onClose} className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400 hover:text-slate-900 transition-all active:scale-90 shadow-sm border border-white">
+                            <X className="w-6 h-6" />
+                        </button>
+                    </div>
                 </div>
 
                 {/* Body */}

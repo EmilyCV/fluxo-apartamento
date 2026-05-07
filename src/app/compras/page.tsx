@@ -30,10 +30,15 @@ export default function ComprasPage() {
     const [isFormOpen, setIsFormOpen] = useState(false);
 
     useEffect(() => {
-        const unsubscribe = comprasService.subscribeToItems((data) => {
-            setItems(data);
-            setLoading(false);
-        });
+        const unsubscribe = comprasService.subscribeToItems(
+            (data) => {
+                setItems(data);
+                setLoading(false);
+            },
+            (error) => {
+                setLoading(false);
+            }
+        );
         return () => unsubscribe();
     }, []);
 
@@ -66,15 +71,26 @@ export default function ComprasPage() {
                             <h1 className="text-4xl font-black text-slate-900 tracking-tighter">Lista de Compras</h1>
                             <p className="text-slate-400 font-bold uppercase text-[10px] tracking-[0.3em]">Todos os itens planejados</p>
                         </div>
-                        <div className="relative w-full md:w-80">
-                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300" />
-                            <input 
-                                type="text"
-                                placeholder="Pesquisar..."
-                                className="w-full h-14 bg-white border border-slate-100 rounded-[24px] pl-12 pr-4 outline-none focus:border-slate-900 transition-all text-sm font-bold shadow-sm"
-                                value={search}
-                                onChange={e => setSearch(e.target.value)}
-                            />
+                        <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
+                            <div className="relative w-full md:w-80">
+                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300" />
+                                <input 
+                                    type="text"
+                                    placeholder="Pesquisar..."
+                                    className="w-full h-14 bg-white border border-slate-100 rounded-[24px] pl-12 pr-4 outline-none focus:border-slate-900 transition-all text-sm font-bold shadow-sm"
+                                    value={search}
+                                    onChange={e => setSearch(e.target.value)}
+                                />
+                            </div>
+                            {items.length > 0 && (
+                                <button 
+                                    onClick={() => { setItemToEdit(undefined); setIsFormOpen(true); }}
+                                    className="hidden md:flex btn-pop bg-slate-900 text-white shadow-xl shadow-slate-900/10 hover:bg-black px-10 h-14"
+                                >
+                                    <Plus className="w-5 h-5" strokeWidth={3} />
+                                    Novo Item
+                                </button>
+                            )}
                         </div>
                     </div>
 
