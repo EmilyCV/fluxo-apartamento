@@ -7,9 +7,15 @@ const config: Config = {
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/modules/**/*.{js,ts,jsx,tsx,mdx}", // Adicionamos os nossos módulos aqui!
     "./src/shared/**/*.{js,ts,jsx,tsx,mdx}", // E a pasta shared!
+    "./src/lib/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
     extend: {
+      backgroundImage: {
+        "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
+        "gradient-conic":
+          "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
+      },
       colors: {
         // Nossa paleta de cores principal
         'brand-pink': '#FBCFE8',  // Rosa claro suave

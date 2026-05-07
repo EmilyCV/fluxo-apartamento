@@ -10,8 +10,10 @@ interface AuthContextType {
     user: User | null;
     userName: string;
     loading: boolean;
+    error: string | null;
     signInWithGoogle: () => Promise<void>;
     logout: () => Promise<void>;
+    clearError: () => void;
 }
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
@@ -20,10 +22,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
     const [userName, setUserName] = useState('');
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const router = useRouter();
+
+    const clearError = () => setError(null);
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+            setLoading(true);
             if (currentUser && currentUser.email) {
                 try {
                     const emailStr = currentUser.email.toLowerCase();
@@ -31,16 +37,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
                     if (userDoc.exists()) {
                         setUser(currentUser);
-                        setUserName(userDoc.data().name || 'Organizador');
+                        setUserName(userDoc.data().name || currentUser.displayName || 'Usuária');
                     } else {
                         await signOut(auth);
                         setUser(null);
-                        setUserName('');
+                        setError('Acesso negado. E-mail não autorizado para este projeto.');
                     }
-                } catch (error) {
-                    console.error("Erro ao validar acesso no Firestore:", error);
+                } catch (err) {
+                    console.error("Erro ao validar acesso:", err);
                     await signOut(auth);
                     setUser(null);
+                    setError('Erro ao validar permissões de acesso.');
                 }
             } else {
                 setUser(null);
@@ -53,22 +60,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const signInWithGoogle = async () => {
         try {
+            setError(null);
             const result = await signInWithPopup(auth, googleProvider);
-            if (!result.user.email) throw new Error('E-mail não encontrado.');
+            const email = result.user.email?.toLowerCase();
 
-            // Valida no momento do login se o usuário está na coleção
-            const emailStr = result.user.email.toLowerCase();
-            const userDoc = await getDoc(doc(db, 'allowed_users', emailStr));
+            if (!email) {
+                await signOut(auth);
+                throw new Error('E-mail não fornecido pelo Google.');
+            }
+
+            const userDoc = await getDoc(doc(db, 'allowed_users', email));
 
             if (!userDoc.exists()) {
                 await signOut(auth);
-                throw new Error('Acesso negado. E-mail não autorizado para este projeto.');
+                setError('Acesso negado. E-mail não autorizado para este projeto.');
+                return;
             }
 
             router.push('/dashboard');
-        } catch (error) {
-            console.error('Erro de login:', error);
-            throw error;
+        } catch (err: any) {
+            console.error('Erro de login:', err);
+            if (err.code !== 'auth/popup-closed-by-user') {
+                setError(err.message || 'Falha na autenticação.');
+            }
         }
     };
 
@@ -78,8 +92,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     return (
-        <AuthContext.Provider value={{ user, userName, loading, signInWithGoogle, logout }}>
-            {!loading && children}
+        <AuthContext.Provider value={{ user, userName, loading, error, signInWithGoogle, logout, clearError }}>
+            {children}
         </AuthContext.Provider>
     );
 }
