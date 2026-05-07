@@ -9,10 +9,9 @@ import { ItemForm } from '@/modules/compras/components/ItemForm';
 import { 
     ChevronLeft, 
     CheckCircle2, 
-    ExternalLink, 
-    Trash2,
     Plus,
-    LayoutGrid
+    LayoutGrid,
+    Sparkles
 } from 'lucide-react';
 
 export default function AmbienteDetailPage() {
@@ -44,21 +43,11 @@ export default function AmbienteDetailPage() {
         setItemToEdit(undefined);
     };
 
-    const handleDelete = async (e: React.MouseEvent, id: string) => {
-        e.stopPropagation();
-        if (confirm('Deseja excluir este item?')) {
-            await comprasService.deleteItem(id);
-        }
-    };
-
-    const totalAmbiente = items.reduce((acc, curr) => acc + (curr.valorTotalAproximado || 0), 0);
-    const totalComprado = items.filter(i => i.adquirido).reduce((acc, curr) => acc + (curr.valorTotalAproximado || 0), 0);
-
     return (
         <AppLayout>
-            <div className="max-w-6xl mx-auto px-6 py-10 md:px-12">
+            <div className="max-w-6xl mx-auto px-6 py-10 md:px-12 space-y-12">
                 
-                <header className="mb-12 space-y-8">
+                <header className="space-y-8 animate-pop">
                     <button 
                         onClick={() => router.push('/ambientes')}
                         className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-slate-400 hover:text-slate-900 transition-all shadow-sm border border-slate-100 active:scale-90"
@@ -69,7 +58,7 @@ export default function AmbienteDetailPage() {
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-8">
                         <div className="space-y-2">
                             <div className="flex items-center gap-2">
-                                <div className="w-2 h-2 bg-brand-blue rounded-full animate-pulse"></div>
+                                <div className="w-2 h-2 bg-brand-pink rounded-full animate-pulse shadow-[0_0_8px_rgba(251,207,232,0.8)]"></div>
                                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Ambiente</span>
                             </div>
                             <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tighter italic">
@@ -77,52 +66,57 @@ export default function AmbienteDetailPage() {
                             </h1>
                         </div>
                         
-                        <div className="bg-slate-900 p-8 rounded-[40px] text-white flex gap-12 shadow-2xl relative overflow-hidden">
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-5 rounded-full -mr-16 -mt-16 blur-2xl"></div>
+                        <div className="card-pop bg-gradient-to-br from-slate-900 to-slate-800 p-8 flex gap-12 relative overflow-hidden border-none text-white shadow-2xl">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-brand-pink opacity-10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
                             <div className="relative z-10">
                                 <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Total</p>
-                                <p className="text-2xl font-black tracking-tight">{formatCurrency(totalAmbiente)}</p>
+                                <p className="text-2xl font-black tracking-tight">{formatCurrency(items.reduce((acc, curr) => acc + (curr.valorTotalAproximado || 0), 0))}</p>
                             </div>
                             <div className="relative z-10">
                                 <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Comprado</p>
-                                <p className="text-2xl font-black tracking-tight text-brand-green">{formatCurrency(totalComprado)}</p>
+                                <p className="text-2xl font-black tracking-tight text-brand-green">{formatCurrency(items.filter(i => i.adquirido).reduce((acc, curr) => acc + (curr.valorTotalAproximado || 0), 0))}</p>
                             </div>
                         </div>
                     </div>
                 </header>
 
                 {loading ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         {[1, 2, 3, 4].map(i => <div key={i} className="h-48 bg-white rounded-[40px] animate-pulse" />)}
                     </div>
                 ) : items.length === 0 ? (
-                    <div className="text-center py-32 bg-white rounded-[48px] border-2 border-dashed border-slate-100 flex flex-col items-center">
-                        <LayoutGrid className="w-16 h-16 text-slate-100 mb-4" />
-                        <p className="text-slate-400 font-black uppercase text-[10px] tracking-[0.3em]">Nenhum item cadastrado</p>
+                    /* ESTADO VAZIO DO AMBIENTE */
+                    <div className="text-center py-32 bg-white rounded-[48px] border-2 border-dashed border-slate-100 flex flex-col items-center animate-pop shadow-sm">
+                        <div className="w-24 h-24 bg-brand-blue-light rounded-[32px] flex items-center justify-center mb-6 shadow-sm border border-brand-blue/20">
+                            <LayoutGrid className="w-10 h-10 text-brand-blue-dark" />
+                        </div>
+                        <h2 className="text-2xl font-black text-slate-800 tracking-tight mb-2">Ambiente vazio</h2>
+                        <p className="text-slate-400 font-medium mb-8 italic">Você ainda não adicionou nenhum item para este cômodo.</p>
                         <button 
                             onClick={() => setIsFormOpen(true)}
-                            className="mt-6 bg-slate-900 text-white px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:scale-105 active:scale-95 transition-all"
+                            className="btn-pop bg-slate-900 text-white shadow-xl shadow-slate-900/10 hover:scale-105 active:scale-95 px-12"
                         >
-                            Adicionar Item
+                            <Plus className="w-5 h-5" strokeWidth={3} /> Adicionar Item
                         </button>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {items.map(item => (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pb-20">
+                        {items.map((item, i) => (
                             <div 
                                 key={item.id}
                                 onClick={() => { setItemToEdit(item); setIsFormOpen(true); }}
-                                className={`bento-card flex flex-col gap-6 active:scale-[0.98] transition-all relative overflow-hidden cursor-pointer group ${item.adquirido ? 'bg-slate-50/50 opacity-60' : 'bg-white border-slate-100 shadow-xl shadow-slate-200/20'}`}
+                                className={`card-pop flex flex-col gap-6 active:scale-[0.98] transition-all relative overflow-hidden cursor-pointer group animate-pop ${item.adquirido ? 'bg-slate-50/50 opacity-60' : 'bg-white border-slate-100'}`}
+                                style={{ animationDelay: `${i * 50}ms` }}
                             >
-                                {item.adquirido && <div className="absolute top-0 right-0 bg-brand-green text-brand-green-dark px-4 py-1.5 rounded-bl-[20px] text-[10px] font-black uppercase tracking-widest">OK</div>}
+                                {item.adquirido && <div className="absolute top-0 right-0 bg-brand-green text-brand-green-dark px-4 py-1.5 rounded-bl-[20px] text-[10px] font-black uppercase tracking-widest shadow-sm">Adquirido</div>}
                                 
                                 <div className="space-y-4 flex-1 min-w-0">
                                     <div className="flex flex-wrap gap-2">
-                                        <span className="text-[10px] font-black uppercase bg-slate-100 text-slate-400 px-2.5 py-1 rounded-lg tracking-tighter">
+                                        <span className="text-[10px] font-black uppercase bg-brand-blue-light text-brand-blue-dark px-3 py-1 rounded-lg tracking-tighter border border-brand-blue/10">
                                             {item.prioridade}
                                         </span>
                                     </div>
-                                    <h3 className={`text-xl font-bold leading-tight group-hover:text-blue-600 transition-colors ${item.adquirido ? 'text-slate-400 line-through' : 'text-slate-800'}`}>
+                                    <h3 className={`text-xl font-bold leading-tight group-hover:text-brand-pink-dark transition-colors ${item.adquirido ? 'text-slate-400 line-through' : 'text-slate-800'}`}>
                                         {item.nome}
                                     </h3>
                                     <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest truncate">{item.subCategoria}</p>
@@ -135,17 +129,15 @@ export default function AmbienteDetailPage() {
                                             {formatCurrency(item.valorTotalAproximado)}
                                         </p>
                                     </div>
-                                    <div className="flex gap-2">
-                                        <button 
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                comprasService.toggleAdquirido(item.id, item.adquirido);
-                                            }}
-                                            className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${item.adquirido ? 'bg-brand-green text-white' : 'bg-slate-50 text-slate-200 hover:bg-brand-green-light hover:text-brand-green-dark'}`}
-                                        >
-                                            <CheckCircle2 className="w-8 h-8" />
-                                        </button>
-                                    </div>
+                                    <button 
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            comprasService.toggleAdquirido(item.id, item.adquirido);
+                                        }}
+                                        className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all shadow-sm ${item.adquirido ? 'bg-brand-green text-white shadow-brand-green/20' : 'bg-slate-50 text-slate-200 hover:bg-brand-green-light hover:text-brand-green-dark'}`}
+                                    >
+                                        <CheckCircle2 className="w-8 h-8" />
+                                    </button>
                                 </div>
                             </div>
                         ))}
@@ -155,7 +147,7 @@ export default function AmbienteDetailPage() {
                 {/* FAB MOBILE CONSISTENTE */}
                 <button 
                     onClick={() => { setItemToEdit(undefined); setIsFormOpen(true); }}
-                    className="md:hidden fixed bottom-32 right-8 w-20 h-20 bg-slate-900 text-white rounded-[32px] shadow-2xl flex items-center justify-center active:scale-75 transition-all z-[110] border-4 border-white"
+                    className="md:hidden fixed bottom-32 right-8 w-20 h-20 bg-slate-900 text-white rounded-[32px] shadow-2xl flex items-center justify-center active:scale-75 transition-all z-[110] border-4 border-white shadow-slate-900/30"
                 >
                     <Plus className="w-10 h-10" strokeWidth={3} />
                 </button>

@@ -11,9 +11,8 @@ import {
     ArrowUpRight,
     Home as HomeIcon,
     ShoppingCart,
-    CheckCircle2,
     Sparkles,
-    TrendingUp
+    CheckCircle2
 } from 'lucide-react';
 import { ItemForm } from '@/modules/compras/components/ItemForm';
 import { useRouter } from 'next/navigation';
@@ -75,8 +74,8 @@ export default function DashboardPage() {
                 {/* --- BENTO GRID --- */}
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-8">
                     
-                    {/* Card Financeiro Principal (Gradiente Suave) */}
-                    <div className="md:col-span-8 card-pop bg-gradient-to-br from-brand-blue-light to-white p-8 md:p-12 relative overflow-hidden flex flex-col justify-between min-h-[340px] animate-pop [animation-delay:100ms]">
+                    {/* Card Financeiro Principal */}
+                    <div className="md:col-span-8 card-pop bg-gradient-to-br from-brand-blue-light to-white p-8 md:p-12 relative overflow-hidden flex flex-col justify-between min-h-[340px] animate-pop">
                         <div className="absolute top-0 right-0 w-64 h-64 bg-brand-blue opacity-20 rounded-full -mr-20 -mt-20 blur-3xl"></div>
                         
                         <div className="relative z-10 flex justify-between items-start">
@@ -109,8 +108,8 @@ export default function DashboardPage() {
                         </div>
                     </div>
 
-                    {/* Stats Compacto (Rosa Vibrante) */}
-                    <div className="md:col-span-4 card-pop bg-brand-pink-light border-brand-pink/20 p-8 flex flex-col justify-between min-h-[340px] animate-pop [animation-delay:200ms]">
+                    {/* Stats Compacto */}
+                    <div className="md:col-span-4 card-pop bg-brand-pink-light border-brand-pink/20 p-8 flex flex-col justify-between min-h-[340px] animate-pop [animation-delay:100ms]">
                         <div className="flex justify-between items-start">
                             <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-brand-pink-dark shadow-sm border border-brand-pink/20">
                                 <ShoppingCart className="w-6 h-6" />
@@ -132,11 +131,12 @@ export default function DashboardPage() {
                         </button>
                     </div>
 
-                    {/* Ambientes Horizontal (Mais divertido) */}
-                    <div className="md:col-span-12 grid grid-cols-1 md:grid-cols-3 gap-6 animate-pop [animation-delay:300ms]">
+                    {/* Ambientes Horizontal */}
+                    <div className="md:col-span-12 grid grid-cols-1 md:grid-cols-3 gap-6 animate-pop [animation-delay:200ms]">
                         {["1. Cozinha", "2. Sala", "4. Banheiro"].map((amb, i) => {
-                            const total = items.filter(i => i.ambiente === amb).length;
-                            const comp = items.filter(i => i.ambiente === amb && i.adquirido).length;
+                            const ambItems = items.filter(item => item.ambiente === amb);
+                            const total = ambItems.length;
+                            const comp = ambItems.filter(item => item.adquirido).length;
                             const perc = total > 0 ? Math.round((comp / total) * 100) : 0;
                             const colors = [
                                 "from-orange-50 to-white border-orange-100",

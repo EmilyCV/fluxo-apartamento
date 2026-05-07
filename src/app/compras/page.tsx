@@ -9,10 +9,9 @@ import { ItemForm } from '@/modules/compras/components/ItemForm';
 import { 
     Search, 
     CheckCircle2, 
-    Trash2, 
-    ExternalLink,
     FilterX,
-    Plus
+    Plus,
+    ShoppingCart
 } from 'lucide-react';
 
 const AMBIENTES: Ambiente[] = ["1. Cozinha", "2. Sala", "3. Varanda", "4. Banheiro", "5. Escritório", "6. Quarto", "7. Gerais"];
@@ -54,21 +53,14 @@ export default function ComprasPage() {
         setItemToEdit(undefined);
     };
 
-    const handleDelete = async (e: React.MouseEvent, id: string) => {
-        e.stopPropagation();
-        if (confirm('Deseja excluir este item?')) {
-            await comprasService.deleteItem(id);
-        }
-    };
-
     const formatCurrency = (value: number) => {
         return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
     };
 
     return (
         <AppLayout>
-            <div className="max-w-6xl mx-auto px-6 py-10 md:px-12">
-                <header className="mb-12 space-y-8">
+            <div className="max-w-6xl mx-auto px-6 py-10 md:px-12 space-y-12">
+                <header className="mb-12 space-y-8 animate-pop">
                     <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                         <div className="space-y-2">
                             <h1 className="text-4xl font-black text-slate-900 tracking-tighter">Lista de Compras</h1>
@@ -79,7 +71,7 @@ export default function ComprasPage() {
                             <input 
                                 type="text"
                                 placeholder="Pesquisar..."
-                                className="w-full h-14 bg-white border border-slate-100 rounded-[20px] pl-12 pr-4 outline-none focus:border-slate-900 transition-all text-sm font-bold shadow-sm"
+                                className="w-full h-14 bg-white border border-slate-100 rounded-[24px] pl-12 pr-4 outline-none focus:border-slate-900 transition-all text-sm font-bold shadow-sm"
                                 value={search}
                                 onChange={e => setSearch(e.target.value)}
                             />
@@ -90,7 +82,7 @@ export default function ComprasPage() {
                         <button 
                             onClick={() => setVerComprados(!verComprados)}
                             className={`shrink-0 h-11 px-6 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                                verComprados ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10' : 'bg-white text-slate-400 border border-slate-100'
+                                verComprados ? 'bg-slate-900 text-white shadow-xl shadow-slate-900/10' : 'bg-white text-slate-400 border border-slate-100'
                             }`}
                         >
                             {verComprados ? 'Ver Tudo' : 'Pendentes'}
@@ -118,50 +110,65 @@ export default function ComprasPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {[1, 2, 3, 4, 5, 6].map(i => <div key={i} className="h-56 bg-white rounded-[40px] animate-pulse" />)}
                     </div>
+                ) : items.length === 0 ? (
+                    /* ESTADO VAZIO: LISTA TOTALMENTE VAZIA */
+                    <div className="text-center py-32 bg-white rounded-[48px] border-2 border-dashed border-slate-100 flex flex-col items-center animate-pop shadow-sm">
+                        <div className="w-24 h-24 bg-brand-pink-light rounded-[32px] flex items-center justify-center mb-6 shadow-sm border border-brand-pink/20">
+                            <ShoppingCart className="w-10 h-10 text-brand-pink-dark" />
+                        </div>
+                        <h2 className="text-2xl font-black text-slate-800 tracking-tight mb-2">Sua lista está vazia</h2>
+                        <p className="text-slate-400 font-medium mb-8 max-w-xs mx-auto italic text-center px-6">Nenhum item cadastrado ainda. Vamos planejar algo novo?</p>
+                        <button 
+                            onClick={() => setIsFormOpen(true)}
+                            className="btn-pop bg-slate-900 text-white shadow-xl shadow-slate-900/10 hover:scale-105 active:scale-95 px-12"
+                        >
+                            <Plus className="w-5 h-5" strokeWidth={3} /> Adicionar Primeiro Item
+                        </button>
+                    </div>
                 ) : filteredItems.length === 0 ? (
-                    <div className="text-center py-32 bg-white rounded-[48px] border-2 border-dashed border-slate-100 flex flex-col items-center">
+                    /* ESTADO VAZIO: FILTROS SEM RESULTADO */
+                    <div className="text-center py-32 bg-white rounded-[48px] border border-slate-100 flex flex-col items-center animate-pop shadow-sm">
                         <FilterX className="w-16 h-16 text-slate-100 mb-4" />
-                        <p className="text-slate-400 font-black uppercase text-[10px] tracking-[0.3em]">Nenhum item encontrado</p>
+                        <p className="text-slate-400 font-black uppercase text-[10px] tracking-[0.3em]">Nenhum item encontrado nos filtros</p>
+                        <button onClick={() => {setSearch(''); setFiltroAmbiente('Todos'); setFiltroCategoria('Todas'); setVerComprados(true);}} className="mt-4 text-brand-blue-dark font-bold text-xs underline underline-offset-4">Limpar Filtros</button>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-20">
                         {filteredItems.map(item => (
                             <div 
                                 key={item.id}
                                 onClick={() => { setItemToEdit(item); setIsFormOpen(true); }}
-                                className={`bento-card flex flex-col gap-6 active:scale-[0.98] transition-all relative overflow-hidden cursor-pointer group ${item.adquirido ? 'bg-slate-50/50' : 'bg-white border-slate-100 shadow-xl shadow-slate-200/20'}`}
+                                className={`card-pop flex flex-col gap-6 active:scale-[0.98] transition-all relative overflow-hidden cursor-pointer group animate-pop ${item.adquirido ? 'bg-slate-50/50 opacity-60' : 'bg-white border-slate-100'}`}
                             >
-                                {item.adquirido && <div className="absolute top-0 right-0 bg-brand-green text-brand-green-dark px-4 py-1.5 rounded-bl-[20px] text-[10px] font-black uppercase tracking-widest">OK</div>}
+                                {item.adquirido && <div className="absolute top-0 right-0 bg-brand-green text-brand-green-dark px-4 py-1.5 rounded-bl-[20px] text-[10px] font-black uppercase tracking-widest shadow-sm">Adquirido</div>}
                                 
                                 <div className="space-y-4 flex-1">
                                     <div className="flex flex-wrap gap-2">
-                                        <span className="text-[10px] font-black uppercase bg-brand-blue/10 text-brand-blue-dark px-2.5 py-1 rounded-lg tracking-tighter">
+                                        <span className="text-[10px] font-black uppercase bg-brand-blue-light text-brand-blue-dark px-3 py-1 rounded-lg tracking-tighter border border-brand-blue/10">
                                             {item.ambiente.split('. ')[1]}
                                         </span>
                                     </div>
-                                    <h3 className={`text-xl font-bold leading-tight group-hover:text-blue-600 transition-colors ${item.adquirido ? 'text-slate-400 line-through' : 'text-slate-800'}`}>
+                                    <h3 className={`text-xl font-bold leading-tight group-hover:text-brand-pink-dark transition-colors ${item.adquirido ? 'text-slate-400 line-through' : 'text-slate-800'}`}>
                                         {item.nome}
                                     </h3>
                                 </div>
 
                                 <div className="flex items-center justify-between pt-6 border-t border-slate-50">
                                     <div className="flex flex-col">
-                                        <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Total</p>
+                                        <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Valor</p>
                                         <p className={`text-xl font-black ${item.adquirido ? 'text-slate-400' : 'text-slate-800'}`}>
                                             {formatCurrency(item.valorTotalAproximado)}
                                         </p>
                                     </div>
-                                    <div className="flex gap-2">
-                                        <button 
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                comprasService.toggleAdquirido(item.id, item.adquirido);
-                                            }}
-                                            className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${item.adquirido ? 'bg-brand-green text-white' : 'bg-slate-50 text-slate-200 hover:bg-brand-green-light hover:text-brand-green-dark'}`}
-                                        >
-                                            <CheckCircle2 className="w-8 h-8" />
-                                        </button>
-                                    </div>
+                                    <button 
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            comprasService.toggleAdquirido(item.id, item.adquirido);
+                                        }}
+                                        className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all shadow-sm ${item.adquirido ? 'bg-brand-green text-white' : 'bg-slate-50 text-slate-200 hover:bg-brand-green-light hover:text-brand-green-dark'}`}
+                                    >
+                                        <CheckCircle2 className="w-8 h-8" />
+                                    </button>
                                 </div>
                             </div>
                         ))}
@@ -171,7 +178,7 @@ export default function ComprasPage() {
                 {/* FAB MOBILE CONSISTENTE */}
                 <button 
                     onClick={() => { setItemToEdit(undefined); setIsFormOpen(true); }}
-                    className="md:hidden fixed bottom-32 right-8 w-20 h-20 bg-slate-900 text-white rounded-[32px] shadow-2xl flex items-center justify-center active:scale-75 transition-all z-[110] border-4 border-white"
+                    className="md:hidden fixed bottom-32 right-8 w-20 h-20 bg-slate-900 text-white rounded-[32px] shadow-2xl flex items-center justify-center active:scale-75 transition-all z-[110] border-4 border-white shadow-slate-900/30"
                 >
                     <Plus className="w-10 h-10" strokeWidth={3} />
                 </button>
