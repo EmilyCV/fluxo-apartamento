@@ -1,7 +1,11 @@
 @import "tailwindcss";
 
 @theme {
-  /* Cores da nossa Paleta Apê 2026 */
+  /* Arredondamentos Extra Grandes (estilo iOS/Premium) */
+  --radius-4xl: 32px;
+  --radius-5xl: 40px;
+
+  /* Cores Fixas do Design System Apê 2026 */
   --color-brand-pink: #FBCFE8;
   --color-brand-blue: #BAE6FD;
   --color-brand-green: #BBF7D0;
@@ -14,77 +18,59 @@
   --color-brand-blue-dark: #0369A1;
   --color-brand-green-dark: #15803D;
 
-  /* Arredondamentos Extra Grandes */
-  --radius-4xl: 32px;
-  --radius-5xl: 40px;
-
-  /* Sombras Suaves (Premium) */
-  --shadow-premium: 0 10px 30px -10px rgba(0, 0, 0, 0.05);
-  --shadow-card: 0 4px 20px -2px rgba(0, 0, 0, 0.03);
+  /* Sombras Profundas (estilo Chá Revelação) */
+  --shadow-premium: 0 20px 40px -10px rgba(0, 0, 0, 0.05);
+  --shadow-glass: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
 }
 
 @layer base {
   :root {
-    --background: #ffffff;
-    --foreground: #0f172a;
-  }
-
-  * {
-    @apply border-slate-100;
+    --background: #f8fafc; /* slate-50 */
+    --foreground: #0f172a; /* slate-900 */
+    --card: #ffffff;
+    --border: #f1f5f9; /* slate-100 */
   }
 
   body {
-    @apply bg-slate-50 text-slate-900 min-h-screen antialiased;
+    background-color: var(--background);
+    color: var(--foreground);
+    min-height: 100vh;
     font-family: 'Inter', sans-serif;
     -webkit-tap-highlight-color: transparent;
   }
 }
 
 @layer components {
-  /* Container centralizado para simular mobile em telas grandes */
-  .mobile-container {
-    @apply w-full max-w-[440px] mx-auto min-h-screen bg-white shadow-2xl relative;
+  /* Cards com mais profundidade e bordas suaves */
+  .card-pop {
+    @apply bg-white border border-white rounded-[32px] shadow-premium transition-all duration-300;
   }
 
-  /* Botões com Toque Gigante (60px+) */
-  .btn-primary {
-    @apply h-[65px] w-full flex items-center justify-center gap-3 rounded-3xl bg-slate-900 text-white font-bold text-lg transition-all active:scale-95 disabled:opacity-50;
+  .card-pop:hover {
+    @apply -translate-y-1 shadow-2xl shadow-slate-200/50;
   }
 
-  .btn-secondary {
-    @apply h-[65px] w-full flex items-center justify-center gap-3 rounded-3xl bg-slate-100 text-slate-600 font-bold text-lg transition-all active:scale-95;
+  /* Efeito de Vidro (Glassmorphism) */
+  .glass {
+    @apply bg-white/70 backdrop-blur-xl border border-white/20;
   }
 
-  .btn-icon {
-    @apply w-[60px] h-[60px] flex items-center justify-center rounded-2xl transition-all active:scale-90;
+  /* Botão Premium */
+  .btn-pop {
+    @apply h-14 px-8 rounded-2xl font-black text-sm uppercase tracking-widest transition-all active:scale-90 flex items-center justify-center gap-3;
   }
 
-  /* Inputs Premium */
-  .input-field {
-    @apply h-[65px] w-full bg-slate-50 border-2 border-transparent rounded-2xl px-6 text-lg font-medium outline-none transition-all focus:border-slate-900 focus:bg-white;
-  }
-
-  /* Cards */
-  .card-premium {
-    @apply bg-white p-6 rounded-5xl border border-slate-100 shadow-card;
-  }
-
-  /* Custom Scrollbar */
-  .no-scrollbar::-webkit-scrollbar {
-    display: none;
-  }
-  .no-scrollbar {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
+  /* Scrollbar invisível */
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 }
 
-/* Animações de entrada */
-@keyframes slideUp {
-  from { transform: translateY(100%); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+/* Animação suave de entrada */
+@keyframes fadeInSlideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-.animate-slide-up {
-  animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+.animate-pop {
+  animation: fadeInSlideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }

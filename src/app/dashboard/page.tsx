@@ -1,28 +1,29 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { useAuth } from '@/modules/auth/contexts/AuthContext';
+import { AppLayout } from '@/shared/components/AppLayout';
 import { comprasService } from '@/modules/compras/services/comprasService';
 import { CompraItem } from '@/modules/compras/types';
-import { ItemForm } from '@/modules/compras/components/ItemForm';
 import { 
-    ShoppingCart, 
-    CheckCircle2, 
-    Plus,
-    TrendingUp,
-    LogOut,
-    ChevronRight,
-    Sparkles
+    Wallet, 
+    Plus, 
+    ArrowUpRight,
+    Home as HomeIcon,
+    ShoppingCart,
+    CheckCircle2,
+    Sparkles,
+    TrendingUp
 } from 'lucide-react';
+import { ItemForm } from '@/modules/compras/components/ItemForm';
+import { useRouter } from 'next/navigation';
 
 export default function DashboardPage() {
-    const { userName, logout } = useAuth();
+    const { userName } = useAuth();
     const router = useRouter();
     const [items, setItems] = useState<CompraItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [isFormOpen, setIsFormOpen] = useState(false);
-    const [itemToEdit, setItemToEdit] = useState<CompraItem | undefined>(undefined);
 
     useEffect(() => {
         const unsubscribe = comprasService.subscribeToItems((data) => {
@@ -32,145 +33,158 @@ export default function DashboardPage() {
         return () => unsubscribe();
     }, []);
 
-    const valorGasto = items
-        .filter(i => i.adquirido)
-        .reduce((acc, curr) => acc + (curr.valorTotalAproximado || 0), 0);
+    const totalInvestido = items.filter(i => i.adquirido).reduce((acc, curr) => acc + (curr.valorTotalAproximado || 0), 0);
+    const totalOrcado = items.reduce((acc, curr) => acc + (curr.valorTotalAproximado || 0), 0);
+    const percProgresso = totalOrcado > 0 ? Math.round((totalInvestido / totalOrcado) * 100) : 0;
 
-    const formatCurrency = (value: number) => {
-        return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
-    };
+    const formatCurrency = (val: number) => 
+        new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
 
-    const handleSaveItem = async (data: Omit<CompraItem, "id" | "createdAt" | "updatedAt">, id?: string) => {
-        if (id) await comprasService.updateItem(id, data);
-        else await comprasService.addItem(data);
+    const handleSaveItem = async (data: Omit<CompraItem, "id" | "createdAt" | "updatedAt">) => {
+        await comprasService.addItem(data);
         setIsFormOpen(false);
-        setItemToEdit(undefined);
     };
 
     return (
-        <div className="min-h-screen bg-slate-100 sm:py-8">
-            <main className="mobile-container flex flex-col bg-slate-50 overflow-hidden">
+        <AppLayout>
+            <div className="max-w-6xl mx-auto px-6 py-10 md:px-12 space-y-12">
                 
-                {/* Header Premium */}
-                <header className="bg-white px-8 pt-12 pb-8 rounded-b-[48px] shadow-premium relative z-10">
-                    <div className="flex justify-between items-center mb-8">
-                        <div className="flex items-center gap-2 bg-brand-pink-light px-4 py-2 rounded-2xl">
-                            <Sparkles className="w-4 h-4 text-brand-pink-dark" />
-                            <span className="text-[10px] font-black text-brand-pink-dark uppercase tracking-widest">Apê 2026</span>
+                {/* --- HEADER --- */}
+                <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 animate-pop">
+                    <div className="space-y-1">
+                        <div className="flex items-center gap-2 mb-2">
+                            <div className="w-8 h-8 bg-brand-pink rounded-xl flex items-center justify-center text-brand-pink-dark rotate-6 shadow-sm">
+                                <Sparkles className="w-4 h-4" />
+                            </div>
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Apê 2026 Home</span>
                         </div>
-                        <button onClick={logout} className="btn-icon bg-slate-50 text-slate-400 hover:bg-red-50 hover:text-red-500 transition-all">
-                            <LogOut className="w-6 h-6" />
-                        </button>
+                        <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tighter">
+                            Olá, {userName?.split(' ')[0]}! ✨
+                        </h1>
+                        <p className="text-slate-400 font-medium italic">O progresso do nosso novo lar.</p>
                     </div>
-                    <div>
-                        <h1 className="text-3xl font-black text-slate-800 tracking-tight leading-none">Olá, {userName.split(' ')[0]}!</h1>
-                        <p className="text-slate-400 font-medium mt-2">Acompanhe nossa jornada.</p>
-                    </div>
+                    <button 
+                        onClick={() => setIsFormOpen(true)}
+                        className="btn-pop bg-slate-900 text-white shadow-xl shadow-slate-900/10 hover:bg-black md:w-auto px-10"
+                    >
+                        <Plus className="w-5 h-5" strokeWidth={3} />
+                        Novo Item
+                    </button>
                 </header>
 
-                <div className="p-8 space-y-8 flex-1 overflow-y-auto no-scrollbar pb-32">
-                    {/* Finance Card Principal */}
-                    <div className="bg-slate-900 p-8 rounded-[40px] text-white shadow-2xl relative overflow-hidden group">
-                        <div className="absolute top-0 right-0 w-40 h-40 bg-brand-pink opacity-10 rounded-full -mr-20 -mt-20 blur-3xl transition-all group-hover:scale-110"></div>
-                        <div className="relative z-10 space-y-1">
-                            <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em]">Total Investido</p>
-                            <p className="text-4xl font-black tracking-tighter">{formatCurrency(valorGasto)}</p>
+                {/* --- BENTO GRID --- */}
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-8">
+                    
+                    {/* Card Financeiro Principal (Gradiente Suave) */}
+                    <div className="md:col-span-8 card-pop bg-gradient-to-br from-brand-blue-light to-white p-8 md:p-12 relative overflow-hidden flex flex-col justify-between min-h-[340px] animate-pop [animation-delay:100ms]">
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-brand-blue opacity-20 rounded-full -mr-20 -mt-20 blur-3xl"></div>
+                        
+                        <div className="relative z-10 flex justify-between items-start">
+                            <div className="space-y-1">
+                                <p className="text-brand-blue-dark font-black text-[10px] uppercase tracking-widest">Total Investido</p>
+                                <h2 className="text-5xl md:text-6xl font-black text-slate-900 tracking-tighter">{formatCurrency(totalInvestido)}</h2>
+                            </div>
+                            <div className="w-16 h-16 bg-white rounded-3xl flex items-center justify-center shadow-sm border border-brand-blue/20">
+                                <Wallet className="w-8 h-8 text-brand-blue-dark" />
+                            </div>
                         </div>
-                        <div className="mt-8 flex items-center justify-between relative z-10">
-                            <div className="flex items-center gap-2 text-slate-400">
-                                <ShoppingCart className="w-5 h-5 opacity-50" />
-                                <span className="text-sm font-bold">{items.filter(i => i.adquirido).length} itens adquiridos</span>
+
+                        <div className="relative z-10 mt-12 space-y-8">
+                            <div className="flex justify-between items-end">
+                                <div className="space-y-1">
+                                    <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">Orçamento Total</p>
+                                    <p className="text-xl font-bold text-slate-600">{formatCurrency(totalOrcado)}</p>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-brand-blue-dark font-black text-4xl leading-none">{percProgresso}%</p>
+                                    <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest">Concluído</p>
+                                </div>
+                            </div>
+                            <div className="h-4 bg-slate-100 rounded-full overflow-hidden p-1 border border-white">
+                                <div 
+                                    className="h-full bg-gradient-to-r from-brand-blue to-brand-green rounded-full transition-all duration-1000 ease-out shadow-sm" 
+                                    style={{ width: `${percProgresso}%` }}
+                                ></div>
                             </div>
                         </div>
                     </div>
 
-                    {/* Stats Secundários */}
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="card-premium flex flex-col gap-3">
-                            <div className="w-12 h-12 bg-brand-blue-light rounded-2xl flex items-center justify-center text-brand-blue-dark shadow-sm">
-                                <TrendingUp className="w-6 h-6" />
+                    {/* Stats Compacto (Rosa Vibrante) */}
+                    <div className="md:col-span-4 card-pop bg-brand-pink-light border-brand-pink/20 p-8 flex flex-col justify-between min-h-[340px] animate-pop [animation-delay:200ms]">
+                        <div className="flex justify-between items-start">
+                            <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-brand-pink-dark shadow-sm border border-brand-pink/20">
+                                <ShoppingCart className="w-6 h-6" />
                             </div>
-                            <div>
-                                <p className="text-2xl font-black text-slate-800">{items.filter(i => !i.adquirido).length}</p>
-                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Faltam comprar</p>
-                            </div>
+                            <span className="text-[10px] font-black text-brand-pink-dark uppercase tracking-widest">Checklist</span>
                         </div>
-                        <div className="card-premium flex flex-col gap-3">
-                            <div className="w-12 h-12 bg-brand-green-light rounded-2xl flex items-center justify-center text-brand-green-dark shadow-sm">
-                                <CheckCircle2 className="w-6 h-6" />
-                            </div>
-                            <div>
-                                <p className="text-2xl font-black text-slate-800">{items.length}</p>
-                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Itens na lista</p>
-                            </div>
+                        <div className="space-y-2">
+                            <p className="text-7xl font-black text-slate-900 tracking-tighter">
+                                {items.filter(i => !i.adquirido).length}
+                            </p>
+                            <p className="text-xs font-bold text-slate-500 uppercase tracking-[0.2em]">Pendentes hoje</p>
                         </div>
+                        <button 
+                            onClick={() => router.push('/compras')}
+                            className="w-full h-16 bg-white border border-brand-pink/30 rounded-2xl flex items-center justify-center gap-3 font-black text-[10px] uppercase tracking-widest hover:bg-brand-pink hover:text-brand-pink-dark transition-all shadow-sm active:scale-95"
+                        >
+                            Ver toda lista
+                            <ArrowUpRight className="w-4 h-4" />
+                        </button>
                     </div>
 
-                    {/* Próximas Compras */}
-                    <section className="space-y-6">
-                        <div className="flex justify-between items-end px-2">
-                            <h2 className="text-xl font-black text-slate-800">Próximas Compras</h2>
-                            <button 
-                                onClick={() => router.push('/compras')}
-                                className="text-blue-600 font-bold text-sm flex items-center gap-1 active:translate-x-1 transition-all"
-                            >
-                                Ver tudo <ChevronRight className="w-4 h-4" />
-                            </button>
-                        </div>
-
-                        {loading ? (
-                            <div className="space-y-4">
-                                {[1, 2].map(i => <div key={i} className="h-[100px] bg-white rounded-3xl animate-pulse" />)}
-                            </div>
-                        ) : items.filter(i => !i.adquirido).length === 0 ? (
-                            <div className="card-premium text-center py-12 border-dashed border-2 bg-transparent">
-                                <ShoppingCart className="w-12 h-12 text-slate-200 mx-auto mb-3" />
-                                <p className="text-slate-400 font-medium">Tudo comprado por enquanto! ✨</p>
-                            </div>
-                        ) : (
-                            <div className="space-y-4">
-                                {items.filter(i => !i.adquirido).slice(0, 3).map(item => (
-                                    <div 
-                                        key={item.id} 
-                                        onClick={() => { setItemToEdit(item); setIsFormOpen(true); }}
-                                        className="card-premium flex items-center justify-between active:scale-[0.98] transition-all cursor-pointer group"
-                                    >
-                                        <div className="flex flex-col gap-1 flex-1 min-w-0 pr-4">
-                                            <span className="text-[10px] font-black text-brand-pink-dark bg-brand-pink/20 px-2 py-0.5 rounded-md w-fit uppercase tracking-tighter">
-                                                {item.ambiente.split('. ')[1]}
-                                            </span>
-                                            <h3 className="font-bold text-slate-800 truncate group-hover:text-blue-600 transition-colors">{item.nome}</h3>
-                                            <p className="text-sm font-black text-slate-400">{formatCurrency(item.valorTotalAproximado)}</p>
+                    {/* Ambientes Horizontal (Mais divertido) */}
+                    <div className="md:col-span-12 grid grid-cols-1 md:grid-cols-3 gap-6 animate-pop [animation-delay:300ms]">
+                        {["1. Cozinha", "2. Sala", "4. Banheiro"].map((amb, i) => {
+                            const total = items.filter(i => i.ambiente === amb).length;
+                            const comp = items.filter(i => i.ambiente === amb && i.adquirido).length;
+                            const perc = total > 0 ? Math.round((comp / total) * 100) : 0;
+                            const colors = [
+                                "from-orange-50 to-white border-orange-100",
+                                "from-blue-50 to-white border-blue-100",
+                                "from-cyan-50 to-white border-cyan-100"
+                            ][i];
+                            
+                            return (
+                                <div key={amb} className={`card-pop bg-gradient-to-br ${colors} p-8 hover:scale-[1.03] cursor-pointer group`} onClick={() => router.push(`/ambientes/${encodeURIComponent(amb)}`)}>
+                                    <div className="flex justify-between items-center mb-10">
+                                        <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm">
+                                            <HomeIcon className="w-5 h-5 text-slate-400 group-hover:text-slate-900 transition-colors" />
                                         </div>
-                                        <button 
-                                            onClick={(e) => { e.stopPropagation(); comprasService.toggleAdquirido(item.id, item.adquirido); }}
-                                            className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-200 hover:text-brand-green-dark hover:bg-brand-green-light transition-all shadow-sm"
-                                        >
-                                            <CheckCircle2 className="w-8 h-8" />
-                                        </button>
+                                        <h3 className="font-black text-slate-900 uppercase text-[10px] tracking-widest">{amb.split('. ')[1]}</h3>
                                     </div>
-                                ))}
-                            </div>
-                        )}
-                    </section>
+                                    <div className="space-y-4">
+                                        <div className="flex items-end justify-between">
+                                            <p className="text-4xl font-black text-slate-800 tracking-tighter">{perc}%</p>
+                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{comp}/{total} itens</p>
+                                        </div>
+                                        <div className="h-2 bg-white rounded-full overflow-hidden border border-slate-50">
+                                            <div 
+                                                className="h-full bg-slate-900 rounded-full transition-all duration-700"
+                                                style={{ width: `${perc}%` }}
+                                            ></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )
+                        })}
+                    </div>
                 </div>
 
-                {/* FAB Premium */}
+                {/* --- FAB MOBILE --- */}
                 <button 
-                    onClick={() => { setItemToEdit(undefined); setIsFormOpen(true); }}
-                    className="fixed bottom-10 left-1/2 -translate-x-1/2 sm:translate-x-0 sm:right-10 sm:left-auto w-20 h-20 bg-slate-900 text-white rounded-[32px] shadow-2xl flex items-center justify-center active:scale-90 transition-all z-40 border-[6px] border-slate-50 hover:bg-slate-800"
+                    onClick={() => setIsFormOpen(true)}
+                    className="md:hidden fixed bottom-32 right-8 w-20 h-20 bg-slate-900 text-white rounded-[32px] shadow-2xl flex items-center justify-center active:scale-75 transition-all z-[110] border-4 border-white shadow-slate-900/30"
                 >
                     <Plus className="w-10 h-10" strokeWidth={3} />
                 </button>
 
                 {isFormOpen && (
                     <ItemForm 
-                        initialData={itemToEdit}
-                        onClose={() => { setIsFormOpen(false); setItemToEdit(undefined); }} 
+                        onClose={() => setIsFormOpen(false)} 
                         onSave={handleSaveItem} 
                     />
                 )}
-            </main>
-        </div>
+            </div>
+        </AppLayout>
     );
 }

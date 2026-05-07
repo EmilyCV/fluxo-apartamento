@@ -7,35 +7,30 @@ export default function LoginPage() {
     const { signInWithGoogle, loading, error } = useAuth();
 
     return (
-        <div className="min-h-screen bg-slate-100 sm:py-8">
-            <main className="mobile-container flex flex-col items-center justify-center p-8 bg-brand-pink-light">
+        <div className="min-h-screen bg-slate-100 dark:bg-slate-950 sm:py-8 flex items-center justify-center">
+            <main className="w-full max-w-[440px] flex flex-col items-center justify-center p-8 bg-white dark:bg-slate-900 sm:rounded-[48px] shadow-2xl dark:shadow-none min-h-screen sm:min-h-0 border border-transparent dark:border-slate-800">
                 
                 {/* Logo / Header */}
                 <div className="mb-12 text-center space-y-4">
-                    <div className="w-20 h-20 bg-white rounded-[28px] shadow-premium flex items-center justify-center mx-auto text-brand-pink">
+                    <div className="w-20 h-20 bg-slate-900 dark:bg-white rounded-[28px] shadow-premium flex items-center justify-center mx-auto text-white dark:text-slate-900">
                         <Home className="w-10 h-10" strokeWidth={2.5} />
                     </div>
                     <div>
-                        <h1 className="text-4xl font-black text-slate-800 tracking-tight">
-                            Apê <span className="text-brand-pink-dark underline decoration-brand-pink decoration-8 underline-offset-4">2026</span>
+                        <h1 className="text-4xl font-black text-slate-800 dark:text-white tracking-tight italic">
+                            Apê <span className="text-brand-pink-dark dark:text-brand-pink underline decoration-brand-pink decoration-8 underline-offset-4">2026</span>
                         </h1>
-                        <p className="text-slate-500 font-medium mt-2">
+                        <p className="text-slate-500 dark:text-slate-400 font-bold uppercase text-[10px] tracking-[0.3em] mt-4">
                             Nosso sonho, item por item.
                         </p>
                     </div>
                 </div>
 
-                {/* Login Card */}
-                <div className="w-full bg-white rounded-5xl p-8 shadow-premium space-y-8">
-                    <div className="text-center">
-                        <h2 className="text-xl font-bold text-slate-800">Boas-vindas!</h2>
-                        <p className="text-slate-400 text-sm">Acesso exclusivo para moradoras</p>
-                    </div>
-
+                {/* Login Card Inner */}
+                <div className="w-full space-y-8">
                     {error && (
-                        <div className="bg-red-50 border border-red-100 p-4 rounded-3xl flex items-start gap-3 animate-in fade-in slide-in-from-top-2">
-                            <ShieldAlert className="w-5 h-5 text-red-500 shrink-0" />
-                            <p className="text-sm text-red-700 font-medium leading-tight">
+                        <div className="bg-red-50 dark:bg-red-950/20 border border-red-100 dark:border-red-900/30 p-5 rounded-[24px] flex items-start gap-3 animate-in fade-in slide-in-from-top-2">
+                            <ShieldAlert className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+                            <p className="text-sm text-red-700 dark:text-red-400 font-bold leading-tight">
                                 {error}
                             </p>
                         </div>
@@ -44,27 +39,25 @@ export default function LoginPage() {
                     <button
                         onClick={signInWithGoogle}
                         disabled={loading}
-                        className="btn-primary shadow-lg shadow-slate-900/10"
+                        className="w-full h-16 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-[24px] font-black text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-4 hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-slate-900/10 dark:shadow-white/5 disabled:opacity-50"
                     >
                         {loading ? (
-                            <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin" />
+                            <div className="w-6 h-6 border-3 border-white/30 dark:border-slate-900/30 border-t-white dark:border-t-slate-900 rounded-full animate-spin" />
                         ) : (
                             <>
-                                <div className="bg-white/10 p-2 rounded-xl">
-                                    <LogIn className="w-6 h-6" />
-                                </div>
+                                <LogIn className="w-5 h-5" />
                                 Entrar com Google
                             </>
                         )}
                     </button>
+                    
+                    <p className="text-center text-slate-400 dark:text-slate-600 text-[10px] font-black uppercase tracking-widest">Acesso Restrito</p>
                 </div>
 
                 {/* Footer */}
-                <footer className="mt-12 text-center">
-                    <p className="text-slate-400 text-xs font-bold uppercase tracking-widest flex items-center gap-2">
-                        <span className="w-8 h-[1px] bg-slate-200"></span>
+                <footer className="mt-16 text-center">
+                    <p className="text-slate-300 dark:text-slate-800 text-[8px] font-black uppercase tracking-[0.5em]">
                         Design System Apê 2026
-                        <span className="w-8 h-[1px] bg-slate-200"></span>
                     </p>
                 </footer>
             </main>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
     Ambiente, 
     Categoria, 
@@ -8,7 +8,7 @@ import {
     Prioridade, 
     CompraItem 
 } from '../types';
-import { X, Save, Calculator, Link as LinkIcon, Info } from 'lucide-react';
+import { X, Save, Calculator, Link as LinkIcon } from 'lucide-react';
 
 interface ItemFormProps {
     onSave: (item: Omit<CompraItem, "id" | "createdAt" | "updatedAt">, id?: string) => Promise<void>;
@@ -64,207 +64,155 @@ export function ItemForm({ onSave, onClose, initialData }: ItemFormProps) {
     };
 
     return (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-            <div className="bg-white w-full max-w-[500px] h-[92vh] sm:h-auto sm:max-h-[90vh] rounded-t-[40px] sm:rounded-[40px] overflow-hidden flex flex-col shadow-2xl animate-in slide-in-from-bottom-full duration-300">
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-md z-[200] flex items-end sm:items-center justify-center p-0 sm:p-4">
+            <div className="bg-white w-full max-w-[550px] h-[94vh] sm:h-auto sm:max-h-[90vh] rounded-t-[48px] sm:rounded-[40px] overflow-hidden flex flex-col shadow-2xl animate-pop">
                 
-                {/* Header do Modal */}
-                <div className="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-white sticky top-0 z-10">
-                    <h2 className="text-2xl font-bold text-slate-800">
-                        {initialData ? 'Editar Item' : 'Novo Item'}
-                    </h2>
-                    <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
-                        <X className="w-8 h-8 text-slate-400" />
+                {/* Header */}
+                <div className="px-10 py-8 border-b border-slate-50 flex justify-between items-center sticky top-0 bg-white/80 backdrop-blur-md z-10">
+                    <div className="space-y-1">
+                        <h2 className="text-2xl font-black text-slate-900 tracking-tighter">
+                            {initialData ? 'Editar Item' : 'Novo Item'}
+                        </h2>
+                        <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em]">Detalhes da Compra</p>
+                    </div>
+                    <button onClick={onClose} className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400 hover:text-slate-900 transition-all active:scale-90 shadow-sm border border-white">
+                        <X className="w-6 h-6" />
                     </button>
                 </div>
 
-                {/* Form Body */}
-                <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-8 py-6 space-y-6 pb-24">
+                {/* Body */}
+                <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-10 py-8 space-y-8 no-scrollbar pb-32 bg-white">
                     
-                    {/* Nome do Item */}
-                    <div className="space-y-2">
-                        <label className="text-sm font-bold text-slate-500 ml-1">O QUE VAMOS COMPRAR?</label>
+                    <div className="space-y-3">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">O que vamos comprar?</label>
                         <input 
                             required
                             type="text"
-                            placeholder="Ex: Airfryer, Sofá, Torneira..."
-                            className="w-full h-[60px] bg-slate-50 border-2 border-transparent focus:border-brand-pink focus:bg-white rounded-2xl px-6 text-lg font-medium transition-all outline-none"
+                            placeholder="Nome do item..."
+                            className="w-full h-16 bg-slate-50 border-2 border-transparent focus:border-brand-pink focus:bg-white rounded-[24px] px-6 text-lg font-bold text-slate-900 transition-all outline-none shadow-sm"
                             value={formData.nome}
                             onChange={e => setFormData({...formData, nome: e.target.value})}
                         />
                     </div>
 
-                    {/* Ambiente e Prioridade (Grid) */}
-                    <div className="grid grid-cols-1 gap-4">
-                        <div className="space-y-2">
-                            <label className="text-sm font-bold text-slate-500 ml-1">AMBIENTE</label>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-3">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Ambiente</label>
+                            <div className="relative">
+                                <select 
+                                    className="w-full h-16 bg-slate-50 border-2 border-transparent focus:border-brand-blue focus:bg-white rounded-[24px] px-6 text-sm font-bold text-slate-900 outline-none appearance-none shadow-sm"
+                                    value={formData.ambiente}
+                                    onChange={e => setFormData({...formData, ambiente: e.target.value as Ambiente})}
+                                >
+                                    {AMBIENTES.map(a => <option key={a} value={a}>{a.split('. ')[1]}</option>)}
+                                </select>
+                            </div>
+                        </div>
+                        <div className="space-y-3">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Prioridade</label>
                             <select 
-                                className="w-full h-[60px] bg-slate-50 border-2 border-transparent focus:border-brand-blue rounded-2xl px-6 text-lg font-medium outline-none appearance-none"
-                                value={formData.ambiente}
-                                onChange={e => setFormData({...formData, ambiente: e.target.value as Ambiente})}
+                                className="w-full h-16 bg-slate-50 border-2 border-transparent focus:border-brand-pink focus:bg-white rounded-[24px] px-6 text-sm font-bold text-slate-900 outline-none appearance-none shadow-sm"
+                                value={formData.prioridade}
+                                onChange={e => setFormData({...formData, prioridade: e.target.value as Prioridade})}
                             >
-                                {AMBIENTES.map(a => <option key={a} value={a}>{a}</option>)}
+                                {PRIORIDADES.map(p => <option key={p} value={p}>{p}</option>)}
                             </select>
                         </div>
                     </div>
 
-                    {/* Preços (Grid) */}
                     <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <label className="text-sm font-bold text-slate-500 ml-1">QTD</label>
+                        <div className="space-y-3">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Quantidade</label>
                             <input 
                                 type="number"
-                                className="w-full h-[60px] bg-slate-50 border-2 border-transparent focus:border-brand-green rounded-2xl px-6 text-lg font-medium outline-none"
+                                className="w-full h-16 bg-slate-50 border-2 border-transparent focus:border-brand-green focus:bg-white rounded-[24px] px-6 text-lg font-bold text-slate-900 outline-none shadow-sm"
                                 value={formData.quantidade}
                                 onChange={e => setFormData({...formData, quantidade: Number(e.target.value)})}
                             />
                         </div>
-                        <div className="space-y-2">
-                            <label className="text-sm font-bold text-slate-500 ml-1">VALOR UNIT. (R$)</label>
+                        <div className="space-y-3">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Preço Unitário</label>
                             <input 
                                 type="number"
                                 step="0.01"
-                                className="w-full h-[60px] bg-slate-50 border-2 border-transparent focus:border-brand-green rounded-2xl px-6 text-lg font-medium outline-none"
+                                className="w-full h-16 bg-slate-50 border-2 border-transparent focus:border-brand-green focus:bg-white rounded-[24px] px-6 text-lg font-bold text-slate-900 outline-none shadow-sm"
                                 value={formData.valorUnitario}
                                 onChange={e => setFormData({...formData, valorUnitario: Number(e.target.value)})}
                             />
                         </div>
                     </div>
 
-                    {/* Valor Total Estimado */}
-                    <div className="bg-brand-green-light/50 p-4 rounded-2xl border border-brand-green/20 flex items-center justify-between">
-                        <div className="flex items-center gap-2 text-green-700">
-                            <Calculator className="w-5 h-5" />
-                            <span className="text-sm font-bold">TOTAL ESTIMADO</span>
+                    {/* Valor Total com Estilo Chá Revelação */}
+                    <div className="bg-gradient-to-br from-brand-blue-light to-white p-8 rounded-[32px] border border-brand-blue/20 flex items-center justify-between shadow-premium">
+                        <div className="flex items-center gap-3 text-brand-blue-dark">
+                            <Calculator className="w-6 h-6" />
+                            <span className="text-[10px] font-black uppercase tracking-[0.2em]">Total Estimado</span>
                         </div>
-                        <span className="text-xl font-black text-slate-800">
+                        <span className="text-3xl font-black text-slate-900 tracking-tighter">
                             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valorTotal)}
                         </span>
                     </div>
 
-                    {/* Categoria e Subcategoria */}
-                    <div className="space-y-4 pt-2">
-                        <div className="space-y-2">
-                            <label className="text-sm font-bold text-slate-500 ml-1">CATEGORIA</label>
-                            <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
-                                {CATEGORIAS.map(cat => (
-                                    <button
-                                        key={cat}
-                                        type="button"
-                                        onClick={() => setFormData({...formData, categoria: cat, subCategoria: SUB_CATEGORIAS[cat][0]})}
-                                        className={`shrink-0 px-6 py-3 rounded-xl font-bold text-sm transition-all ${
-                                            formData.categoria === cat 
-                                            ? 'bg-slate-900 text-white' 
-                                            : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
-                                        }`}
-                                    >
-                                        {cat.split('. ')[1]}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-
-                        <div className="space-y-2">
-                            <label className="text-sm font-bold text-slate-500 ml-1">SUB-CATEGORIA</label>
-                            <select 
-                                className="w-full h-[60px] bg-slate-50 border-2 border-transparent focus:border-brand-pink rounded-2xl px-6 text-lg font-medium outline-none appearance-none"
-                                value={formData.subCategoria}
-                                onChange={e => setFormData({...formData, subCategoria: e.target.value as SubCategoria})}
-                            >
-                                {SUB_CATEGORIAS[formData.categoria].map(sub => <option key={sub} value={sub}>{sub}</option>)}
-                            </select>
-                        </div>
-                    </div>
-
-                    {/* Prioridade */}
-                    <div className="space-y-2">
-                        <label className="text-sm font-bold text-slate-500 ml-1">PRIORIDADE</label>
-                        <div className="grid grid-cols-2 gap-2">
-                            {PRIORIDADES.map(prio => (
+                    <div className="space-y-4">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Categoria e Estilo</label>
+                        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
+                            {CATEGORIAS.map(cat => (
                                 <button
-                                    key={prio}
+                                    key={cat}
                                     type="button"
-                                    onClick={() => setFormData({...formData, prioridade: prio})}
-                                    className={`h-[50px] rounded-xl text-xs font-black uppercase tracking-wider border-2 transition-all ${
-                                        formData.prioridade === prio 
-                                        ? 'border-slate-900 bg-slate-900 text-white' 
-                                        : 'border-slate-100 bg-white text-slate-400'
+                                    onClick={() => setFormData({...formData, categoria: cat, subCategoria: SUB_CATEGORIAS[cat][0]})}
+                                    className={`shrink-0 h-12 px-6 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all ${
+                                        formData.categoria === cat 
+                                        ? 'bg-slate-900 text-white shadow-xl shadow-slate-900/10' 
+                                        : 'bg-white text-slate-400 border border-slate-100 hover:bg-slate-50'
                                     }`}
                                 >
-                                    {prio}
+                                    {cat.split('. ')[1]}
                                 </button>
                             ))}
                         </div>
+                        <select 
+                            className="w-full h-16 bg-slate-50 border-2 border-transparent focus:border-brand-pink focus:bg-white rounded-[24px] px-6 text-sm font-bold text-slate-900 outline-none appearance-none shadow-sm"
+                            value={formData.subCategoria}
+                            onChange={e => setFormData({...formData, subCategoria: e.target.value as SubCategoria})}
+                        >
+                            {SUB_CATEGORIAS[formData.categoria].map(sub => <option key={sub} value={sub}>{sub}</option>)}
+                        </select>
                     </div>
 
-                    {/* Detalhes Extra (Modelo/Fabricante) */}
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <label className="text-sm font-bold text-slate-500 ml-1">MODELO</label>
-                            <input 
-                                type="text"
-                                className="w-full h-[60px] bg-slate-50 border-2 border-transparent focus:border-brand-blue rounded-2xl px-6 text-lg outline-none"
-                                value={formData.modelo}
-                                onChange={e => setFormData({...formData, modelo: e.target.value})}
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-sm font-bold text-slate-500 ml-1">MARCA</label>
-                            <input 
-                                type="text"
-                                className="w-full h-[60px] bg-slate-50 border-2 border-transparent focus:border-brand-blue rounded-2xl px-6 text-lg outline-none"
-                                value={formData.fabricante}
-                                onChange={e => setFormData({...formData, fabricante: e.target.value})}
-                            />
-                        </div>
-                    </div>
-
-                    {/* Link de Compra */}
-                    <div className="space-y-2">
-                        <label className="text-sm font-bold text-slate-500 ml-1 flex items-center gap-2">
-                            <LinkIcon className="w-4 h-4" /> LINK DO PRODUTO
+                    <div className="space-y-3">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+                            <LinkIcon className="w-4 h-4" /> Link do Produto
                         </label>
                         <input 
                             type="url"
                             placeholder="https://..."
-                            className="w-full h-[60px] bg-slate-50 border-2 border-transparent rounded-2xl px-6 text-lg outline-none"
+                            className="w-full h-16 bg-slate-50 border-2 border-transparent rounded-[24px] px-6 text-sm font-bold text-slate-900 outline-none shadow-sm"
                             value={formData.link}
                             onChange={e => setFormData({...formData, link: e.target.value})}
                         />
                     </div>
-
-                    {/* Observações */}
-                    <div className="space-y-2">
-                        <label className="text-sm font-bold text-slate-500 ml-1 flex items-center gap-2">
-                            <Info className="w-4 h-4" /> OBSERVAÇÕES
-                        </label>
-                        <textarea 
-                            rows={3}
-                            className="w-full bg-slate-50 border-2 border-transparent rounded-2xl p-6 text-lg outline-none resize-none"
-                            value={formData.observacoes}
-                            onChange={e => setFormData({...formData, observacoes: e.target.value})}
-                        />
-                    </div>
                 </form>
 
-                {/* Footer Buttons */}
-                <div className="p-8 bg-white border-t border-slate-100 flex gap-4 sticky bottom-0">
+                {/* Footer Actions */}
+                <div className="p-10 bg-white border-t border-slate-50 flex gap-4 sticky bottom-0 z-10 shadow-[0_-20px_40px_rgba(0,0,0,0.02)]">
                     <button 
                         type="button"
                         onClick={onClose}
-                        className="flex-1 h-[65px] rounded-2xl font-bold text-slate-500 bg-slate-100 active:scale-95 transition-all"
+                        className="flex-1 h-16 rounded-[24px] font-black text-[10px] uppercase tracking-[0.2em] text-slate-400 bg-slate-50 hover:bg-slate-100 active:scale-95 transition-all shadow-sm border border-white"
                     >
                         Cancelar
                     </button>
                     <button 
                         onClick={handleSubmit}
                         disabled={loading || !formData.nome}
-                        className="flex-[2] h-[65px] rounded-2xl font-bold text-white bg-slate-900 flex items-center justify-center gap-3 active:scale-95 transition-all disabled:opacity-50"
+                        className="flex-[2] h-16 rounded-[24px] font-black text-[10px] uppercase tracking-[0.2em] text-white bg-slate-900 hover:bg-black flex items-center justify-center gap-3 active:scale-95 transition-all disabled:opacity-50 shadow-xl shadow-slate-900/10"
                     >
                         {loading ? (
-                            <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                         ) : (
                             <>
-                                <Save className="w-6 h-6" />
+                                <Save className="w-5 h-5" />
                                 Salvar Item
                             </>
                         )}
