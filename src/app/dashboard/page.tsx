@@ -52,7 +52,7 @@ export default function DashboardPage() {
                 <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 animate-pop">
                     <div className="space-y-1">
                         <div className="flex items-center gap-2 mb-2">
-                            <div className="w-8 h-8 bg-brand-pink rounded-xl flex items-center justify-center text-brand-pink-dark rotate-6 shadow-sm">
+                            <div className="w-8 h-8 bg-brand-pink rounded-xl flex items-center justify-center text-brand-pink-dark shadow-sm">
                                 <Sparkles className="w-4 h-4" />
                             </div>
                             <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Apê 2026 Home</span>

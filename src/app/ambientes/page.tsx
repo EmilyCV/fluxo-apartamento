@@ -34,7 +34,7 @@ export default function AmbientesPage() {
             <div className="max-w-7xl mx-auto px-6 py-10 md:px-12 space-y-12">
                 <header className="animate-pop">
                     <div className="flex items-center gap-2 mb-2">
-                        <div className="w-8 h-8 bg-brand-blue rounded-xl flex items-center justify-center text-brand-blue-dark rotate-6 shadow-sm">
+                        <div className="w-8 h-8 bg-brand-blue rounded-xl flex items-center justify-center text-brand-blue-dark shadow-sm">
                             <Sparkles className="w-4 h-4" />
                         </div>
                         <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Tour pelo Apê</span>
