@@ -34,6 +34,7 @@ import {
 } from 'lucide-react';
 import { comprasService } from '../services/comprasService';
 import { CustomSelect, SelectOption } from '../../../shared/components/CustomSelect';
+import { CurrencyInput } from '../../../shared/components/CurrencyInput';
 
 interface ItemFormProps {
     onSave: (item: Omit<CompraItem, "id" | "createdAt" | "updatedAt">, id?: string) => Promise<void>;
@@ -52,11 +53,11 @@ const AMBIENTES_OPTIONS: SelectOption[] = [
 ];
 
 const PRIORIDADES_OPTIONS: SelectOption[] = [
-    { value: "Comprar agora", label: "Comprar agora", description: "Alta urgência", icon: <Zap className="w-4 h-4 text-amber-500" /> },
-    { value: "Quando der", label: "Quando der", description: "Média urgência", icon: <Clock className="w-4 h-4 text-blue-500" /> },
-    { value: "Pode esperar", label: "Pode esperar", description: "Baixa urgência", icon: <PauseCircle className="w-4 h-4 text-slate-400" /> },
-    { value: "Aguardando projeto", label: "Aguardando projeto", description: "Depende de definição", icon: <FileText className="w-4 h-4 text-purple-500" /> },
-    { value: "Adquirido", label: "Adquirido", description: "Já comprado", icon: <CheckCircle2 className="w-4 h-4 text-emerald-500" /> },
+    { value: "Comprar agora", label: "Comprar agora", icon: <Zap className="w-4 h-4 text-amber-500" /> },
+    { value: "Quando der", label: "Quando der", icon: <Clock className="w-4 h-4 text-blue-500" /> },
+    { value: "Pode esperar", label: "Pode esperar", icon: <PauseCircle className="w-4 h-4 text-slate-400" /> },
+    { value: "Aguardando projeto", label: "Aguardando projeto", icon: <FileText className="w-4 h-4 text-purple-500" /> },
+    { value: "Adquirido", label: "Adquirido", icon: <CheckCircle2 className="w-4 h-4 text-emerald-500" /> },
 ];
 
 const CATEGORIAS_OPTIONS: SelectOption[] = [
@@ -201,21 +202,20 @@ export function ItemForm({ onSave, onClose, initialData }: ItemFormProps) {
                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Quantidade</label>
                             <input 
                                 type="number"
-                                className="w-full h-16 bg-slate-50 border-2 border-transparent focus:border-brand-green focus:bg-white rounded-[24px] px-6 text-lg font-bold text-slate-900 outline-none shadow-sm"
+                                min="1"
+                                className="w-full h-16 bg-slate-50 border-2 border-transparent focus:border-brand-green focus:bg-white rounded-[24px] px-6 text-lg font-bold text-slate-900 outline-none shadow-sm transition-all"
                                 value={formData.quantidade}
-                                onChange={e => setFormData({...formData, quantidade: Number(e.target.value)})}
+                                onChange={e => {
+                                    const val = Math.max(1, Number(e.target.value));
+                                    setFormData({...formData, quantidade: val});
+                                }}
                             />
                         </div>
-                        <div className="space-y-3">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Preço Unitário</label>
-                            <input 
-                                type="number"
-                                step="0.01"
-                                className="w-full h-16 bg-slate-50 border-2 border-transparent focus:border-brand-green focus:bg-white rounded-[24px] px-6 text-lg font-bold text-slate-900 outline-none shadow-sm"
-                                value={formData.valorUnitario}
-                                onChange={e => setFormData({...formData, valorUnitario: Number(e.target.value)})}
-                            />
-                        </div>
+                        <CurrencyInput 
+                            label="Preço Unitário"
+                            value={formData.valorUnitario}
+                            onChange={val => setFormData({...formData, valorUnitario: val})}
+                        />
                     </div>
 
                     {/* Valor Total com Estilo Chá Revelação */}
