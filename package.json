@@ -4,6 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:mock": "NEXT_PUBLIC_USE_MOCKS=true next dev",
+    "dev:prod": "NEXT_PUBLIC_USE_MOCKS=false next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"

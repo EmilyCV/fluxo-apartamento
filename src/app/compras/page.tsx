@@ -16,7 +16,8 @@ import {
     Home as HomeIcon,
     Tags,
     AlertCircle,
-    RotateCcw
+    RotateCcw,
+    ArrowUpDown
 } from 'lucide-react';
 import { cn } from '@/shared/utils/cn';
 
@@ -24,18 +25,21 @@ const AMBIENTES: Ambiente[] = ["1. Cozinha", "2. Sala", "3. Varanda", "4. Banhei
 const CATEGORIAS: Categoria[] = ["1. Reforma", "2. Eletros", "3. Utensílios", "4. Enxoval"];
 const PRIORIDADES: Prioridade[] = ["Comprar agora", "Quando der", "Pode esperar", "Aguardando projeto", "Adquirido"];
 
+type SortOrder = 'nome-asc' | 'nome-desc' | 'preco-asc' | 'preco-desc' | 'recentes';
+
 interface FilterDropdownProps {
     label: string;
     value: string;
-    options: string[];
+    options: { label: string, value: any }[] | string[];
     icon: React.ElementType;
     isOpen: boolean;
     onToggle: (label: string | null) => void;
     onChange: (value: any) => void;
     placeholder: string;
+    minWidth?: string;
 }
 
-function FilterDropdown({ label, value, options, icon: Icon, isOpen, onToggle, onChange, placeholder }: FilterDropdownProps) {
+function FilterDropdown({ label, value, options, icon: Icon, isOpen, onToggle, onChange, placeholder, minWidth }: FilterDropdownProps) {
     const dropdownRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -49,51 +53,77 @@ function FilterDropdown({ label, value, options, icon: Icon, isOpen, onToggle, o
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, [isOpen, onToggle]);
 
-    const isSelected = value !== placeholder && value !== 'Todos' && value !== 'Todas';
-    const displayValue = isSelected ? value.split('. ').pop() : label;
+    const isOptionSelected = (opt: any) => {
+        if (typeof opt === 'string') return value === opt;
+        return value === opt.value;
+    };
+
+    const isSelected = value !== placeholder && value !== 'Todos' && value !== 'Todas' && value !== 'recentes';
+    
+    // Encontrar o label correto para exibir
+    let displayValue = label;
+    if (isSelected) {
+        const selectedOpt = Array.isArray(options) && typeof options[0] !== 'string' 
+            ? (options as {label: string, value: any}[]).find(o => o.value === value)
+            : null;
+        
+        displayValue = selectedOpt ? selectedOpt.label : value.split('. ').pop();
+    }
 
     return (
-        <div className="relative shrink-0" ref={dropdownRef}>
+        <div className="relative shrink-0" ref={dropdownRef} style={{ minWidth }}>
             <button 
                 onClick={() => onToggle(isOpen ? null : label)}
                 className={cn(
-                    "flex items-center gap-2.5 h-12 px-5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 shadow-sm border",
+                    "flex items-center justify-between gap-2.5 h-12 px-5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 shadow-sm border w-full",
                     isOpen ? "border-slate-900 bg-white text-slate-900 shadow-xl -translate-y-0.5" : 
                     isSelected ? "border-slate-900 bg-slate-900 text-white" : "border-slate-100 bg-white text-slate-500 hover:border-slate-200"
                 )}
             >
-                <Icon className={cn("w-3.5 h-3.5", isSelected ? "text-white" : "text-slate-400")} />
-                <span>{displayValue}</span>
-                <ChevronDown className={cn("w-3.5 h-3.5 transition-transform duration-500", isOpen && "rotate-180", isSelected ? "text-white" : "text-slate-300")} />
+                <div className="flex items-center gap-2.5 truncate">
+                    <Icon className={cn("w-3.5 h-3.5 shrink-0", isSelected ? "text-white" : "text-slate-400")} />
+                    <span className="truncate">{displayValue}</span>
+                </div>
+                <ChevronDown className={cn("w-3.5 h-3.5 shrink-0 transition-transform duration-500", isOpen && "rotate-180", isSelected ? "text-white" : "text-slate-300")} />
             </button>
 
             {isOpen && (
                 <div className="absolute top-full left-0 mt-3 w-64 bg-white/95 backdrop-blur-xl border border-slate-100 rounded-[24px] shadow-[0_20px_50px_rgba(0,0,0,0.15)] p-2 z-[200] animate-fade-in-up">
                     <div className="max-h-72 overflow-y-auto no-scrollbar py-1">
-                        <button
-                            onClick={() => { onChange(placeholder); onToggle(null); }}
-                            className={cn(
-                                "w-full flex items-center justify-between px-4 py-3 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all mb-1",
-                                !isSelected ? "bg-slate-50 text-slate-900" : "text-slate-500 hover:bg-slate-50"
-                            )}
-                        >
-                            <span>Ver Todos</span>
-                            {!isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-slate-900" />}
-                        </button>
-                        <div className="h-px bg-slate-100 my-2 mx-2" />
-                        {options.map((opt) => (
-                            <button
-                                key={opt}
-                                onClick={() => { onChange(opt); onToggle(null); }}
-                                className={cn(
-                                    "w-full flex items-center justify-between px-4 py-3 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all mb-0.5",
-                                    value === opt ? "bg-slate-900 text-white shadow-lg" : "text-slate-600 hover:bg-slate-50 hover:pl-5"
-                                )}
-                            >
-                                <span className="truncate pr-4">{opt.split('. ').pop()}</span>
-                                {value === opt && <CheckCircle2 className="w-3.5 h-3.5 text-white" />}
-                            </button>
-                        ))}
+                        {placeholder !== 'recentes' && (
+                            <>
+                                <button
+                                    onClick={() => { onChange(placeholder); onToggle(null); }}
+                                    className={cn(
+                                        "w-full flex items-center justify-between px-4 py-3 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all mb-1",
+                                        !isSelected ? "bg-slate-50 text-slate-900" : "text-slate-500 hover:bg-slate-50"
+                                    )}
+                                >
+                                    <span>Ver Todos</span>
+                                    {!isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-slate-900" />}
+                                </button>
+                                <div className="h-px bg-slate-100 my-2 mx-2" />
+                            </>
+                        )}
+                        {options.map((opt) => {
+                            const optLabel = typeof opt === 'string' ? opt.split('. ').pop() : opt.label;
+                            const optValue = typeof opt === 'string' ? opt : opt.value;
+                            const active = isOptionSelected(opt);
+
+                            return (
+                                <button
+                                    key={optValue}
+                                    onClick={() => { onChange(optValue); onToggle(null); }}
+                                    className={cn(
+                                        "w-full flex items-center justify-between px-4 py-3 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all mb-0.5",
+                                        active ? "bg-slate-900 text-white shadow-lg" : "text-slate-600 hover:bg-slate-50 hover:pl-5"
+                                    )}
+                                >
+                                    <span className="truncate pr-4">{optLabel}</span>
+                                    {active && <CheckCircle2 className="w-3.5 h-3.5 text-white" />}
+                                </button>
+                            );
+                        })}
                     </div>
                 </div>
             )}
@@ -110,6 +140,7 @@ export default function ComprasPage() {
     const [filtroCategoria, setFiltroCategoria] = useState<Categoria | 'Todas'>('Todas');
     const [filtroPrioridade, setFiltroPrioridade] = useState<Prioridade | 'Todas'>('Todas');
     const [verComprados, setVerComprados] = useState(true);
+    const [ordenacao, setOrdenacao] = useState<SortOrder>('recentes');
 
     const [activeFilter, setActiveFilter] = useState<string | null>(null);
 
@@ -129,15 +160,24 @@ export default function ComprasPage() {
         return () => unsubscribe();
     }, []);
 
-    const filteredItems = items.filter(item => {
-        const matchSearch = item.nome.toLowerCase().includes(search.toLowerCase()) || 
-                            item.fabricante?.toLowerCase().includes(search.toLowerCase());
-        const matchAmbiente = filtroAmbiente === 'Todos' || item.ambiente === filtroAmbiente;
-        const matchCategoria = filtroCategoria === 'Todas' || item.categoria === filtroCategoria;
-        const matchPrioridade = filtroPrioridade === 'Todas' || item.prioridade === filtroPrioridade;
-        const matchStatus = verComprados ? true : !item.adquirido;
-        return matchSearch && matchAmbiente && matchCategoria && matchPrioridade && matchStatus;
-    });
+    const filteredItems = items
+        .filter(item => {
+            const matchSearch = item.nome.toLowerCase().includes(search.toLowerCase()) || 
+                                item.fabricante?.toLowerCase().includes(search.toLowerCase());
+            const matchAmbiente = filtroAmbiente === 'Todos' || item.ambiente === filtroAmbiente;
+            const matchCategoria = filtroCategoria === 'Todas' || item.categoria === filtroCategoria;
+            const matchPrioridade = filtroPrioridade === 'Todas' || item.prioridade === filtroPrioridade;
+            const matchStatus = verComprados ? true : !item.adquirido;
+            return matchSearch && matchAmbiente && matchCategoria && matchPrioridade && matchStatus;
+        })
+        .sort((a, b) => {
+            if (ordenacao === 'nome-asc') return a.nome.localeCompare(b.nome);
+            if (ordenacao === 'nome-desc') return b.nome.localeCompare(a.nome);
+            if (ordenacao === 'preco-asc') return (a.valorTotalAproximado || 0) - (b.valorTotalAproximado || 0);
+            if (ordenacao === 'preco-desc') return (b.valorTotalAproximado || 0) - (a.valorTotalAproximado || 0);
+            // Default: Recentes (Firestore subscribeToItems already comes ordered, but let's be safe)
+            return 0;
+        });
 
     const handleSaveItem = async (data: Omit<CompraItem, "id" | "createdAt" | "updatedAt">, id?: string) => {
         if (id) await comprasService.updateItem(id, data);
@@ -154,7 +194,8 @@ export default function ComprasPage() {
                              filtroAmbiente !== 'Todos' || 
                              filtroCategoria !== 'Todas' || 
                              filtroPrioridade !== 'Todas' || 
-                             !verComprados;
+                             !verComprados ||
+                             ordenacao !== 'recentes';
 
     const clearFilters = () => {
         setSearch('');
@@ -162,8 +203,17 @@ export default function ComprasPage() {
         setFiltroCategoria('Todas');
         setFiltroPrioridade('Todas');
         setVerComprados(true);
+        setOrdenacao('recentes');
         setActiveFilter(null);
     };
+
+    const SORT_OPTIONS = [
+        { label: 'Mais Recentes', value: 'recentes' },
+        { label: 'A-Z', value: 'nome-asc' },
+        { label: 'Z-A', value: 'nome-desc' },
+        { label: 'Menor Preço', value: 'preco-asc' },
+        { label: 'Maior Preço', value: 'preco-desc' },
+    ];
 
     return (
         <AppLayout>
@@ -208,7 +258,7 @@ export default function ComprasPage() {
 
                         <div className="flex flex-col md:flex-row md:items-center gap-4">
                             {/* Toggle de Visualização */}
-                            <div className="flex bg-slate-100 p-1 rounded-2xl w-fit">
+                            <div className="flex bg-slate-100 p-1 rounded-2xl w-fit shrink-0">
                                 <button 
                                     onClick={() => setVerComprados(true)}
                                     className={cn(
@@ -229,10 +279,22 @@ export default function ComprasPage() {
                                 </button>
                             </div>
 
-                            <div className="h-6 w-px bg-slate-200 hidden md:block mx-2"></div>
+                            <div className="h-6 w-px bg-slate-200 hidden md:block mx-2 shrink-0"></div>
 
                             {/* Grupo de Selects Customizados */}
                             <div className="flex flex-wrap items-center gap-3">
+                                <FilterDropdown 
+                                    label="Ordenar"
+                                    placeholder="recentes"
+                                    value={ordenacao}
+                                    options={SORT_OPTIONS}
+                                    icon={ArrowUpDown}
+                                    isOpen={activeFilter === 'Ordenar'}
+                                    onToggle={setActiveFilter}
+                                    onChange={setOrdenacao}
+                                    minWidth="165px"
+                                />
+
                                 <FilterDropdown 
                                     label="Cômodo"
                                     placeholder="Todos"
@@ -242,6 +304,7 @@ export default function ComprasPage() {
                                     isOpen={activeFilter === 'Cômodo'}
                                     onToggle={setActiveFilter}
                                     onChange={setFiltroAmbiente}
+                                    minWidth="140px"
                                 />
                                 <FilterDropdown 
                                     label="Categoria"
@@ -252,6 +315,7 @@ export default function ComprasPage() {
                                     isOpen={activeFilter === 'Categoria'}
                                     onToggle={setActiveFilter}
                                     onChange={setFiltroCategoria}
+                                    minWidth="140px"
                                 />
                                 <FilterDropdown 
                                     label="Prioridade"
@@ -262,6 +326,7 @@ export default function ComprasPage() {
                                     isOpen={activeFilter === 'Prioridade'}
                                     onToggle={setActiveFilter}
                                     onChange={setFiltroPrioridade}
+                                    minWidth="160px"
                                 />
 
                                 {hasActiveFilters && (

@@ -8,14 +8,14 @@ import {
     onSnapshot, 
     orderBy,
     serverTimestamp,
-    Timestamp
 } from "firebase/firestore";
 import { db } from "@/shared/lib/firebase";
 import { CompraItem } from "../types";
+import { mockComprasService } from "./mockComprasService";
 
 const COLLECTION_NAME = "compras";
 
-export const comprasService = {
+const realComprasService = {
     /**
      * Escuta em tempo real a lista de compras
      */
@@ -98,3 +98,8 @@ export const comprasService = {
         }
     }
 };
+
+// Se a variável de ambiente estiver ativa, usa o mock, senão usa o real
+export const comprasService = process.env.NEXT_PUBLIC_USE_MOCKS === 'true' 
+    ? mockComprasService 
+    : realComprasService;
