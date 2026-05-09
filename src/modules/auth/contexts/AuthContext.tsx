@@ -28,6 +28,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const clearError = () => setError(null);
 
     useEffect(() => {
+        // Se estiver usando mocks, define um usuário fake e não escuta o Firebase Auth
+        if (process.env.NEXT_PUBLIC_USE_MOCKS === 'true') {
+            const mockUser = {
+                uid: 'mock-user-id',
+                email: 'convidado@exemplo.com',
+                displayName: 'Usuário Convidado',
+                photoURL: null,
+            } as User;
+            setUser(mockUser);
+            setUserName('Usuário Convidado');
+            setLoading(false);
+            return;
+        }
+
         const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
             setLoading(true);
             if (currentUser && currentUser.email) {
@@ -59,6 +73,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, []);
 
     const signInWithGoogle = async () => {
+        if (process.env.NEXT_PUBLIC_USE_MOCKS === 'true') {
+            const mockUser = {
+                uid: 'mock-user-id',
+                email: 'convidado@exemplo.com',
+                displayName: 'Usuário Convidado',
+                photoURL: null,
+            } as User;
+            setUser(mockUser);
+            setUserName('Usuário Convidado');
+            router.push('/dashboard');
+            return;
+        }
         try {
             setError(null);
             const result = await signInWithPopup(auth, googleProvider);
@@ -87,6 +113,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     const logout = async () => {
+        if (process.env.NEXT_PUBLIC_USE_MOCKS === 'true') {
+            setUser(null);
+            setUserName('');
+            router.push('/login');
+            return;
+        }
         await signOut(auth);
         router.push('/login');
     };
