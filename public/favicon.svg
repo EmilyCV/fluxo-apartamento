@@ -1,0 +1,27 @@
+<svg width="160" height="160" viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg">
+  <!-- Sombra -->
+  <ellipse cx="80" cy="138" rx="42" ry="8" fill="#000" opacity="0.07"/>
+
+  <!-- Bloco principal do prédio -->
+  <rect x="48" y="40" width="64" height="92" rx="10" fill="#d8ecff"/>
+
+  <!-- Faixa superior rosa -->
+  <rect x="48" y="40" width="64" height="16" rx="10" fill="#ffd6e8"/>
+
+  <!-- Porta -->
+  <rect x="72" y="104" width="16" height="28" rx="4" fill="#d6f8d6"/>
+
+  <!-- Janelas linha 1 -->
+  <rect x="56" y="62" width="12" height="12" rx="2" fill="white" opacity="0.9"/>
+  <rect x="74" y="62" width="12" height="12" rx="2" fill="white" opacity="0.9"/>
+  <rect x="92" y="62" width="12" height="12" rx="2" fill="white" opacity="0.9"/>
+
+  <!-- Janelas linha 2 -->
+  <rect x="56" y="80" width="12" height="12" rx="2" fill="white" opacity="0.9"/>
+  <rect x="74" y="80" width="12" height="12" rx="2" fill="white" opacity="0.9"/>
+  <rect x="92" y="80" width="12" height="12" rx="2" fill="white" opacity="0.9"/>
+
+  <!-- Janelas linha 3 (menores, perto da porta) -->
+  <rect x="56" y="98" width="10" height="10" rx="2" fill="white" opacity="0.9"/>
+  <rect x="94" y="98" width="10" height="10" rx="2" fill="white" opacity="0.9"/>
+</svg>
