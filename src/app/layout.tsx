@@ -8,8 +8,14 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Apê 2026",
+  title: {
+    default: "Apê 2026 | Fluxo Apartamento",
+    template: "%s | Apê 2026"
+  },
   description: "Gerenciamento de compras e preparativos para o novo apartamento",
+  icons: {
+    icon: "/favicon.svg",
+  }
 };
 
 export const viewport: Viewport = {

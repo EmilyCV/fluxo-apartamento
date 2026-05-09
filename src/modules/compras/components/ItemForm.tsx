@@ -8,7 +8,33 @@ import {
     Prioridade, 
     CompraItem 
 } from '../types';
-import { X, Save, Calculator, Link as LinkIcon } from 'lucide-react';
+import { 
+    X, 
+    Save, 
+    Calculator, 
+    Link as LinkIcon, 
+    Trash2, 
+    Home, 
+    ChefHat, 
+    Tv, 
+    Sun, 
+    Bath, 
+    Monitor, 
+    Bed, 
+    Package,
+    Zap,
+    Clock,
+    PauseCircle,
+    FileText,
+    CheckCircle2,
+    Hammer,
+    Smartphone,
+    Utensils,
+    Shirt
+} from 'lucide-react';
+import { comprasService } from '../services/comprasService';
+import { CustomSelect, SelectOption } from '../../../shared/components/CustomSelect';
+import { CurrencyInput } from '../../../shared/components/CurrencyInput';
 
 interface ItemFormProps {
     onSave: (item: Omit<CompraItem, "id" | "createdAt" | "updatedAt">, id?: string) => Promise<void>;
@@ -16,14 +42,39 @@ interface ItemFormProps {
     initialData?: CompraItem;
 }
 
+const AMBIENTES_OPTIONS: SelectOption[] = [
+    { value: "1. Cozinha", label: "Cozinha", icon: <ChefHat className="w-4 h-4" /> },
+    { value: "2. Sala", label: "Sala", icon: <Tv className="w-4 h-4" /> },
+    { value: "3. Varanda", label: "Varanda", icon: <Sun className="w-4 h-4" /> },
+    { value: "4. Banheiro", label: "Banheiro", icon: <Bath className="w-4 h-4" /> },
+    { value: "5. Escritório", label: "Escritório", icon: <Monitor className="w-4 h-4" /> },
+    { value: "6. Quarto", label: "Quarto", icon: <Bed className="w-4 h-4" /> },
+    { value: "7. Gerais", label: "Gerais", icon: <Package className="w-4 h-4" /> },
+];
+
+const PRIORIDADES_OPTIONS: SelectOption[] = [
+    { value: "Comprar agora", label: "Comprar agora", icon: <Zap className="w-4 h-4 text-amber-500" /> },
+    { value: "Quando der", label: "Quando der", icon: <Clock className="w-4 h-4 text-blue-500" /> },
+    { value: "Pode esperar", label: "Pode esperar", icon: <PauseCircle className="w-4 h-4 text-slate-400" /> },
+    { value: "Aguardando projeto", label: "Aguardando projeto", icon: <FileText className="w-4 h-4 text-purple-500" /> },
+    { value: "Adquirido", label: "Adquirido", icon: <CheckCircle2 className="w-4 h-4 text-emerald-500" /> },
+];
+
+const CATEGORIAS_OPTIONS: SelectOption[] = [
+    { value: "1. Reforma", label: "Reforma", icon: <Hammer className="w-4 h-4" /> },
+    { value: "2. Eletros", label: "Eletros", icon: <Smartphone className="w-4 h-4" /> },
+    { value: "3. Utensílios", label: "Utensílios", icon: <Utensils className="w-4 h-4" /> },
+    { value: "4. Enxoval", label: "Enxoval", icon: <Shirt className="w-4 h-4" /> },
+];
+
 const AMBIENTES: Ambiente[] = ["1. Cozinha", "2. Sala", "3. Varanda", "4. Banheiro", "5. Escritório", "6. Quarto", "7. Gerais"];
 const CATEGORIAS: Categoria[] = ["1. Reforma", "2. Eletros", "3. Utensílios", "4. Enxoval"];
 
 const SUB_CATEGORIAS: Record<Categoria, SubCategoria[]> = {
-    "1. Reforma": ["1.1 Móveis planejados", "1.2 Móveis convencionais", "1.3 Materiais"],
-    "2. Eletros": ["2.1 Eletrodomésticos", "2.2 Eletroportáteis"],
-    "3. Utensílios": ["3.1 Utensílios cozinha", "3.2 Utensílios limpeza", "3.3 Utensílios gerais", "3.4 Utensílios higiene"],
-    "4. Enxoval": ["4.1 Casa e banho", "4.2 Cama"]
+    "1. Reforma": ["Móveis planejados", "Móveis convencionais", "Materiais"],
+    "2. Eletros": ["Eletrodomésticos", "Eletroportáteis"],
+    "3. Utensílios": ["Utensílios cozinha", "Utensílios limpeza", "Utensílios gerais", "Utensílios higiene"],
+    "4. Enxoval": ["Casa e banho", "Cama"]
 };
 
 const PRIORIDADES: Prioridade[] = ["Comprar agora", "Quando der", "Pode esperar", "Aguardando projeto", "Adquirido"];
@@ -46,6 +97,27 @@ export function ItemForm({ onSave, onClose, initialData }: ItemFormProps) {
     });
 
     const valorTotal = formData.quantidade * formData.valorUnitario;
+
+    const subCategoriasOptions: SelectOption[] = SUB_CATEGORIAS[formData.categoria].map(sub => ({
+        value: sub,
+        label: sub.includes('. ') ? sub.split('. ')[1] : sub,
+        icon: CATEGORIAS_OPTIONS.find(c => c.value === formData.categoria)?.icon
+    }));
+
+    const handleDelete = async () => {
+        if (!initialData?.id) return;
+        if (confirm('Tem certeza que deseja excluir este item?')) {
+            setLoading(true);
+            try {
+                await comprasService.deleteItem(initialData.id);
+                onClose();
+            } catch (error) {
+                console.error("Erro ao deletar:", error);
+            } finally {
+                setLoading(false);
+            }
+        }
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -75,9 +147,21 @@ export function ItemForm({ onSave, onClose, initialData }: ItemFormProps) {
                         </h2>
                         <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em]">Detalhes da Compra</p>
                     </div>
-                    <button onClick={onClose} className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400 hover:text-slate-900 transition-all active:scale-90 shadow-sm border border-white">
-                        <X className="w-6 h-6" />
-                    </button>
+                    <div className="flex items-center gap-3">
+                        {initialData && (
+                            <button 
+                                type="button"
+                                onClick={handleDelete}
+                                className="w-12 h-12 bg-red-50 rounded-2xl flex items-center justify-center text-red-400 hover:text-red-600 transition-all active:scale-90 shadow-sm border border-white"
+                                title="Excluir Item"
+                            >
+                                <Trash2 className="w-5 h-5" />
+                            </button>
+                        )}
+                        <button onClick={onClose} className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400 hover:text-slate-900 transition-all active:scale-90 shadow-sm border border-white">
+                            <X className="w-6 h-6" />
+                        </button>
+                    </div>
                 </div>
 
                 {/* Body */}
@@ -96,28 +180,21 @@ export function ItemForm({ onSave, onClose, initialData }: ItemFormProps) {
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-3">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Ambiente</label>
-                            <div className="relative">
-                                <select 
-                                    className="w-full h-16 bg-slate-50 border-2 border-transparent focus:border-brand-blue focus:bg-white rounded-[24px] px-6 text-sm font-bold text-slate-900 outline-none appearance-none shadow-sm"
-                                    value={formData.ambiente}
-                                    onChange={e => setFormData({...formData, ambiente: e.target.value as Ambiente})}
-                                >
-                                    {AMBIENTES.map(a => <option key={a} value={a}>{a.split('. ')[1]}</option>)}
-                                </select>
-                            </div>
-                        </div>
-                        <div className="space-y-3">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Prioridade</label>
-                            <select 
-                                className="w-full h-16 bg-slate-50 border-2 border-transparent focus:border-brand-pink focus:bg-white rounded-[24px] px-6 text-sm font-bold text-slate-900 outline-none appearance-none shadow-sm"
-                                value={formData.prioridade}
-                                onChange={e => setFormData({...formData, prioridade: e.target.value as Prioridade})}
-                            >
-                                {PRIORIDADES.map(p => <option key={p} value={p}>{p}</option>)}
-                            </select>
-                        </div>
+                        <CustomSelect 
+                            label="Ambiente"
+                            options={AMBIENTES_OPTIONS}
+                            value={formData.ambiente}
+                            onChange={val => setFormData({...formData, ambiente: val as Ambiente})}
+                            searchable
+                            color="blue"
+                        />
+                        <CustomSelect 
+                            label="Prioridade"
+                            options={PRIORIDADES_OPTIONS}
+                            value={formData.prioridade}
+                            onChange={val => setFormData({...formData, prioridade: val as Prioridade})}
+                            color="pink"
+                        />
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
@@ -125,21 +202,20 @@ export function ItemForm({ onSave, onClose, initialData }: ItemFormProps) {
                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Quantidade</label>
                             <input 
                                 type="number"
-                                className="w-full h-16 bg-slate-50 border-2 border-transparent focus:border-brand-green focus:bg-white rounded-[24px] px-6 text-lg font-bold text-slate-900 outline-none shadow-sm"
+                                min="1"
+                                className="w-full h-16 bg-slate-50 border-2 border-transparent focus:border-brand-green focus:bg-white rounded-[24px] px-6 text-lg font-bold text-slate-900 outline-none shadow-sm transition-all"
                                 value={formData.quantidade}
-                                onChange={e => setFormData({...formData, quantidade: Number(e.target.value)})}
+                                onChange={e => {
+                                    const val = Math.max(1, Number(e.target.value));
+                                    setFormData({...formData, quantidade: val});
+                                }}
                             />
                         </div>
-                        <div className="space-y-3">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Preço Unitário</label>
-                            <input 
-                                type="number"
-                                step="0.01"
-                                className="w-full h-16 bg-slate-50 border-2 border-transparent focus:border-brand-green focus:bg-white rounded-[24px] px-6 text-lg font-bold text-slate-900 outline-none shadow-sm"
-                                value={formData.valorUnitario}
-                                onChange={e => setFormData({...formData, valorUnitario: Number(e.target.value)})}
-                            />
-                        </div>
+                        <CurrencyInput 
+                            label="Preço Unitário"
+                            value={formData.valorUnitario}
+                            onChange={val => setFormData({...formData, valorUnitario: val})}
+                        />
                     </div>
 
                     {/* Valor Total com Estilo Chá Revelação */}
@@ -154,30 +230,24 @@ export function ItemForm({ onSave, onClose, initialData }: ItemFormProps) {
                     </div>
 
                     <div className="space-y-4">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Categoria e Estilo</label>
-                        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
-                            {CATEGORIAS.map(cat => (
-                                <button
-                                    key={cat}
-                                    type="button"
-                                    onClick={() => setFormData({...formData, categoria: cat, subCategoria: SUB_CATEGORIAS[cat][0]})}
-                                    className={`shrink-0 h-12 px-6 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all ${
-                                        formData.categoria === cat 
-                                        ? 'bg-slate-900 text-white shadow-xl shadow-slate-900/10' 
-                                        : 'bg-white text-slate-400 border border-slate-100 hover:bg-slate-50'
-                                    }`}
-                                >
-                                    {cat.split('. ')[1]}
-                                </button>
-                            ))}
-                        </div>
-                        <select 
-                            className="w-full h-16 bg-slate-50 border-2 border-transparent focus:border-brand-pink focus:bg-white rounded-[24px] px-6 text-sm font-bold text-slate-900 outline-none appearance-none shadow-sm"
+                        <CustomSelect 
+                            label="Categoria"
+                            options={CATEGORIAS_OPTIONS}
+                            value={formData.categoria}
+                            onChange={val => {
+                                const cat = val as Categoria;
+                                setFormData({...formData, categoria: cat, subCategoria: SUB_CATEGORIAS[cat][0]});
+                            }}
+                            color="slate"
+                        />
+                        <CustomSelect 
+                            label="Estilo / Subcategoria"
+                            options={subCategoriasOptions}
                             value={formData.subCategoria}
-                            onChange={e => setFormData({...formData, subCategoria: e.target.value as SubCategoria})}
-                        >
-                            {SUB_CATEGORIAS[formData.categoria].map(sub => <option key={sub} value={sub}>{sub}</option>)}
-                        </select>
+                            onChange={val => setFormData({...formData, subCategoria: val as SubCategoria})}
+                            color="pink"
+                            placeholder="Selecione o estilo..."
+                        />
                     </div>
 
                     <div className="space-y-3">
@@ -187,9 +257,21 @@ export function ItemForm({ onSave, onClose, initialData }: ItemFormProps) {
                         <input 
                             type="url"
                             placeholder="https://..."
-                            className="w-full h-16 bg-slate-50 border-2 border-transparent rounded-[24px] px-6 text-sm font-bold text-slate-900 outline-none shadow-sm"
+                            className="w-full h-16 bg-slate-50 border-2 border-transparent rounded-[24px] px-6 text-sm font-bold text-slate-900 outline-none shadow-sm focus:border-brand-blue focus:bg-white transition-all"
                             value={formData.link}
                             onChange={e => setFormData({...formData, link: e.target.value})}
+                        />
+                    </div>
+
+                    <div className="space-y-3">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+                            Observações <span className="text-[8px] opacity-50 ml-1">(Opcional)</span>
+                        </label>
+                        <textarea 
+                            rows={3}
+                            className="w-full bg-slate-50 border-2 border-transparent rounded-[24px] p-6 text-sm font-bold text-slate-900 outline-none shadow-sm focus:border-slate-300 focus:bg-white transition-all resize-none"
+                            value={formData.observacoes}
+                            onChange={e => setFormData({...formData, observacoes: e.target.value})}
                         />
                     </div>
                 </form>

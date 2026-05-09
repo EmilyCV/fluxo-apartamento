@@ -11,7 +11,8 @@ import {
     CheckCircle2, 
     Plus,
     LayoutGrid,
-    Sparkles
+    Sparkles,
+    ShoppingCart
 } from 'lucide-react';
 
 export default function AmbienteDetailPage() {
@@ -100,32 +101,51 @@ export default function AmbienteDetailPage() {
                         </button>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pb-20">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-10 pb-32">
                         {items.map((item, i) => (
                             <div 
                                 key={item.id}
                                 onClick={() => { setItemToEdit(item); setIsFormOpen(true); }}
-                                className={`card-pop flex flex-col gap-6 active:scale-[0.98] transition-all relative overflow-hidden cursor-pointer group animate-pop ${item.adquirido ? 'bg-slate-50/50 opacity-60' : 'bg-white border-slate-100'}`}
+                                className={`card-pop group flex flex-col p-10 gap-10 cursor-pointer relative overflow-hidden animate-pop border-slate-100/60 ${
+                                    item.adquirido ? 'bg-slate-50/50 opacity-60 grayscale-[0.5]' : 'bg-white'
+                                }`}
                                 style={{ animationDelay: `${i * 50}ms` }}
                             >
-                                {item.adquirido && <div className="absolute top-0 right-0 bg-brand-green text-brand-green-dark px-4 py-1.5 rounded-bl-[20px] text-[10px] font-black uppercase tracking-widest shadow-sm">Adquirido</div>}
-                                
-                                <div className="space-y-4 flex-1 min-w-0">
-                                    <div className="flex flex-wrap gap-2">
-                                        <span className="text-[10px] font-black uppercase bg-brand-blue-light text-brand-blue-dark px-3 py-1 rounded-lg tracking-tighter border border-brand-blue/10">
-                                            {item.prioridade}
-                                        </span>
+                                {item.adquirido && (
+                                    <div className="absolute top-0 right-0 bg-brand-green text-brand-green-dark px-6 py-2.5 rounded-bl-[24px] text-[10px] font-black uppercase tracking-widest shadow-sm z-10">
+                                        Adquirido
                                     </div>
-                                    <h3 className={`text-xl font-bold leading-tight group-hover:text-brand-pink-dark transition-colors ${item.adquirido ? 'text-slate-400 line-through' : 'text-slate-800'}`}>
-                                        {item.nome}
-                                    </h3>
-                                    <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest truncate">{item.subCategoria}</p>
+                                )}
+                                
+                                <div className="space-y-8 flex-1 min-w-0">
+                                    <div className="flex items-start justify-between">
+                                        <div className="flex flex-wrap gap-2">
+                                            <span className="text-[10px] font-black uppercase bg-brand-blue-light text-brand-blue-dark px-4 py-1.5 rounded-xl tracking-tighter border border-brand-blue/10">
+                                                {item.prioridade}
+                                            </span>
+                                            <span className="text-[10px] font-black uppercase bg-slate-50 text-slate-400 px-4 py-1.5 rounded-xl tracking-tighter border border-slate-100">
+                                                {item.subCategoria.split('. ')[1] || item.subCategoria}
+                                            </span>
+                                        </div>
+                                        {!item.adquirido && <ShoppingCart className="w-5 h-5 text-slate-100 group-hover:text-brand-pink-dark transition-colors" />}
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <h3 className={`text-3xl font-black leading-[1.15] tracking-tight group-hover:text-brand-pink-dark transition-colors break-words ${
+                                            item.adquirido ? 'text-slate-300 line-through' : 'text-slate-900'
+                                        }`}>
+                                            {item.nome}
+                                        </h3>
+                                        {item.fabricante && (
+                                            <p className="text-xs font-bold text-slate-400 uppercase tracking-[0.2em]">{item.fabricante}</p>
+                                        )}
+                                    </div>
                                 </div>
 
-                                <div className="flex items-center justify-between pt-6 border-t border-slate-50">
-                                    <div className="flex flex-col">
-                                        <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Preço</p>
-                                        <p className={`text-xl font-black ${item.adquirido ? 'text-slate-400' : 'text-slate-800'}`}>
+                                <div className="flex items-center justify-between pt-10 border-t border-slate-50/80 mt-auto">
+                                    <div className="flex flex-col gap-1.5">
+                                        <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em]">Investimento</p>
+                                        <p className={`text-3xl font-black tracking-tighter ${item.adquirido ? 'text-slate-300' : 'text-slate-900'}`}>
                                             {formatCurrency(item.valorTotalAproximado)}
                                         </p>
                                     </div>
@@ -134,9 +154,13 @@ export default function AmbienteDetailPage() {
                                             e.stopPropagation();
                                             comprasService.toggleAdquirido(item.id, item.adquirido);
                                         }}
-                                        className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all shadow-sm ${item.adquirido ? 'bg-brand-green text-white shadow-brand-green/20' : 'bg-slate-50 text-slate-200 hover:bg-brand-green-light hover:text-brand-green-dark'}`}
+                                        className={`w-16 h-16 rounded-[24px] flex items-center justify-center transition-all shadow-sm active:scale-90 ${
+                                            item.adquirido 
+                                            ? 'bg-brand-green text-white shadow-brand-green/20' 
+                                            : 'bg-slate-50 text-slate-200 hover:bg-brand-green-light hover:text-brand-green-dark hover:scale-110'
+                                        }`}
                                     >
-                                        <CheckCircle2 className="w-8 h-8" />
+                                        <CheckCircle2 className={`w-8 h-8 ${item.adquirido ? 'stroke-[3px]' : 'stroke-[2px]'}`} />
                                     </button>
                                 </div>
                             </div>

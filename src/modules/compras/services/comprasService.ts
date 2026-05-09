@@ -19,16 +19,22 @@ export const comprasService = {
     /**
      * Escuta em tempo real a lista de compras
      */
-    subscribeToItems: (callback: (items: CompraItem[]) => void) => {
+    subscribeToItems: (callback: (items: CompraItem[]) => void, onError?: (error: any) => void) => {
         const q = query(collection(db, COLLECTION_NAME), orderBy("createdAt", "desc"));
         
-        return onSnapshot(q, (snapshot) => {
-            const items = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            })) as CompraItem[];
-            callback(items);
-        });
+        return onSnapshot(q, 
+            (snapshot) => {
+                const items = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                })) as CompraItem[];
+                callback(items);
+            },
+            (error) => {
+                console.error("Erro ao assinar itens:", error);
+                if (onError) onError(error);
+            }
+        );
     },
 
     /**
