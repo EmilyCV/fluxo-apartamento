@@ -4,32 +4,60 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/modules/auth/contexts/AuthContext';
 import { AppLayout } from '@/shared/components/AppLayout';
 import { comprasService } from '@/modules/compras/services/comprasService';
+import { homeAmbientesService } from '@/modules/ambientes/services/ambientesService';
 import { CompraItem } from '@/modules/compras/types';
+import { HomeAmbiente } from '@/modules/ambientes/types';
+import { MASTER_AMBIENTES } from '@/modules/ambientes/types/masterData';
 import { 
     Wallet, 
     Plus, 
     ArrowUpRight,
-    Home as HomeIcon,
     ShoppingCart,
     Sparkles,
-    CheckCircle2
+    Settings2,
+    Edit2,
+    Trash2,
 } from 'lucide-react';
 import { ItemForm } from '@/modules/compras/components/ItemForm';
+import { AmbienteForm } from '@/modules/ambientes/components/AmbienteForm';
 import { useRouter } from 'next/navigation';
 
 export default function DashboardPage() {
     const { userName } = useAuth();
     const router = useRouter();
     const [items, setItems] = useState<CompraItem[]>([]);
+    const [homeAmbientes, setHomeAmbientes] = useState<HomeAmbiente[]>([]);
     const [loading, setLoading] = useState(true);
     const [isFormOpen, setIsFormOpen] = useState(false);
+    const [isAmbienteFormOpen, setIsAmbienteFormOpen] = useState(false);
+    const [editingCard, setEditingCard] = useState<HomeAmbiente | undefined>();
+    const [isManageMode, setIsManageMode] = useState(false);
 
     useEffect(() => {
-        const unsubscribe = comprasService.subscribeToItems((data) => {
+        const init = async () => {
+            try {
+                // Seed initial environments (Cozinha, Sala, Banheiro)
+                await homeAmbientesService.seedInitialHomeAmbientes();
+            } catch (error) {
+                console.error("Erro ao inicializar ambientes:", error);
+            }
+        };
+
+        init();
+
+        const unsubItems = comprasService.subscribeToItems((data) => {
             setItems(data);
             setLoading(false);
         });
-        return () => unsubscribe();
+
+        const unsubHomeAmbientes = homeAmbientesService.subscribeToHomeAmbientes((data) => {
+            setHomeAmbientes(data);
+        });
+
+        return () => {
+            unsubItems();
+            unsubHomeAmbientes();
+        };
     }, []);
 
     const totalInvestido = items.filter(i => i.adquirido).reduce((acc, curr) => acc + (curr.valorTotalAproximado || 0), 0);
@@ -42,6 +70,29 @@ export default function DashboardPage() {
     const handleSaveItem = async (data: Omit<CompraItem, "id" | "createdAt" | "updatedAt">) => {
         await comprasService.addItem(data);
         setIsFormOpen(false);
+    };
+
+    const handleSaveHomeAmbiente = async (ambienteId: string, ordem: number) => {
+        if (editingCard) {
+            await homeAmbientesService.updateHomeCard(editingCard.id, { ambienteId, ordem });
+        } else {
+            await homeAmbientesService.addToHome(ambienteId, ordem);
+        }
+        setIsAmbienteFormOpen(false);
+        setEditingCard(undefined);
+    };
+
+    const handleRemoveFromHome = async (e: React.MouseEvent, id: string) => {
+        e.stopPropagation();
+        if (confirm('Deseja remover este card da Home? O cômodo continuará existindo na seção de Cômodos.')) {
+            await homeAmbientesService.removeFromHome(id);
+        }
+    };
+
+    const handleEditCard = (e: React.MouseEvent, card: HomeAmbiente) => {
+        e.stopPropagation();
+        setEditingCard(card);
+        setIsAmbienteFormOpen(true);
     };
 
     return (
@@ -62,13 +113,24 @@ export default function DashboardPage() {
                         </h1>
                         <p className="text-slate-400 font-medium italic">O progresso do nosso novo lar.</p>
                     </div>
-                    <button 
-                        onClick={() => setIsFormOpen(true)}
-                        className="btn-pop bg-slate-900 text-white shadow-xl shadow-slate-900/10 hover:bg-black md:w-auto px-10"
-                    >
-                        <Plus className="w-5 h-5" strokeWidth={3} />
-                        Novo Item
-                    </button>
+                    <div className="flex items-center gap-3">
+                        <button 
+                            onClick={() => setIsManageMode(!isManageMode)}
+                            className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${
+                                isManageMode ? 'bg-brand-pink text-brand-pink-dark shadow-inner' : 'bg-white text-slate-400 hover:text-slate-600 shadow-sm border border-slate-100'
+                            }`}
+                            title="Gerenciar Cards"
+                        >
+                            <Settings2 className="w-6 h-6" />
+                        </button>
+                        <button 
+                            onClick={() => setIsFormOpen(true)}
+                            className="btn-pop bg-slate-900 text-white shadow-xl shadow-slate-900/10 hover:bg-black md:w-auto px-10"
+                        >
+                            <Plus className="w-5 h-5" strokeWidth={3} />
+                            Novo Item
+                        </button>
+                    </div>
                 </header>
 
                 {/* --- BENTO GRID --- */}
@@ -131,26 +193,50 @@ export default function DashboardPage() {
                         </button>
                     </div>
 
-                    {/* Ambientes Horizontal */}
-                    <div className="md:col-span-12 grid grid-cols-1 md:grid-cols-3 gap-6 animate-pop [animation-delay:200ms]">
-                        {["1. Cozinha", "2. Sala", "4. Banheiro"].map((amb, i) => {
-                            const ambItems = items.filter(item => item.ambiente === amb);
+                    {/* Cards de Ambientes Dinâmicos */}
+                    <div className={`md:col-span-12 grid grid-cols-1 gap-6 animate-pop [animation-delay:200ms] ${
+                        homeAmbientes.length === 1 ? 'md:grid-cols-1 max-w-2xl mx-auto w-full' : 
+                        homeAmbientes.length === 2 ? 'md:grid-cols-2 max-w-5xl mx-auto w-full' : 
+                        'md:grid-cols-3'
+                    }`}>
+                        {homeAmbientes.map((card) => {
+                            const master = MASTER_AMBIENTES.find(m => m.id === card.ambienteId);
+                            if (!master) return null;
+
+                            const ambItems = items.filter(item => item.ambiente === card.ambienteId);
                             const total = ambItems.length;
                             const comp = ambItems.filter(item => item.adquirido).length;
                             const perc = total > 0 ? Math.round((comp / total) * 100) : 0;
-                            const colors = [
-                                "from-orange-50 to-white border-orange-100",
-                                "from-blue-50 to-white border-blue-100",
-                                "from-cyan-50 to-white border-cyan-100"
-                            ][i];
                             
                             return (
-                                <div key={amb} className={`card-pop bg-gradient-to-br ${colors} p-8 hover:scale-[1.03] cursor-pointer group`} onClick={() => router.push(`/ambientes/${encodeURIComponent(amb)}`)}>
+                                <div 
+                                    key={card.id} 
+                                    className={`card-pop bg-gradient-to-br ${master.color.split(' ')[0]} ${master.color.split(' ')[1]} ${master.color.split(' ')[2]} p-8 hover:scale-[1.03] cursor-pointer group relative overflow-hidden`} 
+                                    onClick={() => router.push(`/ambientes/${encodeURIComponent(card.ambienteId)}`)}
+                                >
+                                    {isManageMode && (
+                                        <div className="absolute top-4 right-4 flex gap-2 z-20">
+                                            <button 
+                                                onClick={(e) => handleEditCard(e, card)}
+                                                className="w-8 h-8 bg-white/80 backdrop-blur-md rounded-lg flex items-center justify-center text-slate-600 hover:text-slate-900 shadow-sm border border-slate-100"
+                                            >
+                                                <Edit2 className="w-4 h-4" />
+                                            </button>
+                                            <button 
+                                                onClick={(e) => handleRemoveFromHome(e, card.id)}
+                                                className="w-8 h-8 bg-red-50/80 backdrop-blur-md rounded-lg flex items-center justify-center text-red-500 hover:text-red-600 shadow-sm border border-red-100"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    )}
                                     <div className="flex justify-between items-center mb-10">
                                         <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm">
-                                            <HomeIcon className="w-5 h-5 text-slate-400 group-hover:text-slate-900 transition-colors" />
+                                            <master.icon className={`w-5 h-5 ${master.color.split(' ')[3]}`} />
                                         </div>
-                                        <h3 className="font-black text-slate-900 uppercase text-[10px] tracking-widest">{amb.split('. ')[1]}</h3>
+                                        <h3 className="font-black text-slate-900 uppercase text-[10px] tracking-widest">
+                                            {master.label}
+                                        </h3>
                                     </div>
                                     <div className="space-y-4">
                                         <div className="flex items-end justify-between">
@@ -167,6 +253,22 @@ export default function DashboardPage() {
                                 </div>
                             )
                         })}
+
+                        {/* Card para Adicionar Novo Ambiente à Home */}
+                        {isManageMode && homeAmbientes.length < MASTER_AMBIENTES.length && (
+                            <button 
+                                onClick={() => {
+                                    setEditingCard(undefined);
+                                    setIsAmbienteFormOpen(true);
+                                }}
+                                className="card-pop bg-slate-50 border-dashed border-slate-200 p-8 flex flex-col items-center justify-center gap-4 group hover:bg-slate-100 transition-all min-h-[220px]"
+                            >
+                                <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-slate-300 group-hover:text-slate-900 transition-all shadow-sm">
+                                    <Plus className="w-6 h-6" strokeWidth={3} />
+                                </div>
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest group-hover:text-slate-900 transition-all">Adicionar Card</span>
+                            </button>
+                        )}
                     </div>
                 </div>
 
@@ -182,6 +284,18 @@ export default function DashboardPage() {
                     <ItemForm 
                         onClose={() => setIsFormOpen(false)} 
                         onSave={handleSaveItem} 
+                    />
+                )}
+
+                {isAmbienteFormOpen && (
+                    <AmbienteForm 
+                        onClose={() => {
+                            setIsAmbienteFormOpen(false);
+                            setEditingCard(undefined);
+                        }}
+                        onSave={handleSaveHomeAmbiente}
+                        existingAmbienteIds={homeAmbientes.map(h => h.ambienteId)}
+                        initialData={editingCard}
                     />
                 )}
             </div>
