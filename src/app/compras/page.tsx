@@ -67,7 +67,7 @@ function FilterDropdown({ label, value, options, icon: Icon, isOpen, onToggle, o
             ? (options as {label: string, value: any}[]).find(o => o.value === value)
             : null;
         
-        displayValue = selectedOpt ? selectedOpt.label : value.split('. ').pop();
+        displayValue = selectedOpt ? selectedOpt.label : (value.split('. ').pop() || value);
     }
 
     return (
@@ -106,7 +106,7 @@ function FilterDropdown({ label, value, options, icon: Icon, isOpen, onToggle, o
                             </>
                         )}
                         {options.map((opt) => {
-                            const optLabel = typeof opt === 'string' ? opt.split('. ').pop() : opt.label;
+                            const optLabel = typeof opt === 'string' ? (opt.split('. ').pop() || opt) : opt.label;
                             const optValue = typeof opt === 'string' ? opt : opt.value;
                             const active = isOptionSelected(opt);
 
