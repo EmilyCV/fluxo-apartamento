@@ -1,17 +1,30 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AppLayout } from '@/shared/components/AppLayout';
+import { comprasService } from '@/modules/compras/services/comprasService';
+import { CompraItem } from '@/modules/compras/types';
 import { 
     ChevronRight,
-    Sparkles
+    Sparkles,
+    CheckCircle2
 } from 'lucide-react';
 
 import { MASTER_AMBIENTES } from '@/modules/ambientes/types/masterData';
 
 export default function AmbientesPage() {
     const router = useRouter();
+    const [items, setItems] = useState<CompraItem[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const unsubscribe = comprasService.subscribeToItems((data) => {
+            setItems(data);
+            setLoading(false);
+        });
+        return () => unsubscribe();
+    }, []);
 
     return (
         <AppLayout>
@@ -30,25 +43,39 @@ export default function AmbientesPage() {
                 </header>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {MASTER_AMBIENTES.map((amb, i) => (
-                        <button
-                            key={amb.id}
-                            onClick={() => router.push(`/ambientes/${encodeURIComponent(amb.id)}`)}
-                            className={`card-pop bg-gradient-to-br ${amb.color.split(' ')[0]} ${amb.color.split(' ')[1]} ${amb.color.split(' ')[2]} p-10 flex flex-col items-start gap-8 text-left group animate-pop`}
-                            style={{ animationDelay: `${i * 50}ms` }}
-                        >
-                            <div className="w-20 h-20 bg-white rounded-[32px] flex items-center justify-center shadow-sm border border-white transition-transform group-hover:scale-110 duration-500">
-                                <amb.icon className={`w-10 h-10 ${amb.color.split(' ')[3]}`} strokeWidth={1.5} />
-                            </div>
-                            <div className="flex-1 w-full space-y-2">
-                                <div className="flex justify-between items-center">
-                                    <h3 className="text-2xl font-black text-slate-800 tracking-tight">{amb.label}</h3>
-                                    <ChevronRight className="w-6 h-6 text-slate-300 group-hover:text-slate-900 group-hover:translate-x-1 transition-all" />
+                    {MASTER_AMBIENTES.map((amb, i) => {
+                        const ambItems = items.filter(item => item.ambiente === amb.id);
+                        const total = ambItems.length;
+                        const comp = ambItems.filter(item => item.adquirido).length;
+
+                        return (
+                            <button
+                                key={amb.id}
+                                onClick={() => router.push(`/ambientes/${encodeURIComponent(amb.id)}`)}
+                                className={`card-pop bg-gradient-to-br ${amb.color.split(' ')[0]} ${amb.color.split(' ')[1]} ${amb.color.split(' ')[2]} p-10 flex flex-col items-start gap-8 text-left group animate-pop relative overflow-hidden`}
+                                style={{ animationDelay: `${i * 50}ms` }}
+                            >
+                                {/* Indicador de Progresso Discreto */}
+                                <div className="absolute top-6 right-8 flex items-center gap-2 bg-white/50 backdrop-blur-sm px-4 py-2 rounded-full border border-white/50 shadow-sm">
+                                    <CheckCircle2 className={`w-3 h-3 ${comp === total && total > 0 ? 'text-emerald-500' : 'text-slate-400'}`} />
+                                    <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">
+                                        {comp}/{total}
+                                    </span>
                                 </div>
-                                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest leading-relaxed">{amb.desc}</p>
-                            </div>
-                        </button>
-                    ))}
+
+                                <div className="w-20 h-20 bg-white rounded-[32px] flex items-center justify-center shadow-sm border border-white transition-transform group-hover:scale-110 duration-500">
+                                    <amb.icon className={`w-10 h-10 ${amb.color.split(' ')[3]}`} strokeWidth={1.5} />
+                                </div>
+                                <div className="flex-1 w-full space-y-2">
+                                    <div className="flex justify-between items-center">
+                                        <h3 className="text-2xl font-black text-slate-800 tracking-tight">{amb.label}</h3>
+                                        <ChevronRight className="w-6 h-6 text-slate-300 group-hover:text-slate-900 group-hover:translate-x-1 transition-all" />
+                                    </div>
+                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest leading-relaxed">{amb.desc}</p>
+                                </div>
+                            </button>
+                        );
+                    })}
                 </div>
             </div>
         </AppLayout>
