@@ -3,6 +3,15 @@ import { generateMockItems } from "./mockData";
 
 const STORAGE_KEY = "mock_compras_items";
 
+// Adicione no topo do arquivo (fora do objeto service)
+type Listener = (items: CompraItem[]) => void;
+const listeners = new Set<Listener>();
+
+const notify = () => {
+    const items = getStoredItems();
+    listeners.forEach((cb) => cb(items));
+};
+
 // Inicializa o localStorage se estiver vazio
 const getStoredItems = (): CompraItem[] => {
     if (typeof window === "undefined") return [];
@@ -26,20 +35,9 @@ const saveItems = (items: CompraItem[]) => {
 export const mockComprasService = {
     subscribeToItems: (callback: (items: CompraItem[]) => void) => {
         // Simula o onSnapshot do Firebase
-        const items = getStoredItems();
-        callback(items);
-        
-        // No mock, não temos um listener real de banco, 
-        // mas as funções de mutação abaixo vão disparar eventos se necessário 
-        // ou o usuário pode simplesmente recarregar.
-        // Para uma melhor experiência, poderíamos usar um EventEmitter.
-        
-        const handleStorageChange = () => {
-            callback(getStoredItems());
-        };
-
-        window.addEventListener('storage', handleStorageChange);
-        return () => window.removeEventListener('storage', handleStorageChange);
+        callback(getStoredItems());  // entrega dados imediatamente
+        listeners.add(callback);     // registra para updates futuros
+        return () => listeners.delete(callback);  // unsubscribe
     },
 
     addItem: async (item: Omit<CompraItem, "id" | "createdAt" | "updatedAt">) => {
@@ -53,8 +51,7 @@ export const mockComprasService = {
         const updatedItems = [newItem, ...items];
         saveItems(updatedItems);
         
-        // Dispara evento local para atualizar a UI na mesma aba
-        window.dispatchEvent(new Event('storage'));
+        notify();
         
         return newItem.id;
     },
@@ -67,7 +64,7 @@ export const mockComprasService = {
                 : item
         );
         saveItems(updatedItems);
-        window.dispatchEvent(new Event('storage'));
+        notify();
     },
 
     updateItem: async (id: string, data: Partial<CompraItem>) => {
@@ -78,13 +75,13 @@ export const mockComprasService = {
                 : item
         );
         saveItems(updatedItems);
-        window.dispatchEvent(new Event('storage'));
+        notify();
     },
 
     deleteItem: async (id: string) => {
         const items = getStoredItems();
         const updatedItems = items.filter(item => item.id !== id);
         saveItems(updatedItems);
-        window.dispatchEvent(new Event('storage'));
+        notify();
     }
 };

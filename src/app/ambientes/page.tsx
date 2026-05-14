@@ -52,7 +52,7 @@ export default function AmbientesPage() {
                             <button
                                 key={amb.id}
                                 onClick={() => router.push(`/ambientes/${encodeURIComponent(amb.id)}`)}
-                                className={`card-pop bg-gradient-to-br ${amb.color.split(' ')[0]} ${amb.color.split(' ')[1]} ${amb.color.split(' ')[2]} p-10 flex flex-col items-start gap-8 text-left group animate-pop relative overflow-hidden`}
+                                className={`card-pop bg-gradient-to-br ${amb.colors.gradient} ${amb.colors.border} p-10 flex flex-col items-start gap-8 text-left group animate-pop relative overflow-hidden`}
                                 style={{ animationDelay: `${i * 50}ms` }}
                             >
                                 {/* Indicador de Progresso Discreto */}
@@ -64,7 +64,7 @@ export default function AmbientesPage() {
                                 </div>
 
                                 <div className="w-20 h-20 bg-white rounded-[32px] flex items-center justify-center shadow-sm border border-white transition-transform group-hover:scale-110 duration-500">
-                                    <amb.icon className={`w-10 h-10 ${amb.color.split(' ')[3]}`} strokeWidth={1.5} />
+                                    <amb.icon className={`w-10 h-10 ${amb.colors.iconText}`} strokeWidth={1.5} />
                                 </div>
                                 <div className="flex-1 w-full space-y-2">
                                     <div className="flex justify-between items-center">
