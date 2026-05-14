@@ -15,6 +15,21 @@ import { mockComprasService } from "./mockComprasService";
 
 const COLLECTION_NAME = "compras";
 
+const normalizeAcquisitionState = <T extends Partial<CompraItem>>(data: T): T => {
+    const normalized = { ...data };
+
+    if (normalized.prioridade === "Adquirido" || normalized.adquirido === true) {
+        normalized.prioridade = "Adquirido";
+        normalized.adquirido = true;
+    }
+
+    return normalized;
+};
+
+const getToggledPrioridade = (adquirido: boolean): CompraItem["prioridade"] => (
+    adquirido ? "Adquirido" : "Quando der"
+);
+
 const realComprasService = {
     /**
      * Escuta em tempo real a lista de compras
@@ -43,7 +58,7 @@ const realComprasService = {
     addItem: async (item: Omit<CompraItem, "id" | "createdAt" | "updatedAt">) => {
         try {
             const docRef = await addDoc(collection(db, COLLECTION_NAME), {
-                ...item,
+                ...normalizeAcquisitionState(item),
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp()
             });
@@ -59,9 +74,11 @@ const realComprasService = {
      */
     toggleAdquirido: async (id: string, currentStatus: boolean) => {
         try {
+            const nextStatus = !currentStatus;
             const docRef = doc(db, COLLECTION_NAME, id);
             await updateDoc(docRef, {
-                adquirido: !currentStatus,
+                adquirido: nextStatus,
+                prioridade: getToggledPrioridade(nextStatus),
                 updatedAt: serverTimestamp()
             });
         } catch (error) {
@@ -77,7 +94,7 @@ const realComprasService = {
         try {
             const docRef = doc(db, COLLECTION_NAME, id);
             await updateDoc(docRef, {
-                ...data,
+                ...normalizeAcquisitionState(data),
                 updatedAt: serverTimestamp()
             });
         } catch (error) {

@@ -3,6 +3,21 @@ import { generateMockItems } from "./mockData";
 
 const STORAGE_KEY = "mock_compras_items";
 
+const normalizeAcquisitionState = <T extends Partial<CompraItem>>(data: T): T => {
+    const normalized = { ...data };
+
+    if (normalized.prioridade === "Adquirido" || normalized.adquirido === true) {
+        normalized.prioridade = "Adquirido";
+        normalized.adquirido = true;
+    }
+
+    return normalized;
+};
+
+const getToggledPrioridade = (adquirido: boolean): CompraItem["prioridade"] => (
+    adquirido ? "Adquirido" : "Quando der"
+);
+
 // Adicione no topo do arquivo (fora do objeto service)
 type Listener = (items: CompraItem[]) => void;
 const listeners = new Set<Listener>();
@@ -43,7 +58,7 @@ export const mockComprasService = {
     addItem: async (item: Omit<CompraItem, "id" | "createdAt" | "updatedAt">) => {
         const items = getStoredItems();
         const newItem: CompraItem = {
-            ...item,
+            ...normalizeAcquisitionState(item),
             id: `mock-${Date.now()}`,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
@@ -58,9 +73,15 @@ export const mockComprasService = {
 
     toggleAdquirido: async (id: string, currentStatus: boolean) => {
         const items = getStoredItems();
+        const nextStatus = !currentStatus;
         const updatedItems = items.map(item => 
             item.id === id 
-                ? { ...item, adquirido: !currentStatus, updatedAt: new Date().toISOString() } 
+                ? {
+                    ...item,
+                    adquirido: nextStatus,
+                    prioridade: getToggledPrioridade(nextStatus),
+                    updatedAt: new Date().toISOString()
+                }
                 : item
         );
         saveItems(updatedItems);
@@ -71,7 +92,7 @@ export const mockComprasService = {
         const items = getStoredItems();
         const updatedItems = items.map(item => 
             item.id === id 
-                ? { ...item, ...data, updatedAt: new Date().toISOString() } 
+                ? { ...item, ...normalizeAcquisitionState(data), updatedAt: new Date().toISOString() }
                 : item
         );
         saveItems(updatedItems);
