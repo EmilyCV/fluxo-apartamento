@@ -77,8 +77,8 @@ export const generateMockItems = (count: number = 20): CompraItem[] => {
       prioridade,
       link: 'https://example.com',
       observacoes: 'Item gerado automaticamente para testes.',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
     });
   }
 

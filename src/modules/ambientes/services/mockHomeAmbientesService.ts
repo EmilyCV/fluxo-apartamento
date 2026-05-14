@@ -16,9 +16,9 @@ const getStoredCards = (): HomeAmbiente[] => {
   const stored = localStorage.getItem(STORAGE_KEY);
   if (!stored) {
     const defaults: HomeAmbiente[] = [
-      { id: 'mock-1', ambienteId: '1. Cozinha', ordem: 1, createdAt: new Date().toISOString() },
-      { id: 'mock-2', ambienteId: '2. Sala', ordem: 2, createdAt: new Date().toISOString() },
-      { id: 'mock-3', ambienteId: '4. Banheiro', ordem: 3, createdAt: new Date().toISOString() },
+      { id: 'mock-1', ambienteId: '1. Cozinha', ordem: 1, createdAt: new Date() },
+      { id: 'mock-2', ambienteId: '2. Sala', ordem: 2, createdAt: new Date() },
+      { id: 'mock-3', ambienteId: '4. Banheiro', ordem: 3, createdAt: new Date() },
     ];
     localStorage.setItem(STORAGE_KEY, JSON.stringify(defaults));
     return defaults;
@@ -44,8 +44,8 @@ export const mockHomeAmbientesService = {
       id: `mock-card-${Date.now()}`,
       ambienteId,
       ordem,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
     };
     const updatedCards = [...cards, newCard].sort((a, b) => a.ordem - b.ordem);
     saveCards(updatedCards);
@@ -57,7 +57,7 @@ export const mockHomeAmbientesService = {
     const cards = getStoredCards();
     const updatedCards = cards
       .map((card) =>
-        card.id === id ? { ...card, ...data, updatedAt: new Date().toISOString() } : card,
+        card.id === id ? { ...card, ...data, updatedAt: new Date() } : card,
       )
       .sort((a, b) => a.ordem - b.ordem);
     saveCards(updatedCards);

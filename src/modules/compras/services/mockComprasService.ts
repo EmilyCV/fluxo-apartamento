@@ -59,8 +59,8 @@ export const mockComprasService = {
     const newItem: CompraItem = {
       ...normalizeAcquisitionState(item),
       id: `mock-${Date.now()}`,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
     };
     const updatedItems = [newItem, ...items];
     saveItems(updatedItems);
@@ -79,7 +79,7 @@ export const mockComprasService = {
             ...item,
             adquirido: nextStatus,
             prioridade: getToggledPrioridade(nextStatus),
-            updatedAt: new Date().toISOString(),
+            updatedAt: new Date(),
           }
         : item,
     );
@@ -91,7 +91,7 @@ export const mockComprasService = {
     const items = getStoredItems();
     const updatedItems = items.map((item) =>
       item.id === id
-        ? { ...item, ...normalizeAcquisitionState(data), updatedAt: new Date().toISOString() }
+        ? { ...item, ...normalizeAcquisitionState(data), updatedAt: new Date() }
         : item,
     );
     saveItems(updatedItems);

@@ -3,4 +3,4 @@ export interface Timestamp {
   nanoseconds: number;
 }
 
-export type FirestoreTimestamp = Timestamp | Date | null;
+export type FirestoreTimestamp = Timestamp | Date | string | null;
