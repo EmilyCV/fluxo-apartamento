@@ -106,13 +106,23 @@ export default function AmbienteDetailPage() {
             <div className="max-w-6xl mx-auto px-6 py-10 md:px-12 space-y-12">
                 
                 <header className="space-y-8 animate-pop">
-                    <button 
-                        onClick={() => router.push('/ambientes')}
-                        className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-slate-400 hover:text-slate-900 transition-all shadow-sm border border-slate-100 active:scale-90"
-                        aria-label="Voltar para ambientes"
-                    >
-                        <ChevronLeft className="w-6 h-6" />
-                    </button>
+                    <div className="flex items-center justify-between">
+                        <button 
+                            onClick={() => router.push('/ambientes')}
+                            className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-slate-400 hover:text-slate-900 transition-all shadow-sm border border-slate-100 active:scale-90"
+                            aria-label="Voltar para ambientes"
+                        >
+                            <ChevronLeft className="w-6 h-6" />
+                        </button>
+                        
+                        <button 
+                            onClick={() => { setItemToEdit(undefined); setIsFormOpen(true); }}
+                            className="btn-pop bg-slate-900 text-white shadow-xl shadow-slate-900/10 hover:bg-black px-6 h-12 hidden md:flex"
+                        >
+                            <Plus className="w-4 h-4" strokeWidth={3} />
+                            Adicionar Item
+                        </button>
+                    </div>
                     
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-8">
                         <div className="space-y-2">
@@ -200,6 +210,7 @@ export default function AmbienteDetailPage() {
                         {[1, 2, 3, 4].map(i => <div key={i} className="h-48 bg-white rounded-[40px] animate-pulse" />)}
                     </div>
                 ) : items.length === 0 ? (
+                    /* ESTADO VAZIO DO AMBIENTE */
                     <div className="text-center py-32 bg-white rounded-[48px] border-2 border-dashed border-slate-100 flex flex-col items-center animate-pop shadow-sm">
                         <div className="w-24 h-24 bg-brand-blue-light rounded-[32px] flex items-center justify-center mb-6 shadow-sm border border-brand-blue/20">
                             <LayoutGrid className="w-10 h-10 text-brand-blue-dark" aria-hidden="true" />
@@ -207,7 +218,7 @@ export default function AmbienteDetailPage() {
                         <h2 className="text-2xl font-black text-slate-800 tracking-tight mb-2">Ambiente vazio</h2>
                         <p className="text-slate-400 font-medium mb-8 italic">Você ainda não adicionou nenhum item para este cômodo.</p>
                         <button 
-                            onClick={() => setIsFormOpen(true)}
+                            onClick={() => { setItemToEdit(undefined); setIsFormOpen(true); }}
                             className="btn-pop bg-slate-900 text-white shadow-xl shadow-slate-900/10 hover:scale-105 active:scale-95 px-12"
                             aria-label="Adicionar primeiro item"
                         >
@@ -301,6 +312,7 @@ export default function AmbienteDetailPage() {
                 {isFormOpen && (
                     <ItemForm 
                         initialData={itemToEdit}
+                        defaultAmbiente={ambienteRaw}
                         onClose={() => { setIsFormOpen(false); setItemToEdit(undefined); }}
                         onSave={handleSaveItem}
                     />
