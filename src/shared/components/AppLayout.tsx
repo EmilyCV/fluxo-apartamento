@@ -41,13 +41,15 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                     </div>
                 </div>
 
-                <nav className="flex-1 px-6 space-y-1 mt-4">
+                <nav className="flex-1 px-6 space-y-1 mt-4" aria-label="Navegação principal">
                     {NAV_ITEMS.map((item) => {
                         const isActive = pathname === item.href;
                         return (
                             <Link 
                                 key={item.href} 
                                 href={item.href}
+                                aria-label={item.label}
+                                aria-current={isActive ? 'page' : undefined}
                                 className={`flex items-center gap-4 px-6 py-4 rounded-2xl font-bold transition-all duration-300 ${
                                     isActive 
                                     ? 'bg-slate-900 text-white shadow-xl shadow-slate-900/10 scale-[1.02]' 
@@ -73,6 +75,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                             onClick={logout}
                             className="p-2 text-slate-400 hover:text-red-500 transition-colors"
                             title="Sair"
+                            aria-label="Sair da conta"
                         >
                             <LogOut className="w-4 h-4" />
                         </button>
@@ -90,13 +93,18 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             </div>
 
             {/* --- BOTTOM NAV (Mobile: <md) --- */}
-            <nav className="md:hidden fixed bottom-8 left-8 right-8 h-20 bg-slate-900/95 backdrop-blur-xl rounded-[32px] shadow-[0_20px_50px_rgba(0,0,0,0.3)] z-[100] flex items-center justify-around px-4 border border-white/10">
+            <nav 
+                className="md:hidden fixed bottom-8 left-8 right-8 h-20 bg-slate-900/95 backdrop-blur-xl rounded-[32px] shadow-[0_20px_50px_rgba(0,0,0,0.3)] z-[100] flex items-center justify-around px-4 border border-white/10"
+                aria-label="Navegação principal"
+            >
                 {NAV_ITEMS.map((item) => {
                     const isActive = pathname === item.href;
                     return (
                         <Link 
                             key={item.href} 
                             href={item.href}
+                            aria-label={item.label}
+                            aria-current={isActive ? 'page' : undefined}
                             className={`flex flex-col items-center justify-center gap-1 w-14 h-14 rounded-2xl transition-all duration-300 active:scale-75 ${
                                 isActive ? 'text-white' : 'text-slate-500'
                             }`}
@@ -106,10 +114,14 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                         </Link>
                     );
                 })}
+                
+                <div className="w-px h-8 bg-white/10 mx-2" />
+                
                 {/* Botão de Logout no Mobile direto na barra */}
                 <button 
                     onClick={logout}
-                    className="flex flex-col items-center justify-center w-14 h-14 rounded-2xl text-slate-500 active:scale-75 transition-all"
+                    className="flex flex-col items-center justify-center w-14 h-14 rounded-2xl text-red-400 active:scale-75 transition-all"
+                    aria-label="Sair da conta"
                 >
                     <LogOut className="w-6 h-6" />
                 </button>

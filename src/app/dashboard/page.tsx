@@ -17,9 +17,11 @@ import {
     Settings2,
     Edit2,
     Trash2,
+    CheckCircle2,
 } from 'lucide-react';
 import { ItemForm } from '@/modules/compras/components/ItemForm';
 import { AmbienteForm } from '@/modules/ambientes/components/AmbienteForm';
+import { ConfirmDialog } from '@/shared/components/ConfirmDialog';
 import { useRouter } from 'next/navigation';
 
 export default function DashboardPage() {
@@ -28,10 +30,14 @@ export default function DashboardPage() {
     const [items, setItems] = useState<CompraItem[]>([]);
     const [homeAmbientes, setHomeAmbientes] = useState<HomeAmbiente[]>([]);
     const [loading, setLoading] = useState(true);
+    const [homeAmbientesLoading, setHomeAmbientesLoading] = useState(true);
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [isAmbienteFormOpen, setIsAmbienteFormOpen] = useState(false);
     const [editingCard, setEditingCard] = useState<HomeAmbiente | undefined>();
     const [isManageMode, setIsManageMode] = useState(false);
+    
+    const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
+    const [cardToRemove, setCardToRemove] = useState<string | null>(null);
 
     useEffect(() => {
         const init = async () => {
@@ -52,6 +58,7 @@ export default function DashboardPage() {
 
         const unsubHomeAmbientes = homeAmbientesService.subscribeToHomeAmbientes((data) => {
             setHomeAmbientes(data);
+            setHomeAmbientesLoading(false);
         });
 
         return () => {
@@ -64,11 +71,27 @@ export default function DashboardPage() {
     const totalOrcado = items.reduce((acc, curr) => acc + (curr.valorTotalAproximado || 0), 0);
     const percProgresso = totalOrcado > 0 ? Math.round((totalInvestido / totalOrcado) * 100) : 0;
 
+    const breakdownCategoria = [
+        { label: 'Reforma', key: '1. Reforma', color: 'bg-purple-400' },
+        { label: 'Eletros', key: '2. Eletros', color: 'bg-blue-400' },
+        { label: 'Utensílios', key: '3. Utensílios', color: 'bg-green-400' },
+        { label: 'Enxoval', key: '4. Enxoval', color: 'bg-pink-400' },
+    ].map(cat => ({
+        ...cat,
+        total: items
+            .filter(i => i.categoria === cat.key)
+            .reduce((acc, i) => acc + (i.valorTotalAproximado || 0), 0),
+        adquirido: items
+            .filter(i => i.categoria === cat.key && i.adquirido)
+            .reduce((acc, i) => acc + (i.valorTotalAproximado || 0), 0),
+    }));
+
     const formatCurrency = (val: number) => 
         new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
 
-    const handleSaveItem = async (data: Omit<CompraItem, "id" | "createdAt" | "updatedAt">) => {
-        await comprasService.addItem(data);
+    const handleSaveItem = async (data: Omit<CompraItem, "id" | "createdAt" | "updatedAt">, id?: string) => {
+        if (id) await comprasService.updateItem(id, data);
+        else await comprasService.addItem(data);
         setIsFormOpen(false);
     };
 
@@ -82,11 +105,17 @@ export default function DashboardPage() {
         setEditingCard(undefined);
     };
 
-    const handleRemoveFromHome = async (e: React.MouseEvent, id: string) => {
+    const handleRemoveFromHome = (e: React.MouseEvent, id: string) => {
         e.stopPropagation();
-        if (confirm('Deseja remover este card da Home? O cômodo continuará existindo na seção de Cômodos.')) {
-            await homeAmbientesService.removeFromHome(id);
-        }
+        setCardToRemove(id);
+        setShowRemoveConfirm(true);
+    };
+
+    const confirmRemove = async () => {
+        if (!cardToRemove) return;
+        await homeAmbientesService.removeFromHome(cardToRemove);
+        setShowRemoveConfirm(false);
+        setCardToRemove(null);
     };
 
     const handleEditCard = (e: React.MouseEvent, card: HomeAmbiente) => {
@@ -193,89 +222,134 @@ export default function DashboardPage() {
                         </button>
                     </div>
 
+                    {/* Breakdown por Categoria */}
+                    {items.length > 0 && (
+                        <div className="md:col-span-12 card-pop p-8 md:p-10 animate-pop [animation-delay:300ms]">
+                            <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-8">
+                                Investimento por Categoria
+                            </h2>
+                            <div className="space-y-5">
+                                {breakdownCategoria.map(cat => {
+                                    const perc = cat.total > 0 ? Math.round((cat.adquirido / cat.total) * 100) : 0;
+                                    return (
+                                        <div key={cat.key} className="space-y-2">
+                                            <div className="flex justify-between items-center">
+                                                <span className="text-sm font-black text-slate-700">{cat.label}</span>
+                                                <div className="flex items-center gap-3">
+                                                    <span className="text-xs text-slate-400 font-bold">
+                                                        {formatCurrency(cat.adquirido)} / {formatCurrency(cat.total)}
+                                                    </span>
+                                                    <span className="text-xs font-black text-slate-600 w-8 text-right">{perc}%</span>
+                                                </div>
+                                            </div>
+                                            <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                                                <div 
+                                                    className={`h-full ${cat.color} rounded-full transition-all duration-700`}
+                                                    style={{ width: `${perc}%` }}
+                                                ></div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
+
                     {/* Cards de Ambientes Dinâmicos */}
-                    <div className={`md:col-span-12 grid grid-cols-1 gap-6 animate-pop [animation-delay:200ms] ${
-                        homeAmbientes.length === 1 ? 'md:grid-cols-1 max-w-2xl mx-auto w-full' : 
-                        homeAmbientes.length === 2 ? 'md:grid-cols-2 max-w-5xl mx-auto w-full' : 
-                        'md:grid-cols-3'
-                    }`}>
-                        {homeAmbientes.map((card) => {
-                            const master = MASTER_AMBIENTES.find(m => m.id === card.ambienteId);
-                            if (!master) return null;
+                    {homeAmbientesLoading ? (
+                        <div className="md:col-span-12 grid grid-cols-1 md:grid-cols-3 gap-6 animate-pop [animation-delay:200ms]">
+                            {[1, 2, 3].map((i) => (
+                                <div key={i} className="h-48 bg-slate-100 rounded-[32px] animate-pulse" />
+                            ))}
+                        </div>
+                    ) : (
+                        <div className={`md:col-span-12 grid grid-cols-1 gap-6 animate-pop [animation-delay:200ms] ${
+                            homeAmbientes.length === 1 ? 'md:grid-cols-1 max-w-2xl mx-auto w-full' : 
+                            homeAmbientes.length === 2 ? 'md:grid-cols-2 max-w-5xl mx-auto w-full' : 
+                            'md:grid-cols-3'
+                        }`}>
+                            {homeAmbientes.map((card) => {
+                                const master = MASTER_AMBIENTES.find(m => m.id === card.ambienteId);
+                                if (!master) return null;
 
-                            const ambItems = items.filter(item => item.ambiente === card.ambienteId);
-                            const total = ambItems.length;
-                            const comp = ambItems.filter(item => item.adquirido).length;
-                            const perc = total > 0 ? Math.round((comp / total) * 100) : 0;
-                            
-                            return (
-                                <div 
-                                    key={card.id} 
-                                    className={`card-pop bg-gradient-to-br ${master.color.split(' ')[0]} ${master.color.split(' ')[1]} ${master.color.split(' ')[2]} p-8 hover:scale-[1.03] cursor-pointer group relative overflow-hidden`} 
-                                    onClick={() => router.push(`/ambientes/${encodeURIComponent(card.ambienteId)}`)}
+                                const ambItems = items.filter(item => item.ambiente === card.ambienteId);
+                                const total = ambItems.length;
+                                const comp = ambItems.filter(item => item.adquirido).length;
+                                const perc = total > 0 ? Math.round((comp / total) * 100) : 0;
+                                
+                                return (
+                                    <div 
+                                        key={card.id} 
+                                        className={`card-pop bg-gradient-to-br ${master.colors.gradient} ${master.colors.border} p-8 hover:scale-[1.03] cursor-pointer group relative overflow-hidden`} 
+                                        onClick={() => router.push(`/ambientes/${encodeURIComponent(card.ambienteId)}`)}
+                                    >
+                                        {isManageMode && (
+                                            <div className="absolute top-4 right-4 flex gap-2 z-20">
+                                                <button 
+                                                    onClick={(e) => handleEditCard(e, card)}
+                                                    className="w-8 h-8 bg-white/80 backdrop-blur-md rounded-lg flex items-center justify-center text-slate-600 hover:text-slate-900 shadow-sm border border-slate-100"
+                                                >
+                                                    <Edit2 className="w-4 h-4" />
+                                                </button>
+                                                <button 
+                                                    onClick={(e) => handleRemoveFromHome(e, card.id)}
+                                                    className="w-8 h-8 bg-red-50/80 backdrop-blur-md rounded-lg flex items-center justify-center text-red-500 hover:text-red-600 shadow-sm border border-red-100"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        )}
+                                        <div className="flex justify-between items-center mb-10">
+                                            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm">
+                                                <master.icon className={`w-5 h-5 ${master.colors.iconText}`} />
+                                            </div>
+                                            <h3 className="font-black text-slate-900 uppercase text-[10px] tracking-widest">
+                                                {master.label}
+                                            </h3>
+                                        </div>
+                                        <div className="space-y-4">
+                                            <div className="flex items-end justify-between">
+                                                <p className="text-4xl font-black text-slate-800 tracking-tighter">{perc}%</p>
+                                                <div className="flex items-center gap-1.5">
+                                                    {perc === 100 && total > 0 && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shadow-sm" />}
+                                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{comp}/{total} itens</p>
+                                                </div>
+                                            </div>
+                                            <div className="h-2 bg-white rounded-full overflow-hidden border border-slate-50">
+                                                <div 
+                                                    className="h-full bg-slate-900 rounded-full transition-all duration-700"
+                                                    style={{ width: `${perc}%` }}
+                                                ></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )
+                            })}
+
+                            {/* Card para Adicionar Novo Ambiente à Home */}
+                            {isManageMode && homeAmbientes.length < MASTER_AMBIENTES.length && (
+                                <button 
+                                    onClick={() => {
+                                        setEditingCard(undefined);
+                                        setIsAmbienteFormOpen(true);
+                                    }}
+                                    className="card-pop bg-slate-50 border-dashed border-slate-200 p-8 flex flex-col items-center justify-center gap-4 group hover:bg-slate-100 transition-all min-h-[220px]"
                                 >
-                                    {isManageMode && (
-                                        <div className="absolute top-4 right-4 flex gap-2 z-20">
-                                            <button 
-                                                onClick={(e) => handleEditCard(e, card)}
-                                                className="w-8 h-8 bg-white/80 backdrop-blur-md rounded-lg flex items-center justify-center text-slate-600 hover:text-slate-900 shadow-sm border border-slate-100"
-                                            >
-                                                <Edit2 className="w-4 h-4" />
-                                            </button>
-                                            <button 
-                                                onClick={(e) => handleRemoveFromHome(e, card.id)}
-                                                className="w-8 h-8 bg-red-50/80 backdrop-blur-md rounded-lg flex items-center justify-center text-red-500 hover:text-red-600 shadow-sm border border-red-100"
-                                            >
-                                                <Trash2 className="w-4 h-4" />
-                                            </button>
-                                        </div>
-                                    )}
-                                    <div className="flex justify-between items-center mb-10">
-                                        <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm">
-                                            <master.icon className={`w-5 h-5 ${master.color.split(' ')[3]}`} />
-                                        </div>
-                                        <h3 className="font-black text-slate-900 uppercase text-[10px] tracking-widest">
-                                            {master.label}
-                                        </h3>
+                                    <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-slate-300 group-hover:text-slate-900 transition-all shadow-sm">
+                                        <Plus className="w-6 h-6" strokeWidth={3} />
                                     </div>
-                                    <div className="space-y-4">
-                                        <div className="flex items-end justify-between">
-                                            <p className="text-4xl font-black text-slate-800 tracking-tighter">{perc}%</p>
-                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{comp}/{total} itens</p>
-                                        </div>
-                                        <div className="h-2 bg-white rounded-full overflow-hidden border border-slate-50">
-                                            <div 
-                                                className="h-full bg-slate-900 rounded-full transition-all duration-700"
-                                                style={{ width: `${perc}%` }}
-                                            ></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            )
-                        })}
-
-                        {/* Card para Adicionar Novo Ambiente à Home */}
-                        {isManageMode && homeAmbientes.length < MASTER_AMBIENTES.length && (
-                            <button 
-                                onClick={() => {
-                                    setEditingCard(undefined);
-                                    setIsAmbienteFormOpen(true);
-                                }}
-                                className="card-pop bg-slate-50 border-dashed border-slate-200 p-8 flex flex-col items-center justify-center gap-4 group hover:bg-slate-100 transition-all min-h-[220px]"
-                            >
-                                <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-slate-300 group-hover:text-slate-900 transition-all shadow-sm">
-                                    <Plus className="w-6 h-6" strokeWidth={3} />
-                                </div>
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest group-hover:text-slate-900 transition-all">Adicionar Card</span>
-                            </button>
-                        )}
-                    </div>
+                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest group-hover:text-slate-900 transition-all">Adicionar Card</span>
+                                </button>
+                            )}
+                        </div>
+                    )}
                 </div>
 
                 {/* --- FAB MOBILE --- */}
                 <button 
                     onClick={() => setIsFormOpen(true)}
-                    className="md:hidden fixed bottom-32 right-8 w-20 h-20 bg-slate-900 text-white rounded-[32px] shadow-2xl flex items-center justify-center active:scale-75 transition-all z-[110] border-4 border-white shadow-slate-900/30"
+                    className="md:hidden fixed fab-safe-bottom right-8 w-20 h-20 bg-slate-900 text-white rounded-[32px] shadow-2xl flex items-center justify-center active:scale-75 transition-all z-[110] border-4 border-white shadow-slate-900/30"
+                    aria-label="Adicionar novo item"
                 >
                     <Plus className="w-10 h-10" strokeWidth={3} />
                 </button>
@@ -298,6 +372,20 @@ export default function DashboardPage() {
                         initialData={editingCard}
                     />
                 )}
+
+                <ConfirmDialog
+                    isOpen={showRemoveConfirm}
+                    title="Remover card"
+                    message="Deseja remover este card da Home? O cômodo continuará existindo na seção de Cômodos."
+                    confirmLabel="Remover"
+                    cancelLabel="Cancelar"
+                    variant="danger"
+                    onConfirm={confirmRemove}
+                    onCancel={() => {
+                        setShowRemoveConfirm(false);
+                        setCardToRemove(null);
+                    }}
+                />
             </div>
         </AppLayout>
     );
