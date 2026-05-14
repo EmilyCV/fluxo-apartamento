@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @theme {
   /* Arredondamentos Extra Grandes (estilo iOS/Premium) */
@@ -6,17 +6,17 @@
   --radius-5xl: 40px;
 
   /* Cores Fixas do Design System Apê 2026 */
-  --color-brand-pink: #FBCFE8;
-  --color-brand-blue: #BAE6FD;
-  --color-brand-green: #BBF7D0;
-  
-  --color-brand-pink-light: #FDF2F8;
-  --color-brand-blue-light: #F0F9FF;
-  --color-brand-green-light: #F0FDF4;
+  --color-brand-pink: #fbcfe8;
+  --color-brand-blue: #bae6fd;
+  --color-brand-green: #bbf7d0;
 
-  --color-brand-pink-dark: #BE185D;
-  --color-brand-blue-dark: #0369A1;
-  --color-brand-green-dark: #15803D;
+  --color-brand-pink-light: #fdf2f8;
+  --color-brand-blue-light: #f0f9ff;
+  --color-brand-green-light: #f0fdf4;
+
+  --color-brand-pink-dark: #be185d;
+  --color-brand-blue-dark: #0369a1;
+  --color-brand-green-dark: #15803d;
 
   /* Sombras Profundas (estilo Chá Revelação) */
   --shadow-premium: 0 20px 40px -10px rgba(0, 0, 0, 0.05);
@@ -42,7 +42,7 @@
   }
 
   :focus-visible {
-    outline: 2px solid #FBCFE8;
+    outline: 2px solid #fbcfe8;
     outline-offset: 2px;
     border-radius: 4px;
   }
@@ -69,8 +69,13 @@
   }
 
   /* Scrollbar invisível */
-  .no-scrollbar::-webkit-scrollbar { display: none; }
-  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
 }
 
 @layer utilities {
@@ -81,28 +86,46 @@
 
 /* Animação suave de entrada */
 @keyframes fadeInSlideUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes fadeInScale {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 @keyframes fadeInRight {
-  from { opacity: 0; transform: translateX(-10px); }
-  to { opacity: 1; transform: translateX(0); }
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 @keyframes fadeInUp {
-  from { 
-    opacity: 0; 
-    transform: translateY(10px) scale(0.98); 
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
   }
-  to { 
-    opacity: 1; 
-    transform: translateY(0) scale(1); 
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
 

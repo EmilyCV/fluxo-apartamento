@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Plus, Send } from 'lucide-react';
 import { Ambiente } from '../types';
-import { CurrencyInput } from '@/shared/components/CurrencyInput';
+import { CurrencyInput } from '@/components/CurrencyInput';
 
 const AMBIENTES_RAPIDOS: { label: string; value: Ambiente }[] = [
   { label: 'Cozinha', value: '1. Cozinha' },
@@ -17,24 +17,24 @@ interface QuickAddProps {
 }
 
 export function QuickAdd({ onAdd }: QuickAddProps) {
-  const [nome, setNome] = useState('');
-  const [ambiente, setAmbiente] = useState<Ambiente>('7. Gerais');
-  const [valor, setValor] = useState(0);
-  const [quantidade, setQuantidade] = useState(1);
+  const [itemName, setItemName] = useState('');
+  const [selectedAmbiente, setSelectedAmbiente] = useState<Ambiente>('7. Gerais');
+  const [unitPrice, setUnitPrice] = useState(0);
+  const [itemQuantity, setItemQuantity] = useState(1);
   const [loading, setLoading] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
 
-  const valorTotal = valor * quantidade;
+  const totalPrice = unitPrice * itemQuantity;
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!nome.trim()) return;
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!itemName.trim()) return;
     setLoading(true);
     try {
-      await onAdd(nome.trim(), ambiente, valor, quantidade);
-      setNome('');
-      setValor(0);
-      setQuantidade(1);
+      await onAdd(itemName.trim(), selectedAmbiente, unitPrice, itemQuantity);
+      setItemName('');
+      setUnitPrice(0);
+      setItemQuantity(1);
       setIsExpanded(false);
     } catch {
       // Silencia — o form completo tem tratamento de erro adequado
@@ -43,8 +43,8 @@ export function QuickAdd({ onAdd }: QuickAddProps) {
     }
   };
 
-  const formatCurrency = (val: number) => 
-    new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
+  const formatCurrencyValue = (amount: number) =>
+    new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(amount);
 
   return (
     <div className="bg-white rounded-[28px] border border-slate-100 shadow-sm overflow-hidden transition-all">
@@ -57,18 +57,18 @@ export function QuickAdd({ onAdd }: QuickAddProps) {
             type="text"
             placeholder="Adicionar item rapidamente..."
             className="flex-1 bg-transparent outline-none text-sm font-bold text-slate-900 placeholder:text-slate-300"
-            value={nome}
-            onChange={(e) => setNome(e.target.value)}
+            value={itemName}
+            onChange={(event) => setItemName(event.target.value)}
             onFocus={() => setIsExpanded(true)}
           />
-          
-          {quantidade > 1 && valor > 0 && (
+
+          {itemQuantity > 1 && unitPrice > 0 && (
             <span className="text-xs font-black text-slate-400 animate-fade-in shrink-0">
-              = {formatCurrency(valorTotal)}
+              = {formatCurrencyValue(totalPrice)}
             </span>
           )}
 
-          {nome.trim() && (
+          {itemName.trim() && (
             <button
               type="submit"
               disabled={loading}
@@ -87,20 +87,22 @@ export function QuickAdd({ onAdd }: QuickAddProps) {
         {isExpanded && (
           <div className="px-4 pb-4 space-y-4 border-t border-slate-50 pt-3">
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest shrink-0">Cômodo:</span>
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest shrink-0">
+                Cômodo:
+              </span>
               <div className="flex gap-2 flex-wrap">
-                {AMBIENTES_RAPIDOS.map((amb) => (
+                {AMBIENTES_RAPIDOS.map((option) => (
                   <button
-                    key={amb.value}
+                    key={option.value}
                     type="button"
-                    onClick={() => setAmbiente(amb.value)}
+                    onClick={() => setSelectedAmbiente(option.value)}
                     className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all ${
-                      ambiente === amb.value
+                      selectedAmbiente === option.value
                         ? 'bg-slate-900 text-white'
                         : 'bg-slate-50 text-slate-500 hover:bg-slate-100'
                     }`}
                   >
-                    {amb.label}
+                    {option.label}
                   </button>
                 ))}
               </div>
@@ -108,19 +110,21 @@ export function QuickAdd({ onAdd }: QuickAddProps) {
 
             <div className="flex gap-3 items-end">
               <div className="w-24 space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Qtd.</label>
-                <input 
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                  Qtd.
+                </label>
+                <input
                   type="number"
                   min="1"
                   className="w-full h-10 bg-slate-50 rounded-xl px-3 font-bold text-sm text-slate-900 outline-none focus:bg-white focus:ring-2 focus:ring-slate-100 transition-all shadow-sm"
-                  value={quantidade}
-                  onChange={(e) => setQuantidade(Math.max(1, Number(e.target.value)))}
+                  value={itemQuantity}
+                  onChange={(event) => setItemQuantity(Math.max(1, Number(event.target.value)))}
                 />
               </div>
-              <CurrencyInput 
+              <CurrencyInput
                 label="Valor unitário"
-                value={valor}
-                onChange={setValor}
+                value={unitPrice}
+                onChange={setUnitPrice}
                 className="flex-1 space-y-2"
                 inputClassName="h-10 text-sm rounded-xl px-4"
               />

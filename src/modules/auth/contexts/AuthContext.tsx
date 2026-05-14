@@ -1,133 +1,155 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState } from 'react';
-import { auth, db, googleProvider } from '@/shared/lib/firebase';
-import { signInWithPopup, signOut, onAuthStateChanged, User } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { User } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
+import { AuthService } from '../services/authService';
 
 interface AuthContextType {
-    user: User | null;
-    userName: string;
-    loading: boolean;
-    error: string | null;
-    signInWithGoogle: () => Promise<void>;
-    logout: () => Promise<void>;
-    clearError: () => void;
+  user: User | null;
+  userName: string;
+  loading: boolean;
+  error: string | null;
+  signInWithGoogle: () => Promise<void>;
+  logout: () => Promise<void>;
+  clearError: () => void;
 }
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-    const [user, setUser] = useState<User | null>(null);
-    const [userName, setUserName] = useState('');
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-    const router = useRouter();
+const MOCK_USER: User = {
+  uid: 'mock-user-id',
+  email: 'convidado@exemplo.com',
+  displayName: 'Usuário Convidado',
+  photoURL: null,
+} as User;
 
-    const clearError = () => setError(null);
+export function FirebaseAuthProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<User | null>(null);
+  const [userName, setUserName] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
-    useEffect(() => {
-        // Se estiver usando mocks, define um usuário fake e não escuta o Firebase Auth
-        if (process.env.NEXT_PUBLIC_USE_MOCKS === 'true') {
-            const mockUser = {
-                uid: 'mock-user-id',
-                email: 'convidado@exemplo.com',
-                displayName: 'Usuário Convidado',
-                photoURL: null,
-            } as User;
-            setUser(mockUser);
-            setUserName('Usuário Convidado');
-            setLoading(false);
-            return;
-        }
+  const clearError = () => setError(null);
 
-        const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-            setLoading(true);
-            if (currentUser && currentUser.email) {
-                try {
-                    const emailStr = currentUser.email.toLowerCase();
-                    const userDoc = await getDoc(doc(db, 'allowed_users', emailStr));
+  useEffect(() => {
+    // Suporte para Mocks no Desenvolvimento Local
+    if (process.env.NEXT_PUBLIC_USE_MOCKS === 'true') {
+      setUser(MOCK_USER);
+      setUserName('Usuário Convidado');
+      setLoading(false);
+      return;
+    }
 
-                    if (userDoc.exists()) {
-                        setUser(currentUser);
-                        setUserName(userDoc.data().name || currentUser.displayName || 'Usuária');
-                    } else {
-                        await signOut(auth);
-                        setUser(null);
-                        setError('Acesso negado. E-mail não autorizado para este projeto.');
-                    }
-                } catch (err) {
-                    console.error("Erro ao validar acesso:", err);
-                    await signOut(auth);
-                    setUser(null);
-                    setError('Erro ao validar permissões de acesso.');
-                }
-            } else {
-                setUser(null);
-                setUserName('');
-            }
-            setLoading(false);
-        });
-        return unsubscribe;
-    }, []);
+    const unsubscribe = AuthService.subscribeToAuthState(async (currentUser) => {
+      setLoading(true);
+      try {
+        if (currentUser?.email) {
+          const { isAllowed, data } = await AuthService.checkUserPermission(currentUser.email);
 
-    const signInWithGoogle = async () => {
-        if (process.env.NEXT_PUBLIC_USE_MOCKS === 'true') {
-            const mockUser = {
-                uid: 'mock-user-id',
-                email: 'convidado@exemplo.com',
-                displayName: 'Usuário Convidado',
-                photoURL: null,
-            } as User;
-            setUser(mockUser);
-            setUserName('Usuário Convidado');
-            router.push('/dashboard');
-            return;
-        }
-        try {
-            setError(null);
-            const result = await signInWithPopup(auth, googleProvider);
-            const email = result.user.email?.toLowerCase();
-
-            if (!email) {
-                await signOut(auth);
-                throw new Error('E-mail não fornecido pelo Google.');
-            }
-
-            const userDoc = await getDoc(doc(db, 'allowed_users', email));
-
-            if (!userDoc.exists()) {
-                await signOut(auth);
-                setError('Acesso negado. E-mail não autorizado para este projeto.');
-                return;
-            }
-
-            router.push('/dashboard');
-        } catch (err: any) {
-            console.error('Erro de login:', err);
-            if (err.code !== 'auth/popup-closed-by-user') {
-                setError(err.message || 'Falha na autenticação.');
-            }
-        }
-    };
-
-    const logout = async () => {
-        if (process.env.NEXT_PUBLIC_USE_MOCKS === 'true') {
+          if (isAllowed) {
+            setUser(currentUser);
+            setUserName(data?.name || currentUser.displayName || 'Usuária');
+          } else {
+            // Se o e-mail não estiver na whitelist, desloga automaticamente
+            await AuthService.logout();
             setUser(null);
-            setUserName('');
-            router.push('/login');
-            return;
+            setError('Acesso negado. E-mail não autorizado para este projeto.');
+          }
+        } else {
+          setUser(null);
+          setUserName('');
         }
-        await signOut(auth);
-        router.push('/login');
-    };
+      } catch (err) {
+        console.error('Erro ao validar sessão do usuário:', err);
+        setError('Ocorreu um erro ao validar sua sessão.');
+      } finally {
+        setLoading(false);
+      }
+    });
 
-    return (
-        <AuthContext.Provider value={{ user, userName, loading, error, signInWithGoogle, logout, clearError }}>
-            {children}
-        </AuthContext.Provider>
-    );
+    return () => unsubscribe();
+  }, []);
+
+  const signInWithGoogle = async () => {
+    if (process.env.NEXT_PUBLIC_USE_MOCKS === 'true') {
+      setUser(MOCK_USER);
+      setUserName('Usuário Convidado');
+      router.push('/dashboard');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const authResult = await AuthService.signInWithGoogle();
+      const userEmail = authResult.user.email;
+
+      if (!userEmail) {
+        await AuthService.logout();
+        throw new Error('E-mail não fornecido pelo Google.');
+      }
+
+      const { isAllowed } = await AuthService.checkUserPermission(userEmail);
+
+      if (!isAllowed) {
+        await AuthService.logout();
+        setError('Acesso negado. E-mail não autorizado para este projeto.');
+        return;
+      }
+
+      router.push('/dashboard');
+    } catch (err: unknown) {
+      console.error('Erro durante o login com Google:', err);
+      const authError = err as { code?: string; message?: string };
+      
+      if (authError.code !== 'auth/popup-closed-by-user') {
+        setError(authError.message || 'Falha na autenticação com Google.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const logout = async () => {
+    try {
+      if (process.env.NEXT_PUBLIC_USE_MOCKS !== 'true') {
+        await AuthService.logout();
+      }
+      setUser(null);
+      setUserName('');
+      router.push('/login');
+    } catch (err) {
+      console.error('Erro ao encerrar sessão:', err);
+    }
+  };
+
+  return (
+    <AuthContext.Provider
+      value={{
+        user,
+        userName,
+        loading,
+        error,
+        signInWithGoogle,
+        logout,
+        clearError,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
-export const useAuth = () => useContext(AuthContext);
+export const useFirebaseAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useFirebaseAuth deve ser usado dentro de um FirebaseAuthProvider');
+  }
+  return context;
+};
+
+// Alias para compatibilidade se necessário
+export const useAuth = useFirebaseAuth;
