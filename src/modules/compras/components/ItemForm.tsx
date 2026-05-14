@@ -43,6 +43,7 @@ interface ItemFormProps {
     onSave: (item: Omit<CompraItem, "id" | "createdAt" | "updatedAt">, id?: string) => Promise<void>;
     onClose: () => void;
     initialData?: CompraItem;
+    defaultAmbiente?: Ambiente;
 }
 
 const AMBIENTES_OPTIONS: SelectOption[] = [
@@ -82,7 +83,7 @@ const SUB_CATEGORIAS: Record<Categoria, SubCategoria[]> = {
 
 const PRIORIDADES: Prioridade[] = ["Comprar agora", "Quando der", "Pode esperar", "Aguardando projeto", "Adquirido"];
 
-export function ItemForm({ onSave, onClose, initialData }: ItemFormProps) {
+export function ItemForm({ onSave, onClose, initialData, defaultAmbiente }: ItemFormProps) {
     const initialPrioridade = initialData?.adquirido ? "Adquirido" : initialData?.prioridade || PRIORIDADES[0];
     const initialAdquirido = initialPrioridade === "Adquirido" || (initialData?.adquirido ?? false);
 
@@ -91,7 +92,7 @@ export function ItemForm({ onSave, onClose, initialData }: ItemFormProps) {
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [formData, setFormData] = useState({
         nome: initialData?.nome || '',
-        ambiente: initialData?.ambiente || AMBIENTES[0],
+        ambiente: initialData?.ambiente || defaultAmbiente || AMBIENTES[0],
         categoria: initialData?.categoria || CATEGORIAS[0],
         subCategoria: initialData?.subCategoria || SUB_CATEGORIAS[CATEGORIAS[0]][0],
         prioridade: initialPrioridade,
