@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { AppLayout } from '@/shared/components/AppLayout';
 import { comprasService } from '@/modules/compras/services/comprasService';
@@ -12,10 +12,16 @@ import {
     Plus,
     LayoutGrid,
     Sparkles,
-    ShoppingCart
+    ShoppingCart,
+    SortAsc,
+    Clock,
+    Zap,
+    ArrowUpNarrowWide
 } from 'lucide-react';
 import { hapticFeedback } from '@/shared/utils/haptics';
 import { cn } from '@/shared/utils/cn';
+
+type SortOrder = 'recentes' | 'prioridade' | 'alfabetico' | 'preco';
 
 export default function AmbienteDetailPage() {
     const params = useParams();
@@ -27,7 +33,9 @@ export default function AmbienteDetailPage() {
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [itemToEdit, setItemToEdit] = useState<CompraItem | undefined>(undefined);
     
-    const [ordenacao, setOrdenacao] = useState<'recentes' | 'preco-asc' | 'preco-desc' | 'prioridade'>('recentes');
+    const [ordenacao, setOrdenacao] = useState<SortOrder>('recentes');
+    const [alfabeticoAsc, setAlfabeticoAsc] = useState(true);
+    const [precoAsc, setPrecoAsc] = useState(true);
 
     useEffect(() => {
         const unsubscribe = comprasService.subscribeToItems((data) => {
@@ -48,15 +56,50 @@ export default function AmbienteDetailPage() {
         setItemToEdit(undefined);
     };
 
-    const sortedItems = [...items].sort((a, b) => {
-        if (ordenacao === 'preco-asc') return (a.valorTotalAproximado || 0) - (b.valorTotalAproximado || 0);
-        if (ordenacao === 'preco-desc') return (b.valorTotalAproximado || 0) - (a.valorTotalAproximado || 0);
+    const handleAlfabetico = () => {
+        if (ordenacao === 'alfabetico') {
+            setAlfabeticoAsc(prev => !prev);
+        } else {
+            setOrdenacao('alfabetico');
+            setAlfabeticoAsc(true);
+        }
+    };
+
+    const handlePreco = () => {
+        if (ordenacao === 'preco') {
+            setPrecoAsc(prev => !prev);
+        } else {
+            setOrdenacao('preco');
+            setPrecoAsc(true);
+        }
+    };
+
+    const sortedItems = useMemo(() => {
+        const list = [...items];
+        
+        if (ordenacao === 'alfabetico') {
+            return list.sort((a, b) => 
+                alfabeticoAsc 
+                    ? a.nome.localeCompare(b.nome)
+                    : b.nome.localeCompare(a.nome)
+            );
+        }
+
+        if (ordenacao === 'preco') {
+            return list.sort((a, b) => 
+                precoAsc
+                    ? (a.valorTotalAproximado || 0) - (b.valorTotalAproximado || 0)
+                    : (b.valorTotalAproximado || 0) - (a.valorTotalAproximado || 0)
+            );
+        }
+        
         if (ordenacao === 'prioridade') {
             const order = ['Comprar agora', 'Quando der', 'Pode esperar', 'Aguardando projeto', 'Adquirido'];
-            return order.indexOf(a.prioridade) - order.indexOf(b.prioridade);
+            return list.sort((a, b) => order.indexOf(a.prioridade) - order.indexOf(b.prioridade));
         }
-        return 0; // recentes — já vem ordenado do Firestore
-    });
+
+        return list; // 'recentes'
+    }, [items, ordenacao, alfabeticoAsc, precoAsc]);
 
     return (
         <AppLayout>
@@ -96,24 +139,58 @@ export default function AmbienteDetailPage() {
                     </div>
 
                     {items.length > 1 && (
-                        <div className="flex bg-white rounded-2xl p-1 gap-1 border border-slate-100 w-fit shadow-sm" role="group" aria-label="Ordenação de itens">
-                            {[
-                                { value: 'recentes', label: 'Recentes' },
-                                { value: 'prioridade', label: 'Prioridade' },
-                                { value: 'preco-asc', label: 'Menor Preço' },
-                                { value: 'preco-desc', label: 'Maior Preço' },
-                            ].map((opt) => (
-                                <button
-                                    key={opt.value}
-                                    onClick={() => setOrdenacao(opt.value as any)}
-                                    aria-pressed={ordenacao === opt.value}
-                                    className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                                        ordenacao === opt.value ? 'bg-slate-900 text-white' : 'text-slate-400 hover:text-slate-600'
-                                    }`}
-                                >
-                                    {opt.label}
-                                </button>
-                            ))}
+                        <div className="flex bg-slate-100 p-1 rounded-2xl w-fit shadow-sm border border-slate-200/50" role="group" aria-label="Ordenação de itens">
+                            <button
+                                onClick={() => setOrdenacao('recentes')}
+                                className={cn(
+                                    "flex items-center gap-2 h-10 px-4 rounded-[14px] text-[10px] font-black uppercase tracking-widest transition-all duration-300",
+                                    ordenacao === 'recentes' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-600'
+                                )}
+                            >
+                                <Clock className="w-3.5 h-3.5" />
+                                <span className={cn("hidden sm:inline", ordenacao === 'recentes' ? "inline" : "hidden")}>Recentes</span>
+                            </button>
+
+                            <button
+                                onClick={() => setOrdenacao('prioridade')}
+                                className={cn(
+                                    "flex items-center gap-2 h-10 px-4 rounded-[14px] text-[10px] font-black uppercase tracking-widest transition-all duration-300",
+                                    ordenacao === 'prioridade' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-600'
+                                )}
+                            >
+                                <Zap className="w-3.5 h-3.5" />
+                                <span className={cn("hidden sm:inline", ordenacao === 'prioridade' ? "inline" : "hidden")}>Prioridade</span>
+                            </button>
+
+                            <button
+                                onClick={handleAlfabetico}
+                                className={cn(
+                                    "flex items-center gap-2 h-10 px-4 rounded-[14px] text-[10px] font-black uppercase tracking-widest transition-all duration-300",
+                                    ordenacao === 'alfabetico' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-600'
+                                )}
+                                title={alfabeticoAsc ? 'Ordenar Z-A' : 'Ordenar A-Z'}
+                            >
+                                <SortAsc className={cn(
+                                    "w-3.5 h-3.5 transition-transform duration-300",
+                                    ordenacao === 'alfabetico' && !alfabeticoAsc && "rotate-180"
+                                )} />
+                                <span className={cn("hidden sm:inline", ordenacao === 'alfabetico' ? "inline" : "hidden")}>A-Z</span>
+                            </button>
+
+                            <button
+                                onClick={handlePreco}
+                                className={cn(
+                                    "flex items-center gap-2 h-10 px-4 rounded-[14px] text-[10px] font-black uppercase tracking-widest transition-all duration-300",
+                                    ordenacao === 'preco' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-600'
+                                )}
+                                title={precoAsc ? 'Preço decrescente' : 'Preço crescente'}
+                            >
+                                <ArrowUpNarrowWide className={cn(
+                                    "w-3.5 h-3.5 transition-transform duration-300",
+                                    ordenacao === 'preco' && !precoAsc && "rotate-180"
+                                )} />
+                                <span className={cn("hidden sm:inline", ordenacao === 'preco' ? "inline" : "hidden")}>Preço</span>
+                            </button>
                         </div>
                     )}
                 </header>
@@ -123,7 +200,6 @@ export default function AmbienteDetailPage() {
                         {[1, 2, 3, 4].map(i => <div key={i} className="h-48 bg-white rounded-[40px] animate-pulse" />)}
                     </div>
                 ) : items.length === 0 ? (
-                    /* ESTADO VAZIO DO AMBIENTE */
                     <div className="text-center py-32 bg-white rounded-[48px] border-2 border-dashed border-slate-100 flex flex-col items-center animate-pop shadow-sm">
                         <div className="w-24 h-24 bg-brand-blue-light rounded-[32px] flex items-center justify-center mb-6 shadow-sm border border-brand-blue/20">
                             <LayoutGrid className="w-10 h-10 text-brand-blue-dark" aria-hidden="true" />
@@ -147,9 +223,10 @@ export default function AmbienteDetailPage() {
                                 tabIndex={0}
                                 onKeyDown={(e) => e.key === 'Enter' && (setItemToEdit(item), setIsFormOpen(true))}
                                 onClick={() => { setItemToEdit(item); setIsFormOpen(true); }}
-                                className={`card-pop group flex flex-col p-10 gap-10 cursor-pointer relative overflow-hidden animate-pop border-slate-100/60 ${
+                                className={cn(
+                                    "card-pop group flex flex-col p-10 gap-10 cursor-pointer relative overflow-hidden animate-pop border-slate-100/60",
                                     item.adquirido ? 'bg-slate-50/50 opacity-60 grayscale-[0.5]' : 'bg-white'
-                                }`}
+                                )}
                                 style={{ animationDelay: `${i * 50}ms` }}
                             >
                                 {item.adquirido && (
@@ -198,13 +275,14 @@ export default function AmbienteDetailPage() {
                                             hapticFeedback('success');
                                             comprasService.toggleAdquirido(item.id, item.adquirido);
                                         }}
-                                        className={`w-16 h-16 rounded-[24px] flex items-center justify-center transition-all shadow-sm active:scale-90 ${
+                                        className={cn(
+                                            "w-16 h-16 rounded-[24px] flex items-center justify-center transition-all shadow-sm active:scale-90",
                                             item.adquirido 
                                             ? 'bg-brand-green text-white shadow-brand-green/20' 
                                             : 'bg-slate-50 text-slate-200 hover:bg-brand-green-light hover:text-brand-green-dark hover:scale-110'
-                                        }`}
+                                        )}
                                     >
-                                        <CheckCircle2 className={`w-8 h-8 ${item.adquirido ? 'stroke-[3px]' : 'stroke-[2px]'}`} />
+                                        <CheckCircle2 className={cn("w-8 h-8", item.adquirido ? 'stroke-[3px]' : 'stroke-[2px]')} />
                                     </button>
                                 </div>
                             </div>
@@ -212,7 +290,6 @@ export default function AmbienteDetailPage() {
                     </div>
                 )}
 
-                {/* FAB MOBILE CONSISTENTE */}
                 <button 
                     onClick={() => { setItemToEdit(undefined); setIsFormOpen(true); }}
                     className="md:hidden fixed fab-safe-bottom right-8 w-20 h-20 bg-slate-900 text-white rounded-[32px] shadow-2xl flex items-center justify-center active:scale-75 transition-all z-[110] border-4 border-white shadow-slate-900/30"
