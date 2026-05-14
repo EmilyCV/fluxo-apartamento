@@ -204,16 +204,16 @@ export default function ComprasPage() {
         setItemToEdit(undefined);
     };
 
-    const handleQuickAdd = async (nome: string, ambiente: Ambiente) => {
+    const handleQuickAdd = async (nome: string, ambiente: Ambiente, valor: number, quantidade: number) => {
         await comprasService.addItem({
             nome,
             ambiente,
             categoria: '3. Utensílios',  // default mais neutro
             subCategoria: 'Utensílios gerais',
             prioridade: 'Quando der',
-            quantidade: 1,
-            valorUnitario: 0,
-            valorTotalAproximado: 0,
+            quantidade: quantidade,
+            valorUnitario: valor,
+            valorTotalAproximado: quantidade * valor,
             adquirido: false,
         });
     };
