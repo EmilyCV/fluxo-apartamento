@@ -2,6 +2,15 @@ import { HomeAmbiente } from "../types";
 
 const STORAGE_KEY = "mock_home_ambientes";
 
+// Adicione no topo do arquivo (fora do objeto service)
+type Listener = (items: HomeAmbiente[]) => void;
+const listeners = new Set<Listener>();
+
+const notify = () => {
+    const cards = getStoredCards();
+    listeners.forEach((cb) => cb(cards));
+};
+
 const getStoredCards = (): HomeAmbiente[] => {
     if (typeof window === "undefined") return [];
     const stored = localStorage.getItem(STORAGE_KEY);
@@ -25,13 +34,8 @@ const saveCards = (cards: HomeAmbiente[]) => {
 export const mockHomeAmbientesService = {
     subscribeToHomeAmbientes: (callback: (items: HomeAmbiente[]) => void) => {
         callback(getStoredCards());
-        
-        const handleStorageChange = () => {
-            callback(getStoredCards());
-        };
-
-        window.addEventListener('storage', handleStorageChange);
-        return () => window.removeEventListener('storage', handleStorageChange);
+        listeners.add(callback);
+        return () => listeners.delete(callback);
     },
 
     addToHome: async (ambienteId: string, ordem: number) => {
@@ -45,7 +49,7 @@ export const mockHomeAmbientesService = {
         };
         const updatedCards = [...cards, newCard].sort((a, b) => a.ordem - b.ordem);
         saveCards(updatedCards);
-        window.dispatchEvent(new Event('storage'));
+        notify();
         return newCard.id;
     },
 
@@ -57,14 +61,14 @@ export const mockHomeAmbientesService = {
                 : card
         ).sort((a, b) => a.ordem - b.ordem);
         saveCards(updatedCards);
-        window.dispatchEvent(new Event('storage'));
+        notify();
     },
 
     removeFromHome: async (id: string) => {
         const cards = getStoredCards();
         const updatedCards = cards.filter(card => card.id !== id);
         saveCards(updatedCards);
-        window.dispatchEvent(new Event('storage'));
+        notify();
     },
 
     seedInitialHomeAmbientes: async () => {

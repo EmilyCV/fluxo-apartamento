@@ -9,13 +9,15 @@ interface CurrencyInputProps {
     label?: string;
     placeholder?: string;
     className?: string;
+    inputClassName?: string;
 }
 
 export function CurrencyInput({ 
     value, 
     onChange, 
     label, 
-    className 
+    className,
+    inputClassName
 }: CurrencyInputProps) {
     // Format number to BRL string
     const formatToBRL = useCallback((val: number) => {
@@ -76,7 +78,8 @@ export function CurrencyInput({
                     inputMode="numeric"
                     className={cn(
                         "w-full h-16 bg-slate-50 border-2 border-transparent rounded-[24px] px-6 text-lg font-bold text-slate-900 outline-none shadow-sm transition-all",
-                        "focus:border-brand-green focus:bg-white focus:shadow-xl focus:shadow-brand-green/10"
+                        "focus:border-brand-green focus:bg-white focus:shadow-xl focus:shadow-brand-green/10",
+                        inputClassName
                     )}
                     value={displayValue}
                     onChange={handleChange}

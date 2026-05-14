@@ -8,7 +8,8 @@ import {
     onSnapshot, 
     orderBy,
     serverTimestamp,
-    getDocs
+    getDocs,
+    limit
 } from "firebase/firestore";
 import { db } from "@/shared/lib/firebase";
 import { HomeAmbiente } from "../types";
@@ -88,7 +89,13 @@ const realHomeAmbientesService = {
      * Inicializa com os cômodos padrão: Cozinha, Sala, Banheiro
      */
     seedInitialHomeAmbientes: async () => {
-        const q = query(collection(db, COLLECTION_NAME));
+        // Não repete o seed na mesma sessão
+        if (typeof window !== 'undefined') {
+            if (sessionStorage.getItem('home_seeded') === 'true') return;
+        }
+
+        // Usa limit(1) em vez de getDocs completo — muito mais barato
+        const q = query(collection(db, COLLECTION_NAME), limit(1));
         const snapshot = await getDocs(q);
         
         if (snapshot.empty) {
@@ -105,6 +112,10 @@ const realHomeAmbientesService = {
                     updatedAt: serverTimestamp()
                 });
             }
+        }
+
+        if (typeof window !== 'undefined') {
+            sessionStorage.setItem('home_seeded', 'true');
         }
     }
 };

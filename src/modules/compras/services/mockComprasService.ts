@@ -3,6 +3,30 @@ import { generateMockItems } from "./mockData";
 
 const STORAGE_KEY = "mock_compras_items";
 
+const normalizeAcquisitionState = <T extends Partial<CompraItem>>(data: T): T => {
+    const normalized = { ...data };
+
+    if (normalized.prioridade === "Adquirido" || normalized.adquirido === true) {
+        normalized.prioridade = "Adquirido";
+        normalized.adquirido = true;
+    }
+
+    return normalized;
+};
+
+const getToggledPrioridade = (adquirido: boolean): CompraItem["prioridade"] => (
+    adquirido ? "Adquirido" : "Quando der"
+);
+
+// Adicione no topo do arquivo (fora do objeto service)
+type Listener = (items: CompraItem[]) => void;
+const listeners = new Set<Listener>();
+
+const notify = () => {
+    const items = getStoredItems();
+    listeners.forEach((cb) => cb(items));
+};
+
 // Inicializa o localStorage se estiver vazio
 const getStoredItems = (): CompraItem[] => {
     if (typeof window === "undefined") return [];
@@ -26,26 +50,15 @@ const saveItems = (items: CompraItem[]) => {
 export const mockComprasService = {
     subscribeToItems: (callback: (items: CompraItem[]) => void) => {
         // Simula o onSnapshot do Firebase
-        const items = getStoredItems();
-        callback(items);
-        
-        // No mock, não temos um listener real de banco, 
-        // mas as funções de mutação abaixo vão disparar eventos se necessário 
-        // ou o usuário pode simplesmente recarregar.
-        // Para uma melhor experiência, poderíamos usar um EventEmitter.
-        
-        const handleStorageChange = () => {
-            callback(getStoredItems());
-        };
-
-        window.addEventListener('storage', handleStorageChange);
-        return () => window.removeEventListener('storage', handleStorageChange);
+        callback(getStoredItems());  // entrega dados imediatamente
+        listeners.add(callback);     // registra para updates futuros
+        return () => listeners.delete(callback);  // unsubscribe
     },
 
     addItem: async (item: Omit<CompraItem, "id" | "createdAt" | "updatedAt">) => {
         const items = getStoredItems();
         const newItem: CompraItem = {
-            ...item,
+            ...normalizeAcquisitionState(item),
             id: `mock-${Date.now()}`,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
@@ -53,38 +66,43 @@ export const mockComprasService = {
         const updatedItems = [newItem, ...items];
         saveItems(updatedItems);
         
-        // Dispara evento local para atualizar a UI na mesma aba
-        window.dispatchEvent(new Event('storage'));
+        notify();
         
         return newItem.id;
     },
 
     toggleAdquirido: async (id: string, currentStatus: boolean) => {
         const items = getStoredItems();
+        const nextStatus = !currentStatus;
         const updatedItems = items.map(item => 
             item.id === id 
-                ? { ...item, adquirido: !currentStatus, updatedAt: new Date().toISOString() } 
+                ? {
+                    ...item,
+                    adquirido: nextStatus,
+                    prioridade: getToggledPrioridade(nextStatus),
+                    updatedAt: new Date().toISOString()
+                }
                 : item
         );
         saveItems(updatedItems);
-        window.dispatchEvent(new Event('storage'));
+        notify();
     },
 
     updateItem: async (id: string, data: Partial<CompraItem>) => {
         const items = getStoredItems();
         const updatedItems = items.map(item => 
             item.id === id 
-                ? { ...item, ...data, updatedAt: new Date().toISOString() } 
+                ? { ...item, ...normalizeAcquisitionState(data), updatedAt: new Date().toISOString() }
                 : item
         );
         saveItems(updatedItems);
-        window.dispatchEvent(new Event('storage'));
+        notify();
     },
 
     deleteItem: async (id: string) => {
         const items = getStoredItems();
         const updatedItems = items.filter(item => item.id !== id);
         saveItems(updatedItems);
-        window.dispatchEvent(new Event('storage'));
+        notify();
     }
 };
