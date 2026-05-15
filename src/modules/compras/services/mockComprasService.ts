@@ -1,4 +1,5 @@
 import { CompraItem } from '../types';
+import { FirestoreTimestamp } from '@/types';
 import { generateMockItems } from './mockData';
 
 const STORAGE_KEY = 'mock_compras_items';
@@ -16,6 +17,15 @@ const normalizeAcquisitionState = <T extends Partial<CompraItem>>(data: T): T =>
 
 const getToggledPrioridade = (adquirido: boolean): CompraItem['prioridade'] =>
   adquirido ? 'Adquirido' : 'Quando der';
+
+// Helper robusto para converter FirestoreTimestamp | string | Date para número
+const toTimestamp = (ts: FirestoreTimestamp | undefined): number => {
+  if (!ts) return 0;
+  if (ts instanceof Date) return ts.getTime();
+  if (typeof ts === 'string') return new Date(ts).getTime();
+  if (typeof ts === 'object' && 'seconds' in ts) return ts.seconds * 1000;
+  return 0;
+};
 
 // Adicione no topo do arquivo (fora do objeto service)
 type Listener = (items: CompraItem[]) => void;
@@ -38,7 +48,7 @@ const getStoredItems = (): CompraItem[] => {
     items = JSON.parse(stored);
   }
   // Ordena por data de criação desc (mais recentes primeiro)
-  return items.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  return items.sort((a, b) => toTimestamp(b.createdAt) - toTimestamp(a.createdAt));
 };
 
 const saveItems = (items: CompraItem[]) => {
