@@ -134,7 +134,7 @@ function FilterDropdownInner<T extends string>({
 
       {isOpen && (
         <div
-          className="absolute top-full left-0 mt-3 w-64 bg-white/95 backdrop-blur-xl border border-slate-100 rounded-[24px] shadow-[0_20px_50px_rgba(0,0,0,0.15)] p-2 z-[200] animate-fade-in-up"
+          className="absolute top-full left-0 mt-3 w-64 bg-white border border-slate-100 rounded-[24px] shadow-[0_20px_50px_rgba(0,0,0,0.15)] p-2 z-[200] animate-fade-in-up"
           role="listbox"
         >
           <div className="max-h-72 overflow-y-auto no-scrollbar py-1">
@@ -289,14 +289,14 @@ export function ComprasView() {
             <div className="flex items-center gap-3 w-full lg:w-auto">
               <div className="relative flex-1 lg:w-96 group">
                 <Search
-                  className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within:text-slate-900 transition-colors"
+                  className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-200 group-focus-within:text-slate-400 transition-colors"
                   aria-hidden="true"
                 />
                 <input
                   type="text"
                   aria-label="Procurar itens"
                   placeholder="O que você está procurando?"
-                  className="w-full h-16 bg-white border border-slate-100 rounded-[28px] pl-16 pr-6 outline-none focus:border-slate-900 focus:shadow-2xl focus:shadow-slate-200/50 transition-all text-sm font-bold shadow-sm"
+                  className="w-full h-16 bg-white border border-slate-100 rounded-[28px] pl-16 pr-6 outline-none focus:border-slate-300 focus:shadow-2xl focus:shadow-slate-200/50 transition-all text-sm font-bold shadow-sm"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
