@@ -8,7 +8,8 @@
     "dev:prod": "NEXT_PUBLIC_USE_MOCKS=false next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "format": "prettier --write ."
   },
   "dependencies": {
     "clsx": "^2.1.1",
@@ -26,6 +27,8 @@
     "@types/react-dom": "^18.2.0",
     "eslint": "^9",
     "eslint-config-next": "^15.3.3",
+    "eslint-config-prettier": "^10.1.8",
+    "prettier": "^3.8.3",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

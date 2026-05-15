@@ -4,7 +4,7 @@
  */
 export function hapticFeedback(type: 'success' | 'light' | 'medium' = 'success') {
   if (typeof window === 'undefined') return;
-  
+
   // API de Vibration (Android Chrome, Firefox)
   if ('vibrate' in navigator) {
     const patterns = {
