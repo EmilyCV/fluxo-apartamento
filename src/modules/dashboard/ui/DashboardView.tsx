@@ -32,6 +32,7 @@ export function DashboardView() {
     items,
     homeAmbientes,
     loading,
+    homeAmbientesLoading,
     totalInvestido,
     totalOrcado,
     percentualProgresso,
@@ -245,7 +246,7 @@ export function DashboardView() {
           )}
 
           {/* Cards de Ambientes Dinâmicos */}
-          {loading ? (
+          {homeAmbientesLoading ? (
             <div className="md:col-span-12 grid grid-cols-1 md:grid-cols-3 gap-6 animate-pop [animation-delay:200ms]">
               {[1, 2, 3].map((skeletonIndex) => (
                 <div key={skeletonIndex} className="h-48 bg-slate-100 rounded-[32px] animate-pulse" />

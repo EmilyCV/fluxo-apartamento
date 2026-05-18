@@ -12,7 +12,6 @@ import {
   Plus,
   LayoutGrid,
   ShoppingCart,
-  SortAsc,
   Clock,
   Zap,
   ArrowUpNarrowWide,
@@ -116,7 +115,7 @@ export function AmbienteDetailView({ ambienteId }: AmbienteDetailViewProps) {
             </div>
           </div>
 
-          {items.length > 1 && (
+          {items.length > 0 && (
             <div
               className="flex bg-slate-100 p-1 rounded-2xl w-fit shadow-sm border border-slate-200/50"
               role="group"
@@ -169,7 +168,7 @@ export function AmbienteDetailView({ ambienteId }: AmbienteDetailViewProps) {
                 )}
                 title={alfabeticoAsc ? 'Ordenar Z-A' : 'Ordenar A-Z'}
               >
-                <SortAsc
+                <ArrowUpNarrowWide
                   className={cn(
                     'w-3.5 h-3.5 transition-transform duration-300',
                     ordenacao === 'alfabetico' && !alfabeticoAsc && 'rotate-180',

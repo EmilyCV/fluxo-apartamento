@@ -103,7 +103,8 @@ export function useDashboardData() {
   return {
     items,
     homeAmbientes,
-    loading: loading || homeAmbientesLoading,
+    loading,
+    homeAmbientesLoading,
     totalInvestido,
     totalOrcado,
     percentualProgresso,

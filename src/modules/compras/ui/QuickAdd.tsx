@@ -23,6 +23,7 @@ export function QuickAdd({ onAdd }: QuickAddProps) {
   const [itemQuantity, setItemQuantity] = useState(1);
   const [loading, setLoading] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [success, setSuccess] = useState(false);
 
   const totalPrice = unitPrice * itemQuantity;
 
@@ -36,6 +37,8 @@ export function QuickAdd({ onAdd }: QuickAddProps) {
       setUnitPrice(0);
       setItemQuantity(1);
       setIsExpanded(false);
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 1500);
     } catch {
       // Silencia — o form completo tem tratamento de erro adequado
     } finally {
@@ -132,6 +135,12 @@ export function QuickAdd({ onAdd }: QuickAddProps) {
           </div>
         )}
       </form>
+
+      {success && (
+        <p className="px-4 pb-4 text-xs font-bold text-brand-green-dark bg-brand-green-light animate-fade-in">
+          Item adicionado com sucesso.
+        </p>
+      )}
     </div>
   );
 }

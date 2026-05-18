@@ -154,7 +154,7 @@ export function ItemForm({ onSave, onClose, initialData, defaultAmbiente }: Item
         },
         initialData?.id,
       );
-      onClose();
+      // NÃO chamar onClose() aqui — o pai fecha via onSave
     } catch (error) {
       console.error('Erro ao salvar item:', error);
       setSaveError('Não foi possível salvar. Verifique sua conexão e tente novamente.');

@@ -32,7 +32,7 @@ export function CurrencyInput({
   // Update display when value changes externally
   useEffect(() => {
     const numericFromDisplay = Number(displayValue.replace(/\D/g, '')) / 100;
-    if (numericFromDisplay !== value) {
+    if (Math.abs(numericFromDisplay - value) > 0.001) {
       setDisplayValue(formatToBRL(value));
     }
   }, [value, formatToBRL, displayValue]);
