@@ -7,9 +7,9 @@ export default function ComprasLoading() {
           <div key={i} className="h-12 w-32 bg-slate-100 rounded-2xl animate-pulse" />
         ))}
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-10">
         {[1, 2, 3, 4, 5, 6].map((i) => (
-          <div key={i} className="h-72 bg-slate-100 rounded-[32px] animate-pulse" />
+          <div key={i} className="h-48 sm:h-72 bg-slate-100 rounded-[32px] animate-pulse" />
         ))}
       </div>
     </div>

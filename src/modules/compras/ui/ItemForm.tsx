@@ -165,7 +165,15 @@ export function ItemForm({ onSave, onClose, initialData, defaultAmbiente }: Item
 
   return (
     <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-md z-[200] flex items-end sm:items-center justify-center p-0 sm:p-4">
-      <div className="bg-white w-full max-w-[550px] h-[94dvh] sm:h-auto sm:max-h-[90dvh] rounded-t-[48px] sm:rounded-[40px] overflow-hidden flex flex-col shadow-2xl animate-pop">
+      <div
+        className="bg-white w-full max-w-[550px] h-[94dvh] sm:h-auto sm:max-h-[90dvh] rounded-t-[48px] sm:rounded-[40px] overflow-hidden flex flex-col shadow-2xl animate-pop"
+        style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+      >
+        {/* Drag handle — mobile only */}
+        <div className="md:hidden flex justify-center pt-3 pb-1">
+          <div className="w-10 h-1 bg-slate-200 rounded-full" />
+        </div>
+
         {/* Header */}
         <div className="px-10 py-8 border-b border-slate-50 flex justify-between items-center sticky top-0 bg-white/80 backdrop-blur-md z-10">
           <div className="space-y-1">
@@ -201,7 +209,7 @@ export function ItemForm({ onSave, onClose, initialData, defaultAmbiente }: Item
         {/* Body */}
         <form
           onSubmit={handleSubmit}
-          className="flex-1 overflow-y-auto px-10 py-8 space-y-8 no-scrollbar pb-32 bg-white"
+          className="flex-1 overflow-y-auto px-10 py-8 space-y-8 no-scrollbar scroll-smooth pb-40 bg-white"
         >
           <div className="space-y-3">
             <label
@@ -381,14 +389,14 @@ export function ItemForm({ onSave, onClose, initialData, defaultAmbiente }: Item
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 h-16 rounded-[24px] font-black text-[10px] uppercase tracking-[0.2em] text-slate-400 bg-slate-50 hover:bg-slate-100 active:scale-95 transition-all shadow-sm border border-white"
+              className="flex-1 h-16 rounded-[24px] font-black text-[10px] uppercase tracking-[0.2em] text-slate-400 bg-slate-50 hover:bg-slate-100 active:scale-95 transition-all shadow-sm border border-white touch-manipulation"
             >
               Cancelar
             </button>
             <button
               onClick={handleSubmit}
               disabled={loading || !formData.nome}
-              className="flex-[2] h-16 rounded-[24px] font-black text-[10px] uppercase tracking-[0.2em] text-white bg-slate-900 hover:bg-black flex items-center justify-center gap-3 active:scale-95 transition-all disabled:opacity-50 shadow-xl shadow-slate-900/10"
+              className="flex-[2] h-16 rounded-[24px] font-black text-[10px] uppercase tracking-[0.2em] text-white bg-slate-900 hover:bg-black flex items-center justify-center gap-3 active:scale-95 transition-all disabled:opacity-50 shadow-xl shadow-slate-900/10 touch-manipulation"
             >
               {loading ? (
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
