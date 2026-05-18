@@ -91,8 +91,8 @@ export function DashboardView() {
       <div className="max-w-6xl mx-auto px-6 py-10 md:px-12 space-y-12">
         {/* --- HEADER --- */}
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 animate-pop">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2 mb-2">
+          <div className="space-y-0.5">
+            <div className="flex items-center gap-2 mb-1">
               <div className="w-8 h-8 bg-brand-pink rounded-xl flex items-center justify-center text-brand-pink-dark shadow-sm">
                 <Sparkles className="w-4 h-4" />
               </div>
@@ -120,7 +120,7 @@ export function DashboardView() {
             </button>
             <button
               onClick={() => setIsFormOpen(true)}
-              className="btn-pop bg-slate-900 text-white shadow-xl shadow-slate-900/10 hover:bg-black md:w-auto px-10"
+              className="btn-pop bg-slate-900 text-white shadow-xl shadow-slate-900/10 hover:bg-black md:w-auto px-5 md:px-10 h-12 md:h-14 text-[9px] md:text-[10px]"
             >
               <Plus className="w-5 h-5" strokeWidth={3} />
               Novo Item
@@ -131,7 +131,7 @@ export function DashboardView() {
         {/* --- BENTO GRID --- */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-8">
           {/* Card Financeiro Principal */}
-          <div className="md:col-span-8 card-pop bg-gradient-to-br from-brand-blue-light to-white p-8 md:p-12 relative overflow-hidden flex flex-col justify-between min-h-[340px] animate-pop">
+          <div className="md:col-span-8 card-pop bg-gradient-to-br from-brand-blue-light to-white p-8 md:p-12 relative overflow-hidden flex flex-col justify-between min-h-[260px] md:min-h-[340px] animate-pop">
             <div className="absolute top-0 right-0 w-64 h-64 bg-brand-blue opacity-20 rounded-full -mr-20 -mt-20 blur-3xl"></div>
 
             <div className="relative z-10 flex justify-between items-start">
@@ -139,7 +139,7 @@ export function DashboardView() {
                 <p className="text-brand-blue-dark font-black text-[10px] uppercase tracking-widest">
                   Total Investido
                 </p>
-                <h2 className="text-5xl md:text-6xl font-black text-slate-900 tracking-tighter">
+                <h2 className="text-4xl md:text-6xl font-black text-slate-900 tracking-tighter">
                   {formatCurrency(totalInvestido)}
                 </h2>
               </div>
@@ -203,7 +203,7 @@ export function DashboardView() {
 
           {/* Breakdown por Categoria */}
           {items.length > 0 && (
-            <div className="md:col-span-12 card-pop p-8 md:p-10 animate-pop [animation-delay:300ms]">
+            <div className="md:col-span-12 card-pop p-5 md:p-10 animate-pop [animation-delay:300ms]">
               <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-8">
                 Investimento por Categoria
               </h2>
@@ -219,11 +219,12 @@ export function DashboardView() {
                         <span className="text-sm font-black text-slate-700">
                           {categoriaMetric.label}
                         </span>
-                        <div className="flex items-center gap-3">
-                          <span className="text-xs text-slate-400 font-bold">
-                            {formatCurrency(categoriaMetric.adquirido)} /{' '}
-                            {formatCurrency(categoriaMetric.total)}
-                          </span>
+                        <div className="flex items-center gap-2">
+                          <div className="flex flex-col items-end sm:flex-row sm:items-center gap-0.5 sm:gap-3">
+                            <span className="text-xs text-slate-400 font-bold">{formatCurrency(categoriaMetric.adquirido)}</span>
+                            <span className="hidden sm:inline text-xs text-slate-300">/</span>
+                            <span className="text-xs text-slate-300 font-bold">{formatCurrency(categoriaMetric.total)}</span>
+                          </div>
                           <span className="text-xs font-black text-slate-600 w-8 text-right">
                             {percentual}%
                           </span>
@@ -275,7 +276,7 @@ export function DashboardView() {
                   <div
                     key={homeCard.id}
                     className={cn(
-                      'card-pop bg-gradient-to-br p-8 hover:scale-[1.03] cursor-pointer group relative overflow-hidden',
+                      'card-pop bg-gradient-to-br p-5 md:p-8 hover:scale-[1.03] cursor-pointer group relative overflow-hidden',
                       masterAmbiente.colors.gradient,
                       masterAmbiente.colors.border,
                     )}
@@ -358,10 +359,15 @@ export function DashboardView() {
         {/* --- FAB MOBILE --- */}
         <button
           onClick={() => setIsFormOpen(true)}
-          className="md:hidden fixed fab-safe-bottom right-8 w-20 h-20 bg-slate-900 text-white rounded-[32px] shadow-2xl flex items-center justify-center active:scale-75 transition-all z-[110] border-4 border-white shadow-slate-900/30"
+          className="md:hidden fixed fab-safe-bottom right-6 z-[110] active:scale-95 transition-all"
           aria-label="Adicionar novo item"
         >
-          <Plus className="w-10 h-10" strokeWidth={3} />
+          <div className="flex items-center gap-2 px-6 h-16 bg-slate-900 rounded-[28px] shadow-2xl border-2 border-white/10">
+            <Plus className="w-6 h-6 text-white" strokeWidth={3} />
+            <span className="text-white text-[11px] font-black uppercase tracking-widest">
+              Adicionar
+            </span>
+          </div>
         </button>
 
         {isFormOpen && <ItemForm onClose={() => setIsFormOpen(false)} onSave={onSaveItem} />}

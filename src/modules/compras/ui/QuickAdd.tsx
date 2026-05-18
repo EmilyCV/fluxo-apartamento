@@ -59,7 +59,7 @@ export function QuickAdd({ onAdd }: QuickAddProps) {
           <input
             type="text"
             placeholder="Adicionar item rapidamente..."
-            className="flex-1 bg-transparent outline-none text-sm font-bold text-slate-900 placeholder:text-slate-300"
+            className="flex-1 bg-transparent outline-none text-base font-bold text-slate-900 placeholder:text-slate-300"
             value={itemName}
             onChange={(event) => setItemName(event.target.value)}
             onFocus={() => setIsExpanded(true)}
@@ -99,7 +99,7 @@ export function QuickAdd({ onAdd }: QuickAddProps) {
                     key={option.value}
                     type="button"
                     onClick={() => setSelectedAmbiente(option.value)}
-                    className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all ${
+                    className={`px-3 py-1.5 min-h-[36px] rounded-xl text-[10px] font-black uppercase tracking-wider transition-all touch-manipulation ${
                       selectedAmbiente === option.value
                         ? 'bg-slate-900 text-white'
                         : 'bg-slate-50 text-slate-500 hover:bg-slate-100'
@@ -112,7 +112,7 @@ export function QuickAdd({ onAdd }: QuickAddProps) {
             </div>
 
             <div className="flex gap-3 items-end">
-              <div className="w-24 space-y-2">
+              <div className="w-24 min-w-0 space-y-2">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
                   Qtd.
                 </label>
@@ -128,8 +128,8 @@ export function QuickAdd({ onAdd }: QuickAddProps) {
                 label="Valor unitário"
                 value={unitPrice}
                 onChange={setUnitPrice}
-                className="flex-1 space-y-2"
-                inputClassName="h-10 text-sm rounded-xl px-4"
+                className="flex-1 min-w-0 space-y-2"
+                inputClassName="h-10 text-base rounded-xl px-4"
               />
             </div>
           </div>

@@ -24,8 +24,12 @@ export function ConfirmDialog({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[300] flex items-center justify-center p-6">
-      <div className="bg-white rounded-[32px] p-8 max-w-sm w-full shadow-2xl animate-fade-in-up space-y-6">
+    <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[300] flex items-end sm:items-center justify-center p-0 sm:p-6">
+      <div className="bg-white rounded-t-[32px] sm:rounded-[32px] p-8 w-full sm:max-w-sm shadow-2xl animate-fade-in-up space-y-6">
+        {/* Drag handle — mobile only */}
+        <div className="sm:hidden flex justify-center mb-4 -mt-2">
+          <div className="w-10 h-1 bg-slate-200 rounded-full" />
+        </div>
         <div className="space-y-2">
           <h3 className="text-xl font-black text-slate-900 tracking-tight">{title}</h3>
           <p className="text-sm text-slate-500 font-medium leading-relaxed">{message}</p>
