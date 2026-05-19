@@ -79,9 +79,30 @@ function FilterDropdownInner<T extends string>({
   const updateCoords = useCallback(() => {
     if (containerRef.current) {
       const rect = containerRef.current.getBoundingClientRect();
+      const PANEL_WIDTH = 256;
+      const PANEL_HEIGHT = 288; // max-h-72 approximates to 288px
+      const MARGIN = 16;
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+
+      // Horizontal Clamping
+      let leftPosition = rect.left;
+      if (leftPosition + PANEL_WIDTH > viewportWidth - MARGIN) {
+        leftPosition = rect.right - PANEL_WIDTH;
+      }
+      if (leftPosition < MARGIN) {
+        leftPosition = MARGIN;
+      }
+
+      // Vertical Positioning
+      let topPosition = rect.bottom + window.scrollY;
+      if (rect.bottom + PANEL_HEIGHT > viewportHeight - MARGIN) {
+        topPosition = rect.top + window.scrollY - PANEL_HEIGHT - 8; // 8px gap above
+      }
+
       setCoords({
-        top: rect.bottom + window.scrollY,
-        left: rect.left,
+        top: topPosition,
+        left: leftPosition,
         width: rect.width,
       });
     }
@@ -538,7 +559,7 @@ export function ComprasView() {
                   </div>
                 )}
 
-                <div className="space-y-8 flex-1">
+                <div className="space-y-8 flex-1 min-w-0">
                   <div className="flex items-start justify-between">
                     <div className="flex flex-wrap gap-2">
                       <span className="text-[10px] font-black uppercase bg-brand-blue-light text-brand-blue-dark px-4 py-1.5 rounded-xl tracking-tighter border border-brand-blue/10">

@@ -59,17 +59,11 @@ export function QuickAdd({ onAdd }: QuickAddProps) {
           <input
             type="text"
             placeholder="Adicionar item rapidamente..."
-            className="flex-1 bg-transparent outline-none text-base font-bold text-slate-900 placeholder:text-slate-300"
+            className="flex-1 min-w-0 bg-transparent outline-none text-base font-bold text-slate-900 placeholder:text-slate-300"
             value={itemName}
             onChange={(event) => setItemName(event.target.value)}
             onFocus={() => setIsExpanded(true)}
           />
-
-          {itemQuantity > 1 && unitPrice > 0 && (
-            <span className="text-xs font-black text-slate-400 animate-fade-in shrink-0">
-              = {formatCurrencyValue(totalPrice)}
-            </span>
-          )}
 
           {itemName.trim() && (
             <button
@@ -89,6 +83,17 @@ export function QuickAdd({ onAdd }: QuickAddProps) {
 
         {isExpanded && (
           <div className="px-4 pb-4 space-y-4 border-t border-slate-50 pt-3">
+            {unitPrice > 0 && (
+              <div className="flex items-center justify-between bg-brand-blue-light/50 rounded-2xl px-4 py-3 border border-brand-blue/10 animate-fade-in">
+                <span className="text-[10px] font-black text-brand-blue-dark uppercase tracking-widest">
+                  Total
+                </span>
+                <span className="text-lg font-black text-slate-900 tabular-nums tracking-tight">
+                  {formatCurrencyValue(totalPrice)}
+                </span>
+              </div>
+            )}
+            
             <div className="flex items-center gap-2">
               <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest shrink-0">
                 Cômodo:
