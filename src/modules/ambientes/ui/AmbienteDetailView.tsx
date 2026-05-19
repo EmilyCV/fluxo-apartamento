@@ -95,21 +95,21 @@ export function AmbienteDetailView({ ambienteId }: AmbienteDetailViewProps) {
               </h1>
             </div>
 
-            <div className="card-pop bg-gradient-to-br from-slate-900 to-slate-800 p-8 flex gap-12 relative overflow-hidden border-none text-white shadow-2xl shrink-0">
+            <div className="card-pop bg-gradient-to-br from-slate-900 to-slate-800 p-6 sm:p-8 flex gap-6 sm:gap-12 relative overflow-hidden border-none text-white shadow-2xl shrink-0">
               <div className="absolute top-0 right-0 w-32 h-32 bg-brand-pink opacity-10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
-              <div className="relative z-10">
+              <div className="relative z-10 shrink-0">
                 <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">
                   Total
                 </p>
-                <p className="text-2xl font-black tracking-tight">
+                <p className="text-2xl font-black tracking-tight whitespace-nowrap">
                   {formatCurrency(totalInvestido)}
                 </p>
               </div>
-              <div className="relative z-10">
+              <div className="relative z-10 shrink-0">
                 <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">
                   Comprado
                 </p>
-                <p className="text-2xl font-black tracking-tight text-brand-green">
+                <p className="text-2xl font-black tracking-tight text-brand-green whitespace-nowrap">
                   {formatCurrency(totalComprado)}
                 </p>
               </div>
