@@ -4,27 +4,46 @@ import { useState, useEffect, useMemo } from 'react';
 import { comprasService } from '@/modules/compras/services/comprasService';
 import { CompraItem } from '@/modules/compras/types';
 import { MASTER_AMBIENTES } from '../types/masterData';
+import { getIsHydrated } from '@/utils/hydration';
 
 export type AmbientesSortOrder = 'original' | 'alfabetico' | 'progresso';
 
 export function useAmbientesData() {
-  const [items, setItems] = useState<CompraItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [items, setItems] = useState<CompraItem[]>(() => {
+    if (typeof window !== 'undefined' && getIsHydrated()) {
+      return (comprasService as any).getCachedItems?.() || [];
+    }
+    return [];
+  });
+  const [loading, setLoading] = useState(() => {
+    if (typeof window !== 'undefined' && getIsHydrated()) {
+      return (comprasService as any).getCachedItems?.() === null;
+    }
+    return true;
+  });
   const [searchTerm, setSearchTerm] = useState('');
   const [ordenacao, setOrdenacao] = useState<AmbientesSortOrder>('original');
   const [alfabeticoAsc, setAlfabeticoAsc] = useState(true);
 
   useEffect(() => {
+    let didReceiveSync = false;
+
     const unsubscribe = comprasService.subscribeToItems(
       (itemList) => {
         setItems(itemList);
         setLoading(false);
+        didReceiveSync = true;
       },
       (error) => {
         console.error('Erro ao carregar itens para estatísticas de ambientes:', error);
         setLoading(false);
       },
     );
+
+    if (didReceiveSync) {
+      setLoading(false);
+    }
+
     return () => unsubscribe();
   }, []);
 

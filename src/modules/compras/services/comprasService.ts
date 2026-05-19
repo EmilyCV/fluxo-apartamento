@@ -29,11 +29,23 @@ const normalizeAcquisitionState = <T extends Partial<CompraItem>>(data: T): T =>
 const getToggledPrioridade = (adquirido: boolean): CompraItem['prioridade'] =>
   adquirido ? 'Adquirido' : 'Quando der';
 
+let cachedItems: CompraItem[] | null = null;
+
 const realComprasService = {
+  /**
+   * Verifica se há cache em memória
+   */
+  getCachedItems: () => cachedItems,
+
   /**
    * Escuta em tempo real a lista de compras
    */
   subscribeToItems: (callback: (items: CompraItem[]) => void, onError?: (error: Error) => void) => {
+    // Se já temos cache, entrega imediatamente de forma síncrona
+    if (cachedItems) {
+      callback(cachedItems);
+    }
+
     const q = query(collection(db, COLLECTION_NAME), orderBy('createdAt', 'desc'));
 
     return onSnapshot(
@@ -43,6 +55,7 @@ const realComprasService = {
           id: doc.id,
           ...doc.data(),
         })) as CompraItem[];
+        cachedItems = items; // Atualiza o cache
         callback(items);
       },
       (error) => {

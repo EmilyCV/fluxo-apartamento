@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useState, useRef, useCallback, useLayoutEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { AppLayout } from '@/components/AppLayout';
 import { CompraItem, Ambiente, Categoria, Prioridade } from '@/modules/compras/types';
 import { ItemForm } from '@/modules/compras/ui/ItemForm';
@@ -22,6 +23,8 @@ import {
 import { cn } from '@/utils/cn';
 import { hapticFeedback } from '@/utils/haptics';
 import { comprasService } from '@/modules/compras/services/comprasService';
+import { motion, AnimatePresence } from 'framer-motion';
+import { getIsHydrated, setIsHydrated } from '@/utils/hydration';
 
 const AMBIENTES: Ambiente[] = [
   '1. Cozinha',
@@ -69,12 +72,71 @@ function FilterDropdownInner<T extends string>({
   placeholder,
   minWidth,
 }: FilterDropdownProps<T>) {
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const [coords, setCoords] = useState({ top: 0, left: 0, width: 0 });
+
+  const updateCoords = useCallback(() => {
+    if (containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      const PANEL_WIDTH = 256;
+      const PANEL_HEIGHT = 288; // max-h-72 approximates to 288px
+      const MARGIN = 16;
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+
+      // Horizontal Clamping
+      let leftPosition = rect.left;
+      if (leftPosition + PANEL_WIDTH > viewportWidth - MARGIN) {
+        leftPosition = rect.right - PANEL_WIDTH;
+      }
+      if (leftPosition < MARGIN) {
+        leftPosition = MARGIN;
+      }
+
+      // Vertical Positioning
+      let topPosition = rect.bottom + window.scrollY;
+      if (rect.bottom + PANEL_HEIGHT + 16 > viewportHeight - MARGIN) {
+        topPosition = rect.top + window.scrollY - PANEL_HEIGHT - 16; // Adjust for the +8 in JSX to have 8px gap
+      }
+
+      setCoords({
+        top: topPosition,
+        left: leftPosition,
+        width: rect.width,
+      });
+    }
+  }, []);
+
+  useLayoutEffect(() => {
+    if (isOpen) {
+      updateCoords();
+      window.addEventListener('scroll', updateCoords);
+      window.addEventListener('resize', updateCoords);
+
+      // Bloqueia scroll no mobile
+      if (window.innerWidth < 768) {
+        document.body.style.overflow = 'hidden';
+      }
+    } else {
+      document.body.style.overflow = '';
+    }
+
+    return () => {
+      window.removeEventListener('scroll', updateCoords);
+      window.removeEventListener('resize', updateCoords);
+      document.body.style.overflow = '';
+    };
+  }, [isOpen, updateCoords]);
 
   useEffect(() => {
     if (!isOpen) return;
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+      const isInsideContainer = containerRef.current?.contains(target);
+      const isInsidePanel = panelRef.current?.contains(target);
+
+      if (!isInsideContainer && !isInsidePanel) {
         onToggle(null);
       }
     };
@@ -87,8 +149,7 @@ function FilterDropdownInner<T extends string>({
     return value === opt.value;
   };
 
-  const isSelected =
-    value !== placeholder && value !== 'Todos' && value !== 'Todas' && value !== 'recentes';
+  const isSelected = value !== placeholder;
 
   let displayValue = label;
   if (isSelected) {
@@ -101,7 +162,7 @@ function FilterDropdownInner<T extends string>({
   }
 
   return (
-    <div className="relative shrink-0" ref={dropdownRef} style={{ minWidth }}>
+    <div className="relative shrink-0" ref={containerRef} style={{ minWidth }}>
       <button
         onClick={() => onToggle(isOpen ? null : label)}
         aria-expanded={isOpen}
@@ -132,64 +193,77 @@ function FilterDropdownInner<T extends string>({
         />
       </button>
 
-      {isOpen && (
-        <div
-          className="absolute top-full left-0 mt-3 w-64 bg-white border border-slate-100 rounded-[24px] shadow-[0_20px_50px_rgba(0,0,0,0.15)] p-2 z-[200] animate-fade-in-up"
-          role="listbox"
-        >
-          <div className="max-h-72 overflow-y-auto no-scrollbar py-1">
-            {placeholder !== 'recentes' && (
-              <>
-                <button
-                  role="option"
-                  aria-selected={!isSelected}
-                  onClick={() => {
-                    onChange(placeholder);
-                    onToggle(null);
-                  }}
-                  className={cn(
-                    'w-full flex items-center justify-between px-4 py-3 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all mb-1',
-                    !isSelected ? 'bg-slate-50 text-slate-900' : 'text-slate-500 hover:bg-slate-50',
-                  )}
-                >
-                  <span>Ver Todos</span>
-                  {!isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-slate-900" />}
-                </button>
-                <div className="h-px bg-slate-100 my-2 mx-2" />
-              </>
-            )}
-            {options.map((opt) => {
-              const optLabel =
-                typeof opt === 'string'
-                  ? opt.split('. ').pop() || opt
-                  : (opt as FilterOption<T>).label;
-              const optValue = typeof opt === 'string' ? opt : (opt as FilterOption<T>).value;
-              const active = isOptionSelected(opt);
+      {isOpen &&
+        typeof document !== 'undefined' &&
+        createPortal(
+          <div
+            ref={panelRef}
+            style={{
+              position: 'fixed',
+              top: coords.top - window.scrollY + 8,
+              left: coords.left,
+              width: '256px',
+              zIndex: 9999,
+            }}
+            className="bg-white border border-slate-100 rounded-[24px] shadow-[0_20px_50px_rgba(0,0,0,0.15)] overflow-hidden p-[1px] animate-fade-in-up"
+            role="listbox"
+          >
+            <div className="max-h-72 overflow-y-auto no-scrollbar pt-4 px-3 pb-3">
+              {placeholder !== 'recentes' && (
+                <>
+                  <button
+                    role="option"
+                    aria-selected={!isSelected}
+                    onClick={() => {
+                      onChange(placeholder);
+                      onToggle(null);
+                    }}
+                    className={cn(
+                      'w-full flex items-center justify-between px-4 py-3 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all mb-1',
+                      !isSelected
+                        ? 'bg-slate-900 text-white shadow-lg'
+                        : 'text-slate-600 hover:bg-slate-50 hover:pl-5',
+                    )}
+                  >
+                    <span className="truncate pr-4">Ver Todos</span>
+                    {!isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-white" />}
+                  </button>
+                  <div className="h-px bg-slate-100 my-2 mx-2" />
+                </>
+              )}
+              {options.map((opt) => {
+                const optLabel =
+                  typeof opt === 'string'
+                    ? opt.split('. ').pop() || opt
+                    : (opt as FilterOption<T>).label;
+                const optValue = typeof opt === 'string' ? opt : (opt as FilterOption<T>).value;
+                const active = isOptionSelected(opt);
 
-              return (
-                <button
-                  key={optValue}
-                  role="option"
-                  aria-selected={active}
-                  onClick={() => {
-                    onChange(optValue);
-                    onToggle(null);
-                  }}
-                  className={cn(
-                    'w-full flex items-center justify-between px-4 py-3 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all mb-0.5',
-                    active
-                      ? 'bg-slate-900 text-white shadow-lg'
-                      : 'text-slate-600 hover:bg-slate-50 hover:pl-5',
-                  )}
-                >
-                  <span className="truncate pr-4">{optLabel}</span>
-                  {active && <CheckCircle2 className="w-3.5 h-3.5 text-white" />}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
+                return (
+                  <button
+                    key={optValue}
+                    role="option"
+                    aria-selected={active}
+                    onClick={() => {
+                      onChange(optValue);
+                      onToggle(null);
+                    }}
+                    className={cn(
+                      'w-full flex items-center justify-between px-4 py-3 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all mb-0.5',
+                      active
+                        ? 'bg-slate-900 text-white shadow-lg'
+                        : 'text-slate-600 hover:bg-slate-50 hover:pl-5',
+                    )}
+                  >
+                    <span className="truncate pr-4">{optLabel}</span>
+                    {active && <CheckCircle2 className="w-3.5 h-3.5 text-white" />}
+                  </button>
+                );
+              })}
+            </div>
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }
@@ -221,6 +295,12 @@ export function ComprasView() {
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
   const [itemToEdit, setItemToEdit] = useState<CompraItem | undefined>(undefined);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isMounted, setIsMounted] = useState(getIsHydrated());
+
+  useEffect(() => {
+    setIsMounted(true);
+    setIsHydrated();
+  }, []);
 
   const onSave = async (data: Omit<CompraItem, 'id' | 'createdAt' | 'updatedAt'>, id?: string) => {
     await handleSaveItem(data, id);
@@ -272,13 +352,16 @@ export function ComprasView() {
     { label: 'Maior Preço', value: 'preco-desc' },
   ];
 
+  const showQuickAdd = isMounted && !loading;
+  const isActuallyLoading = !isMounted || loading;
+
   return (
     <AppLayout>
       <div className="max-w-6xl mx-auto px-6 py-10 md:px-12 space-y-12">
-        <header className="space-y-12 animate-pop relative z-[60]">
+        <header className="space-y-6 sm:space-y-12 animate-pop relative z-[60]">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8">
             <div className="space-y-2">
-              <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tighter">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 tracking-tighter">
                 Lista de Compras
               </h1>
               <p className="text-slate-400 font-bold uppercase text-[10px] tracking-[0.3em]">
@@ -289,14 +372,14 @@ export function ComprasView() {
             <div className="flex items-center gap-3 w-full lg:w-auto">
               <div className="relative flex-1 lg:w-96 group">
                 <Search
-                  className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-200 group-focus-within:text-slate-400 transition-colors"
+                  className="absolute left-4 sm:left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-200 group-focus-within:text-slate-400 transition-colors"
                   aria-hidden="true"
                 />
                 <input
                   type="text"
                   aria-label="Procurar itens"
                   placeholder="O que você está procurando?"
-                  className="w-full h-16 bg-white border border-slate-100 rounded-[28px] pl-16 pr-6 outline-none focus:border-slate-300 focus:shadow-2xl focus:shadow-slate-200/50 transition-all text-sm font-bold shadow-sm"
+                  className="w-full h-12 sm:h-16 bg-white border border-slate-100 rounded-[28px] pl-14 sm:pl-16 pr-6 outline-none focus:border-slate-300 focus:shadow-2xl focus:shadow-slate-200/50 transition-all text-sm font-bold shadow-sm"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
@@ -315,7 +398,7 @@ export function ComprasView() {
             </div>
           </div>
 
-          {!loading && (
+          {showQuickAdd && (
             <div className="animate-pop [animation-delay:100ms]">
               <QuickAdd onAdd={handleQuickAdd} />
             </div>
@@ -363,7 +446,8 @@ export function ComprasView() {
 
               <div className="h-6 w-px bg-slate-200 hidden md:block mx-2 shrink-0"></div>
 
-              <div className="flex flex-wrap items-center gap-3">
+              <div className="overflow-x-auto -mx-6 px-6 md:mx-0 md:px-0 py-6 -my-6 no-scrollbar">
+              <div className="flex items-center gap-3 w-max">
                 <FilterDropdown<SortOrder>
                   label="Ordenar"
                   placeholder="recentes"
@@ -413,7 +497,7 @@ export function ComprasView() {
                 {hasActiveFilters && (
                   <button
                     onClick={clearFilters}
-                    className="flex items-center gap-2 h-12 px-5 rounded-2xl text-[10px] font-black uppercase tracking-widest text-red-500 hover:bg-red-50 border border-transparent hover:border-red-100 transition-all shrink-0 group animate-slide-in"
+                    className="flex items-center gap-2 h-12 px-5 rounded-2xl text-[10px] font-black uppercase tracking-widest text-red-500 hover:bg-red-50 border border-transparent hover:border-red-100 transition-all shrink-0 group animate-slide-in touch-manipulation"
                     aria-label="Limpar todos os filtros"
                   >
                     <RotateCcw className="w-3.5 h-3.5 group-hover:rotate-[-45deg] transition-transform" />
@@ -421,31 +505,32 @@ export function ComprasView() {
                   </button>
                 )}
               </div>
+              </div>
             </div>
           </div>
         </header>
 
-        {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+        {isActuallyLoading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-10">
             {[1, 2, 3, 4, 5, 6].map((i) => (
               <div
                 key={i}
-                className="h-72 bg-white rounded-[40px] animate-pulse border border-slate-50"
+                className="h-48 sm:h-72 bg-slate-100 rounded-[40px] animate-pulse border border-slate-50"
               />
             ))}
           </div>
         ) : items.length === 0 ? (
-          <div className="text-center py-40 bg-white rounded-[48px] border border-slate-100 flex flex-col items-center animate-pop shadow-sm">
+          <div className="text-center py-20 sm:py-40 bg-white rounded-[48px] border border-slate-100 flex flex-col items-center animate-pop shadow-sm">
             <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-6">
               <FilterX className="w-8 h-8 text-slate-200" aria-hidden="true" />
             </div>
             <h3 className="text-xl font-black text-slate-800 mb-2">Nenhum resultado</h3>
-            <p className="text-slate-400 font-bold uppercase text-[9px] tracking-[0.3em] mb-8">
+            <p className="text-slate-400 font-bold uppercase text-[9px] tracking-[0.3em] mb-5 sm:mb-8">
               Tente ajustar seus filtros para encontrar o que procura
             </p>
             <button
               onClick={clearFilters}
-              className="flex items-center gap-3 px-8 h-14 rounded-2xl bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all"
+              className="flex items-center gap-3 px-8 h-14 rounded-2xl bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all active:scale-95 touch-manipulation"
               aria-label="Limpar filtros"
             >
               <RotateCcw className="w-4 h-4" />
@@ -453,7 +538,7 @@ export function ComprasView() {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 pb-32">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-10 pb-nav-safe md:pb-12">
             {items.map((item) => (
               <div
                 key={item.id}
@@ -465,7 +550,7 @@ export function ComprasView() {
                   setIsFormOpen(true);
                 }}
                 className={cn(
-                  'card-pop group flex flex-col p-10 gap-10 cursor-pointer relative overflow-hidden animate-pop border-slate-100/60',
+                  'card-pop group flex flex-col p-5 sm:p-10 gap-4 sm:gap-10 cursor-pointer relative overflow-hidden animate-pop border-slate-100/60 active:scale-[0.98] transition-transform',
                   item.adquirido ? 'bg-slate-50/50 opacity-60 grayscale-[0.5]' : 'bg-white',
                 )}
               >
@@ -475,7 +560,7 @@ export function ComprasView() {
                   </div>
                 )}
 
-                <div className="space-y-8 flex-1">
+                <div className="space-y-8 flex-1 min-w-0">
                   <div className="flex items-start justify-between">
                     <div className="flex flex-wrap gap-2">
                       <span className="text-[10px] font-black uppercase bg-brand-blue-light text-brand-blue-dark px-4 py-1.5 rounded-xl tracking-tighter border border-brand-blue/10">
@@ -496,7 +581,7 @@ export function ComprasView() {
                   <div className="space-y-2">
                     <h3
                       className={cn(
-                        'text-3xl font-black leading-[1.15] tracking-tight group-hover:text-brand-pink-dark transition-colors break-words',
+                        'text-xl sm:text-3xl font-black leading-[1.15] tracking-tight group-hover:text-brand-pink-dark transition-colors break-words',
                         item.adquirido ? 'text-slate-300 line-through' : 'text-slate-900',
                       )}
                     >
@@ -510,14 +595,14 @@ export function ComprasView() {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between pt-10 border-t border-slate-50/80 mt-auto">
+                <div className="flex items-center justify-between pt-4 sm:pt-10 border-t border-slate-50/80 mt-auto">
                   <div className="flex flex-col gap-1.5">
                     <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em]">
                       Investimento
                     </p>
                     <p
                       className={cn(
-                        'text-3xl font-black tracking-tighter',
+                        'text-2xl sm:text-3xl font-black tracking-tighter tabular-nums truncate',
                         item.adquirido ? 'text-slate-300' : 'text-slate-900',
                       )}
                     >
@@ -533,7 +618,7 @@ export function ComprasView() {
                       comprasService.toggleAdquirido(item.id, item.adquirido);
                     }}
                     className={cn(
-                      'w-16 h-16 rounded-[24px] flex items-center justify-center transition-all shadow-sm active:scale-90',
+                      'w-12 h-12 sm:w-16 sm:h-16 rounded-[24px] flex items-center justify-center transition-all shadow-sm active:scale-90',
                       item.adquirido
                         ? 'bg-brand-green text-white shadow-brand-green/20'
                         : 'bg-slate-50 text-slate-200 hover:bg-brand-green-light hover:text-brand-green-dark hover:scale-110',
@@ -549,16 +634,25 @@ export function ComprasView() {
           </div>
         )}
 
-        <button
-          onClick={() => {
-            setItemToEdit(undefined);
-            setIsFormOpen(true);
-          }}
-          className="md:hidden fixed fab-safe-bottom right-8 w-20 h-20 bg-slate-900 text-white rounded-[32px] shadow-2xl flex items-center justify-center active:scale-75 transition-all z-[110] border-4 border-white shadow-slate-900/30"
-          aria-label="Adicionar novo item"
-        >
-          <Plus className="w-10 h-10" strokeWidth={3} />
-        </button>
+        <AnimatePresence>
+          {!isFormOpen && (
+            <motion.button
+              initial={{ opacity: 0, scale: 0.9, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 10 }}
+              transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => {
+                setItemToEdit(undefined);
+                setIsFormOpen(true);
+              }}
+              className="md:hidden fixed fab-safe-bottom right-6 w-16 h-16 bg-slate-900 text-white rounded-2xl shadow-2xl flex items-center justify-center z-[110] border-2 border-white/10 shadow-slate-900/30"
+              aria-label="Adicionar novo item"
+            >
+              <Plus className="w-8 h-8" strokeWidth={3} />
+            </motion.button>
+          )}
+        </AnimatePresence>
 
         {isFormOpen && (
           <ItemForm

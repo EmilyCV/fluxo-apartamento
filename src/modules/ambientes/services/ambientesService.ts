@@ -17,7 +17,14 @@ import { mockHomeAmbientesService } from './mockHomeAmbientesService';
 
 const COLLECTION_NAME = 'home_ambientes';
 
+let cachedHomeAmbientes: HomeAmbiente[] | null = null;
+
 const realHomeAmbientesService = {
+  /**
+   * Verifica se há cache em memória
+   */
+  getCachedHomeAmbientes: () => cachedHomeAmbientes,
+
   /**
    * Escuta em tempo real quais cômodos estão na Home
    */
@@ -25,6 +32,11 @@ const realHomeAmbientesService = {
     callback: (items: HomeAmbiente[]) => void,
     onError?: (error: Error) => void,
   ) => {
+    // Se já temos cache, entrega imediatamente de forma síncrona
+    if (cachedHomeAmbientes) {
+      callback(cachedHomeAmbientes);
+    }
+
     const q = query(collection(db, COLLECTION_NAME), orderBy('ordem', 'asc'));
 
     return onSnapshot(
@@ -34,6 +46,7 @@ const realHomeAmbientesService = {
           id: doc.id,
           ...doc.data(),
         })) as HomeAmbiente[];
+        cachedHomeAmbientes = items; // Atualiza o cache
         callback(items);
       },
       (error) => {

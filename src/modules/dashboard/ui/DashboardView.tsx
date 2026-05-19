@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/modules/auth/contexts/AuthContext';
 import { AppLayout } from '@/components/AppLayout';
 import { CompraItem } from '@/modules/compras/types';
@@ -23,6 +23,8 @@ import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { useRouter } from 'next/navigation';
 import { useDashboardData } from '@/modules/dashboard/hooks/useDashboardData';
 import { cn } from '@/utils/cn';
+import { motion, AnimatePresence } from 'framer-motion';
+import { getIsHydrated, setIsHydrated } from '@/utils/hydration';
 
 export function DashboardView() {
   const { userName } = useAuth();
@@ -32,6 +34,7 @@ export function DashboardView() {
     items,
     homeAmbientes,
     loading,
+    homeAmbientesLoading,
     totalInvestido,
     totalOrcado,
     percentualProgresso,
@@ -48,6 +51,12 @@ export function DashboardView() {
 
   const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
   const [cardToRemove, setCardToRemove] = useState<string | null>(null);
+  const [isMounted, setIsMounted] = useState(getIsHydrated());
+
+  useEffect(() => {
+    setIsMounted(true);
+    setIsHydrated();
+  }, []);
 
   const formatCurrency = (val: number) =>
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
@@ -90,8 +99,8 @@ export function DashboardView() {
       <div className="max-w-6xl mx-auto px-6 py-10 md:px-12 space-y-12">
         {/* --- HEADER --- */}
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 animate-pop">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2 mb-2">
+          <div className="space-y-0.5">
+            <div className="flex items-center gap-2 mb-1">
               <div className="w-8 h-8 bg-brand-pink rounded-xl flex items-center justify-center text-brand-pink-dark shadow-sm">
                 <Sparkles className="w-4 h-4" />
               </div>
@@ -119,7 +128,7 @@ export function DashboardView() {
             </button>
             <button
               onClick={() => setIsFormOpen(true)}
-              className="btn-pop bg-slate-900 text-white shadow-xl shadow-slate-900/10 hover:bg-black md:w-auto px-10"
+              className="btn-pop bg-slate-900 text-white shadow-xl shadow-slate-900/10 hover:bg-black md:w-auto px-5 md:px-10 h-12 md:h-14 text-[9px] md:text-[10px]"
             >
               <Plus className="w-5 h-5" strokeWidth={3} />
               Novo Item
@@ -130,7 +139,7 @@ export function DashboardView() {
         {/* --- BENTO GRID --- */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-8">
           {/* Card Financeiro Principal */}
-          <div className="md:col-span-8 card-pop bg-gradient-to-br from-brand-blue-light to-white p-8 md:p-12 relative overflow-hidden flex flex-col justify-between min-h-[340px] animate-pop">
+          <div className="md:col-span-8 card-pop bg-gradient-to-br from-brand-blue-light to-white p-8 md:p-12 relative overflow-hidden flex flex-col justify-between min-h-[260px] md:min-h-[340px] animate-pop">
             <div className="absolute top-0 right-0 w-64 h-64 bg-brand-blue opacity-20 rounded-full -mr-20 -mt-20 blur-3xl"></div>
 
             <div className="relative z-10 flex justify-between items-start">
@@ -138,7 +147,7 @@ export function DashboardView() {
                 <p className="text-brand-blue-dark font-black text-[10px] uppercase tracking-widest">
                   Total Investido
                 </p>
-                <h2 className="text-5xl md:text-6xl font-black text-slate-900 tracking-tighter">
+                <h2 className="text-4xl md:text-6xl font-black text-slate-900 tracking-tighter clamp-text">
                   {formatCurrency(totalInvestido)}
                 </h2>
               </div>
@@ -201,8 +210,8 @@ export function DashboardView() {
           </div>
 
           {/* Breakdown por Categoria */}
-          {items.length > 0 && (
-            <div className="md:col-span-12 card-pop p-8 md:p-10 animate-pop [animation-delay:300ms]">
+          {items.length > 0 && isMounted && (
+            <div className="md:col-span-12 card-pop p-5 md:p-10 animate-pop [animation-delay:300ms]">
               <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-8">
                 Investimento por Categoria
               </h2>
@@ -218,11 +227,12 @@ export function DashboardView() {
                         <span className="text-sm font-black text-slate-700">
                           {categoriaMetric.label}
                         </span>
-                        <div className="flex items-center gap-3">
-                          <span className="text-xs text-slate-400 font-bold">
-                            {formatCurrency(categoriaMetric.adquirido)} /{' '}
-                            {formatCurrency(categoriaMetric.total)}
-                          </span>
+                        <div className="flex items-center gap-2">
+                          <div className="flex flex-col items-end sm:flex-row sm:items-center gap-0.5 sm:gap-3">
+                            <span className="text-xs text-slate-400 font-bold">{formatCurrency(categoriaMetric.adquirido)}</span>
+                            <span className="hidden sm:inline text-xs text-slate-300">/</span>
+                            <span className="text-xs text-slate-300 font-bold">{formatCurrency(categoriaMetric.total)}</span>
+                          </div>
                           <span className="text-xs font-black text-slate-600 w-8 text-right">
                             {percentual}%
                           </span>
@@ -245,7 +255,7 @@ export function DashboardView() {
           )}
 
           {/* Cards de Ambientes Dinâmicos */}
-          {loading ? (
+          {(!isMounted || homeAmbientesLoading) ? (
             <div className="md:col-span-12 grid grid-cols-1 md:grid-cols-3 gap-6 animate-pop [animation-delay:200ms]">
               {[1, 2, 3].map((skeletonIndex) => (
                 <div key={skeletonIndex} className="h-48 bg-slate-100 rounded-[32px] animate-pulse" />
@@ -274,7 +284,8 @@ export function DashboardView() {
                   <div
                     key={homeCard.id}
                     className={cn(
-                      'card-pop bg-gradient-to-br p-8 hover:scale-[1.03] cursor-pointer group relative overflow-hidden',
+                      'card-pop bg-gradient-to-br p-5 md:p-8 hover:scale-[1.03] cursor-pointer group relative animate-pop',
+                      isManageMode ? 'overflow-visible' : 'overflow-hidden',
                       masterAmbiente.colors.gradient,
                       masterAmbiente.colors.border,
                     )}
@@ -282,22 +293,6 @@ export function DashboardView() {
                       router.push(`/ambientes/${encodeURIComponent(homeCard.ambienteId)}`)
                     }
                   >
-                    {isManageMode && (
-                      <div className="absolute top-4 right-4 flex gap-2 z-20">
-                        <button
-                          onClick={(event) => handleEditCard(event, homeCard)}
-                          className="w-8 h-8 bg-white/80 backdrop-blur-md rounded-lg flex items-center justify-center text-slate-600 hover:text-slate-900 shadow-sm border border-slate-100"
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={(event) => handleRemoveClick(event, homeCard.id)}
-                          className="w-8 h-8 bg-red-50/80 backdrop-blur-md rounded-lg flex items-center justify-center text-red-500 hover:text-red-600 shadow-sm border border-red-100"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    )}
                     <div className="flex justify-between items-center mb-10">
                       <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm">
                         <masterAmbiente.icon
@@ -329,6 +324,25 @@ export function DashboardView() {
                         ></div>
                       </div>
                     </div>
+
+                    {isManageMode && (
+                      <div className="flex justify-end gap-2 mt-3 pt-3 border-t border-black/5 animate-fade-in">
+                        <button
+                          onClick={(event) => handleEditCard(event, homeCard)}
+                          className="w-10 h-10 bg-white/80 backdrop-blur-md rounded-xl flex items-center justify-center text-slate-600 hover:text-slate-900 shadow-sm border border-slate-100"
+                          title="Editar"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={(event) => handleRemoveClick(event, homeCard.id)}
+                          className="w-10 h-10 bg-red-50/80 backdrop-blur-md rounded-xl flex items-center justify-center text-red-500 hover:text-red-600 shadow-sm border border-red-100"
+                          title="Remover"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -355,13 +369,22 @@ export function DashboardView() {
         </div>
 
         {/* --- FAB MOBILE --- */}
-        <button
-          onClick={() => setIsFormOpen(true)}
-          className="md:hidden fixed fab-safe-bottom right-8 w-20 h-20 bg-slate-900 text-white rounded-[32px] shadow-2xl flex items-center justify-center active:scale-75 transition-all z-[110] border-4 border-white shadow-slate-900/30"
-          aria-label="Adicionar novo item"
-        >
-          <Plus className="w-10 h-10" strokeWidth={3} />
-        </button>
+        <AnimatePresence>
+          {!isFormOpen && !isAmbienteFormOpen && (
+            <motion.button
+              initial={{ opacity: 0, scale: 0.9, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 10 }}
+              transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => setIsFormOpen(true)}
+              className="md:hidden fixed fab-safe-bottom right-6 w-16 h-16 bg-slate-900 text-white rounded-2xl shadow-2xl flex items-center justify-center z-[110] border-2 border-white/10 shadow-slate-900/30"
+              aria-label="Adicionar novo item"
+            >
+              <Plus className="w-8 h-8" strokeWidth={3} />
+            </motion.button>
+          )}
+        </AnimatePresence>
 
         {isFormOpen && <ItemForm onClose={() => setIsFormOpen(false)} onSave={onSaveItem} />}
 

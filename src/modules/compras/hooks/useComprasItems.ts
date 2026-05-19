@@ -3,14 +3,25 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { comprasService } from '../services/comprasService';
 import { CompraItem, Ambiente, Categoria, Prioridade } from '../types';
+import { getIsHydrated } from '@/utils/hydration';
 
 export type SortOrder = 'nome-asc' | 'nome-desc' | 'preco-asc' | 'preco-desc' | 'recentes';
 
 const SEARCH_DEBOUNCE_MS = 300;
 
 export function useComprasItems() {
-  const [items, setItems] = useState<CompraItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [items, setItems] = useState<CompraItem[]>(() => {
+    if (typeof window !== 'undefined' && getIsHydrated()) {
+      return (comprasService as any).getCachedItems?.() || [];
+    }
+    return [];
+  });
+  const [loading, setLoading] = useState(() => {
+    if (typeof window !== 'undefined' && getIsHydrated()) {
+      return (comprasService as any).getCachedItems?.() === null;
+    }
+    return true;
+  });
 
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -22,16 +33,24 @@ export function useComprasItems() {
   const [ordenacao, setOrdenacao] = useState<SortOrder>('recentes');
 
   useEffect(() => {
+    let didReceiveSync = false;
+
     const unsubscribe = comprasService.subscribeToItems(
       (itemList) => {
         setItems(itemList);
         setLoading(false);
+        didReceiveSync = true;
       },
       (fetchError) => {
         console.error('Erro ao carregar itens de compra:', fetchError);
         setLoading(false);
       },
     );
+
+    if (didReceiveSync) {
+      setLoading(false);
+    }
+
     return () => unsubscribe();
   }, []);
 
