@@ -95,7 +95,7 @@ export function AmbienteDetailView({ ambienteId }: AmbienteDetailViewProps) {
               </h1>
             </div>
 
-            <div className="card-pop bg-gradient-to-br from-slate-900 to-slate-800 p-8 flex gap-12 relative overflow-hidden border-none text-white shadow-2xl">
+            <div className="card-pop bg-gradient-to-br from-slate-900 to-slate-800 p-8 flex gap-12 relative overflow-hidden border-none text-white shadow-2xl shrink-0">
               <div className="absolute top-0 right-0 w-32 h-32 bg-brand-pink opacity-10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
               <div className="relative z-10">
                 <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">
