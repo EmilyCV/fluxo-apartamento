@@ -22,6 +22,7 @@ import {
 import { cn } from '@/utils/cn';
 import { hapticFeedback } from '@/utils/haptics';
 import { comprasService } from '@/modules/compras/services/comprasService';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const AMBIENTES: Ambiente[] = [
   '1. Cozinha',
@@ -519,7 +520,7 @@ export function ComprasView() {
                     </p>
                     <p
                       className={cn(
-                        'text-2xl sm:text-3xl font-black tracking-tighter',
+                        'text-2xl sm:text-3xl font-black tracking-tighter tabular-nums truncate',
                         item.adquirido ? 'text-slate-300' : 'text-slate-900',
                       )}
                     >
@@ -551,21 +552,25 @@ export function ComprasView() {
           </div>
         )}
 
-        <button
-          onClick={() => {
-            setItemToEdit(undefined);
-            setIsFormOpen(true);
-          }}
-          className="md:hidden fixed fab-safe-bottom right-6 z-[110] active:scale-95 transition-all"
-          aria-label="Adicionar novo item"
-        >
-          <div className="flex items-center gap-2 px-6 h-16 bg-slate-900 rounded-[28px] shadow-2xl border-2 border-white/10">
-            <Plus className="w-6 h-6 text-white" strokeWidth={3} />
-            <span className="text-white text-[11px] font-black uppercase tracking-widest">
-              Adicionar
-            </span>
-          </div>
-        </button>
+        <AnimatePresence>
+          {!isFormOpen && (
+            <motion.button
+              initial={{ opacity: 0, scale: 0.9, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 10 }}
+              transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => {
+                setItemToEdit(undefined);
+                setIsFormOpen(true);
+              }}
+              className="md:hidden fixed fab-safe-bottom right-6 w-16 h-16 bg-slate-900 text-white rounded-2xl shadow-2xl flex items-center justify-center z-[110] border-2 border-white/10 shadow-slate-900/30"
+              aria-label="Adicionar novo item"
+            >
+              <Plus className="w-8 h-8" strokeWidth={3} />
+            </motion.button>
+          )}
+        </AnimatePresence>
 
         {isFormOpen && (
           <ItemForm

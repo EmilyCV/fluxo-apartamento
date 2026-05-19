@@ -92,11 +92,17 @@
 
 @layer utilities {
   .fab-safe-bottom {
-    bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
+    bottom: calc(7.5rem + env(safe-area-inset-bottom, 0px));
   }
 
   .pb-nav-safe {
     padding-bottom: calc(8rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .clamp-text {
+    font-size: clamp(1.75rem, 10vw, 3.75rem);
+    line-height: 1;
+    @apply tabular-nums tracking-tighter;
   }
 }
 

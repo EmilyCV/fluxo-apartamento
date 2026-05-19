@@ -23,6 +23,7 @@ import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { useRouter } from 'next/navigation';
 import { useDashboardData } from '@/modules/dashboard/hooks/useDashboardData';
 import { cn } from '@/utils/cn';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export function DashboardView() {
   const { userName } = useAuth();
@@ -139,7 +140,7 @@ export function DashboardView() {
                 <p className="text-brand-blue-dark font-black text-[10px] uppercase tracking-widest">
                   Total Investido
                 </p>
-                <h2 className="text-4xl md:text-6xl font-black text-slate-900 tracking-tighter">
+                <h2 className="text-4xl md:text-6xl font-black text-slate-900 tracking-tighter clamp-text">
                   {formatCurrency(totalInvestido)}
                 </h2>
               </div>
@@ -357,18 +358,22 @@ export function DashboardView() {
         </div>
 
         {/* --- FAB MOBILE --- */}
-        <button
-          onClick={() => setIsFormOpen(true)}
-          className="md:hidden fixed fab-safe-bottom right-6 z-[110] active:scale-95 transition-all"
-          aria-label="Adicionar novo item"
-        >
-          <div className="flex items-center gap-2 px-6 h-16 bg-slate-900 rounded-[28px] shadow-2xl border-2 border-white/10">
-            <Plus className="w-6 h-6 text-white" strokeWidth={3} />
-            <span className="text-white text-[11px] font-black uppercase tracking-widest">
-              Adicionar
-            </span>
-          </div>
-        </button>
+        <AnimatePresence>
+          {!isFormOpen && !isAmbienteFormOpen && (
+            <motion.button
+              initial={{ opacity: 0, scale: 0.9, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 10 }}
+              transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => setIsFormOpen(true)}
+              className="md:hidden fixed fab-safe-bottom right-6 w-16 h-16 bg-slate-900 text-white rounded-2xl shadow-2xl flex items-center justify-center z-[110] border-2 border-white/10 shadow-slate-900/30"
+              aria-label="Adicionar novo item"
+            >
+              <Plus className="w-8 h-8" strokeWidth={3} />
+            </motion.button>
+          )}
+        </AnimatePresence>
 
         {isFormOpen && <ItemForm onClose={() => setIsFormOpen(false)} onSave={onSaveItem} />}
 

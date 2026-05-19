@@ -49,8 +49,8 @@ export function CurrencyInput({
 
     const numericValue = Number(rawValue) / 100;
 
-    // Limit to reasonable value (10 million)
-    if (numericValue > 9999999.99) return;
+    // Limit to reasonable value (1 billion)
+    if (numericValue > 999999999.99) return;
 
     setDisplayValue(formatToBRL(numericValue));
     onChange(numericValue);
@@ -65,6 +65,13 @@ export function CurrencyInput({
     }, 0);
   };
 
+  // Dynamic font size based on value length
+  const getFontSizeClass = () => {
+    if (displayValue.length > 18) return 'text-sm';
+    if (displayValue.length > 15) return 'text-base';
+    return 'text-lg';
+  };
+
   return (
     <div className={cn('space-y-3', className)}>
       {label && (
@@ -77,7 +84,8 @@ export function CurrencyInput({
           type="text"
           inputMode="numeric"
           className={cn(
-            'w-full h-16 bg-slate-50 border-2 border-transparent rounded-[24px] px-6 text-lg font-bold text-slate-900 outline-none shadow-sm transition-all',
+            'w-full h-16 bg-slate-50 border-2 border-transparent rounded-[24px] px-6 font-bold text-slate-900 outline-none shadow-sm transition-all tabular-nums truncate min-w-0',
+            getFontSizeClass(),
             'focus:border-brand-green focus:bg-white focus:shadow-xl focus:shadow-brand-green/10',
             inputClassName,
           )}

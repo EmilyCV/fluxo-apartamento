@@ -19,6 +19,7 @@ import {
 import { hapticFeedback } from '@/utils/haptics';
 import { cn } from '@/utils/cn';
 import { comprasService } from '@/modules/compras/services/comprasService';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface AmbienteDetailViewProps {
   ambienteId: Ambiente;
@@ -307,7 +308,10 @@ export function AmbienteDetailView({ ambienteId }: AmbienteDetailViewProps) {
                       Investimento
                     </p>
                     <p
-                      className={`text-2xl sm:text-3xl font-black tracking-tighter ${item.adquirido ? 'text-slate-300' : 'text-slate-900'}`}
+                      className={cn(
+                        'text-2xl sm:text-3xl font-black tracking-tighter tabular-nums truncate',
+                        item.adquirido ? 'text-slate-300' : 'text-slate-900',
+                      )}
                     >
                       {formatCurrency(item.valorTotalAproximado)}
                     </p>
@@ -337,16 +341,25 @@ export function AmbienteDetailView({ ambienteId }: AmbienteDetailViewProps) {
           </div>
         )}
 
-        <button
-          onClick={() => {
-            setItemToEdit(undefined);
-            setIsFormOpen(true);
-          }}
-          className="md:hidden fixed fab-safe-bottom right-8 w-20 h-20 bg-slate-900 text-white rounded-[32px] shadow-2xl flex items-center justify-center active:scale-75 transition-all z-[110] border-4 border-white shadow-slate-900/30"
-          aria-label="Adicionar novo item"
-        >
-          <Plus className="w-10 h-10" strokeWidth={3} />
-        </button>
+        <AnimatePresence>
+          {!isFormOpen && (
+            <motion.button
+              initial={{ opacity: 0, scale: 0.9, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 10 }}
+              transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => {
+                setItemToEdit(undefined);
+                setIsFormOpen(true);
+              }}
+              className="md:hidden fixed fab-safe-bottom right-6 w-16 h-16 bg-slate-900 text-white rounded-2xl shadow-2xl flex items-center justify-center z-[110] border-2 border-white/10 shadow-slate-900/30"
+              aria-label="Adicionar novo item"
+            >
+              <Plus className="w-8 h-8" strokeWidth={3} />
+            </motion.button>
+          )}
+        </AnimatePresence>
 
         {isFormOpen && (
           <ItemForm
