@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Plus, Send } from 'lucide-react';
+import { Plus, Send, CheckCircle2 } from 'lucide-react';
 import { Ambiente } from '../types';
 import { CurrencyInput } from '@/components/CurrencyInput';
 
@@ -142,9 +142,12 @@ export function QuickAdd({ onAdd }: QuickAddProps) {
       </form>
 
       {success && (
-        <p className="px-4 pb-4 text-xs font-bold text-brand-green-dark bg-brand-green-light animate-fade-in">
-          Item adicionado com sucesso.
-        </p>
+        <div className="bg-brand-green-light border-t border-brand-green/20 animate-fade-in">
+          <p className="px-4 py-3 text-xs font-bold text-brand-green-dark leading-relaxed flex items-center gap-2">
+            <CheckCircle2 className="w-3.5 h-3.5 shrink-0" strokeWidth={3} />
+            Item adicionado com sucesso
+          </p>
+        </div>
       )}
     </div>
   );

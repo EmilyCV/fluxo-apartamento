@@ -96,8 +96,8 @@ function FilterDropdownInner<T extends string>({
 
       // Vertical Positioning
       let topPosition = rect.bottom + window.scrollY;
-      if (rect.bottom + PANEL_HEIGHT > viewportHeight - MARGIN) {
-        topPosition = rect.top + window.scrollY - PANEL_HEIGHT - 8; // 8px gap above
+      if (rect.bottom + PANEL_HEIGHT + 16 > viewportHeight - MARGIN) {
+        topPosition = rect.top + window.scrollY - PANEL_HEIGHT - 16; // Adjust for the +8 in JSX to have 8px gap
       }
 
       setCoords({
@@ -149,8 +149,7 @@ function FilterDropdownInner<T extends string>({
     return value === opt.value;
   };
 
-  const isSelected =
-    value !== placeholder && value !== 'Todos' && value !== 'Todas' && value !== 'recentes';
+  const isSelected = value !== placeholder;
 
   let displayValue = label;
   if (isSelected) {
@@ -201,15 +200,15 @@ function FilterDropdownInner<T extends string>({
             ref={panelRef}
             style={{
               position: 'fixed',
-              top: coords.top - window.scrollY,
+              top: coords.top - window.scrollY + 8,
               left: coords.left,
               width: '256px',
               zIndex: 9999,
             }}
-            className="bg-white border border-slate-100 rounded-[24px] shadow-[0_20px_50px_rgba(0,0,0,0.15)] p-2 animate-fade-in-up"
+            className="bg-white border border-slate-100 rounded-[24px] shadow-[0_20px_50px_rgba(0,0,0,0.15)] overflow-hidden p-[1px] animate-fade-in-up"
             role="listbox"
           >
-            <div className="max-h-72 overflow-y-auto no-scrollbar py-1">
+            <div className="max-h-72 overflow-y-auto no-scrollbar pt-4 px-3 pb-3">
               {placeholder !== 'recentes' && (
                 <>
                   <button
@@ -221,11 +220,13 @@ function FilterDropdownInner<T extends string>({
                     }}
                     className={cn(
                       'w-full flex items-center justify-between px-4 py-3 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all mb-1',
-                      !isSelected ? 'bg-slate-50 text-slate-900' : 'text-slate-500 hover:bg-slate-50',
+                      !isSelected
+                        ? 'bg-slate-900 text-white shadow-lg'
+                        : 'text-slate-600 hover:bg-slate-50 hover:pl-5',
                     )}
                   >
-                    <span>Ver Todos</span>
-                    {!isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-slate-900" />}
+                    <span className="truncate pr-4">Ver Todos</span>
+                    {!isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-white" />}
                   </button>
                   <div className="h-px bg-slate-100 my-2 mx-2" />
                 </>
@@ -445,7 +446,7 @@ export function ComprasView() {
 
               <div className="h-6 w-px bg-slate-200 hidden md:block mx-2 shrink-0"></div>
 
-              <div className="overflow-x-auto -mx-6 px-6 md:mx-0 md:px-0 pb-2 no-scrollbar">
+              <div className="overflow-x-auto -mx-6 px-6 md:mx-0 md:px-0 py-6 -my-6 no-scrollbar">
               <div className="flex items-center gap-3 w-max">
                 <FilterDropdown<SortOrder>
                   label="Ordenar"
