@@ -1,11 +1,12 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AppLayout } from '@/components/AppLayout';
 import { ChevronRight, CheckCircle2, LayoutGrid, Search, FilterX, RotateCcw, Clock, SortAsc, Zap } from 'lucide-react';
 import { useAmbientesData } from '@/modules/ambientes/hooks/useAmbientesData';
 import { cn } from '@/utils/cn';
+import { getIsHydrated, setIsHydrated } from '@/utils/hydration';
 
 export function AmbientesView() {
   const router = useRouter();
@@ -20,10 +21,19 @@ export function AmbientesView() {
     handleAlfabeticoClick
   } = useAmbientesData();
 
+  const [isMounted, setIsMounted] = useState(getIsHydrated());
+
+  useEffect(() => {
+    setIsMounted(true);
+    setIsHydrated();
+  }, []);
+
+  const isActuallyLoading = !isMounted || loading;
+
   return (
     <AppLayout>
       <div className="max-w-7xl mx-auto px-6 py-10 md:px-12 space-y-12">
-        <header className="space-y-12 animate-pop">
+        <header className="space-y-6 sm:space-y-12 animate-pop">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8">
             <div className="space-y-2">
               <div className="flex items-center gap-2">
@@ -34,7 +44,7 @@ export function AmbientesView() {
                   Explorar
                 </span>
               </div>
-              <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tighter">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 tracking-tighter">
                 Nossos Cômodos
               </h1>
               <p className="text-slate-400 font-medium italic">
@@ -45,14 +55,14 @@ export function AmbientesView() {
             <div className="flex items-center gap-3 w-full lg:w-auto">
               <div className="relative flex-1 lg:w-96 group">
                 <Search
-                  className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-200 group-focus-within:text-slate-400 transition-colors"
+                  className="absolute left-4 sm:left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-200 group-focus-within:text-slate-400 transition-colors"
                   aria-hidden="true"
                 />
                 <input
                   type="text"
                   aria-label="Procurar cômodos"
                   placeholder="Qual cômodo você procura?"
-                  className="w-full h-16 bg-white border border-slate-100 rounded-[28px] pl-16 pr-6 outline-none focus:border-slate-300 focus:shadow-2xl focus:shadow-slate-200/50 transition-all text-sm font-bold shadow-sm"
+                  className="w-full h-12 sm:h-16 bg-white border border-slate-100 rounded-[28px] pl-14 sm:pl-16 pr-6 outline-none focus:border-slate-300 focus:shadow-2xl focus:shadow-slate-200/50 transition-all text-sm font-bold shadow-sm"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
@@ -61,6 +71,7 @@ export function AmbientesView() {
           </div>
 
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="overflow-x-auto -mx-6 px-6 md:mx-0 md:px-0 pb-1 no-scrollbar">
             <div
               className="flex bg-slate-100 p-1 rounded-2xl w-fit shadow-sm border border-slate-200/50 ml-auto"
               role="group"
@@ -109,44 +120,45 @@ export function AmbientesView() {
                 Progresso
               </button>
             </div>
+            </div>
           </div>
         </header>
 
-        {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-32">
+        {isActuallyLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-nav-safe md:pb-12">
             {[1, 2, 3, 4, 5, 6].map((skeletonIndex) => (
               <div
                 key={skeletonIndex}
-                className="h-64 bg-white rounded-[40px] animate-pulse border border-slate-50"
+                className="h-44 sm:h-64 bg-slate-100 rounded-[40px] animate-pulse border border-slate-50"
               />
             ))}
           </div>
         ) : ambientes.length === 0 ? (
-          <div className="text-center py-40 bg-white rounded-[48px] border border-slate-100 flex flex-col items-center animate-pop shadow-sm">
+          <div className="text-center py-20 sm:py-40 bg-white rounded-[48px] border border-slate-100 flex flex-col items-center animate-pop shadow-sm">
             <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-6">
               <FilterX className="w-8 h-8 text-slate-200" aria-hidden="true" />
             </div>
             <h3 className="text-xl font-black text-slate-800 mb-2">Nenhum cômodo encontrado</h3>
-            <p className="text-slate-400 font-bold uppercase text-[9px] tracking-[0.3em] mb-8">
+            <p className="text-slate-400 font-bold uppercase text-[9px] tracking-[0.3em] mb-5 sm:mb-8">
               Tente ajustar sua busca ou filtros
             </p>
             <button
               onClick={() => { setSearchTerm(''); setOrdenacao('original'); }}
-              className="flex items-center gap-3 px-8 h-14 rounded-2xl bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all"
+              className="flex items-center gap-3 px-8 h-14 rounded-2xl bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all active:scale-95 touch-manipulation"
             >
               <RotateCcw className="w-4 h-4" />
               Limpar Busca
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-32">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-nav-safe md:pb-12">
             {ambientes.map((ambiente, index) => {
               return (
                 <button
                   key={ambiente.id}
                   onClick={() => router.push(`/ambientes/${encodeURIComponent(ambiente.id)}`)}
                   className={cn(
-                    'group card-pop p-10 flex flex-col justify-between hover:scale-[1.02] active:scale-95 text-left min-h-[300px] animate-pop relative overflow-hidden bg-gradient-to-br border',
+                    'group card-pop p-5 sm:p-10 flex flex-col justify-between hover:scale-[1.02] active:scale-95 text-left min-h-[180px] sm:min-h-[300px] animate-pop relative overflow-hidden bg-gradient-to-br border',
                     ambiente.colors.gradient,
                     ambiente.colors.border,
                   )}

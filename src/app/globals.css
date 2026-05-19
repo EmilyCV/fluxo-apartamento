@@ -39,6 +39,18 @@
     font-family: 'Inter', sans-serif;
     -webkit-tap-highlight-color: transparent;
     -webkit-text-size-adjust: 100%;
+    overflow-x: hidden;
+  }
+
+  @media (max-width: 767px) {
+    input[type="text"],
+    input[type="number"],
+    input[type="url"],
+    input[type="email"],
+    textarea,
+    select {
+      font-size: 16px !important;
+    }
   }
 
   :focus-visible {
@@ -80,7 +92,17 @@
 
 @layer utilities {
   .fab-safe-bottom {
-    bottom: calc(8rem + env(safe-area-inset-bottom, 0px));
+    bottom: calc(7.5rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .pb-nav-safe {
+    padding-bottom: calc(8rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .clamp-text {
+    font-size: clamp(1.75rem, 10vw, 3.75rem);
+    line-height: 1;
+    @apply tabular-nums tracking-tighter;
   }
 }
 
@@ -93,6 +115,15 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@media (max-width: 767px) {
+  @media (prefers-reduced-motion: no-preference) {
+    @keyframes fadeInSlideUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
   }
 }
 

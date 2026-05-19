@@ -12,7 +12,6 @@ import {
   Plus,
   LayoutGrid,
   ShoppingCart,
-  SortAsc,
   Clock,
   Zap,
   ArrowUpNarrowWide,
@@ -20,6 +19,7 @@ import {
 import { hapticFeedback } from '@/utils/haptics';
 import { cn } from '@/utils/cn';
 import { comprasService } from '@/modules/compras/services/comprasService';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface AmbienteDetailViewProps {
   ambienteId: Ambiente;
@@ -60,7 +60,7 @@ export function AmbienteDetailView({ ambienteId }: AmbienteDetailViewProps) {
   return (
     <AppLayout>
       <div className="max-w-6xl mx-auto px-6 py-10 md:px-12 space-y-12">
-        <header className="space-y-8 animate-pop">
+        <header className="space-y-6 sm:space-y-8 animate-pop">
           <div className="flex items-center justify-between">
             <button
               onClick={() => router.push('/ambientes')}
@@ -90,7 +90,7 @@ export function AmbienteDetailView({ ambienteId }: AmbienteDetailViewProps) {
                   Ambiente
                 </span>
               </div>
-              <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tighter italic">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 tracking-tighter italic">
                 {ambienteId.split('. ')[1]}
               </h1>
             </div>
@@ -116,7 +116,8 @@ export function AmbienteDetailView({ ambienteId }: AmbienteDetailViewProps) {
             </div>
           </div>
 
-          {items.length > 1 && (
+          {items.length > 0 && (
+            <div className="overflow-x-auto -mx-6 px-6 md:mx-0 md:px-0 pb-1 no-scrollbar">
             <div
               className="flex bg-slate-100 p-1 rounded-2xl w-fit shadow-sm border border-slate-200/50"
               role="group"
@@ -169,7 +170,7 @@ export function AmbienteDetailView({ ambienteId }: AmbienteDetailViewProps) {
                 )}
                 title={alfabeticoAsc ? 'Ordenar Z-A' : 'Ordenar A-Z'}
               >
-                <SortAsc
+                <ArrowUpNarrowWide
                   className={cn(
                     'w-3.5 h-3.5 transition-transform duration-300',
                     ordenacao === 'alfabetico' && !alfabeticoAsc && 'rotate-180',
@@ -208,6 +209,7 @@ export function AmbienteDetailView({ ambienteId }: AmbienteDetailViewProps) {
                 </span>
               </button>
             </div>
+            </div>
           )}
         </header>
 
@@ -218,14 +220,14 @@ export function AmbienteDetailView({ ambienteId }: AmbienteDetailViewProps) {
             ))}
           </div>
         ) : items.length === 0 ? (
-          <div className="text-center py-32 bg-white rounded-[48px] border-2 border-dashed border-slate-100 flex flex-col items-center animate-pop shadow-sm">
+          <div className="text-center py-20 sm:py-32 bg-white rounded-[48px] border-2 border-dashed border-slate-100 flex flex-col items-center animate-pop shadow-sm">
             <div className="w-24 h-24 bg-brand-blue-light rounded-[32px] flex items-center justify-center mb-6 shadow-sm border border-brand-blue/20">
               <LayoutGrid className="w-10 h-10 text-brand-blue-dark" aria-hidden="true" />
             </div>
             <h2 className="text-2xl font-black text-slate-800 tracking-tight mb-2">
               Ambiente vazio
             </h2>
-            <p className="text-slate-400 font-medium mb-8 italic">
+            <p className="text-slate-400 font-medium mb-5 sm:mb-8 italic">
               Você ainda não adicionou nenhum item para este cômodo.
             </p>
             <button
@@ -233,14 +235,14 @@ export function AmbienteDetailView({ ambienteId }: AmbienteDetailViewProps) {
                 setItemToEdit(undefined);
                 setIsFormOpen(true);
               }}
-              className="btn-pop bg-slate-900 text-white shadow-xl shadow-slate-900/10 hover:scale-105 active:scale-95 px-12"
+              className="btn-pop bg-slate-900 text-white shadow-xl shadow-slate-900/10 hover:scale-105 active:scale-95 touch-manipulation px-12"
               aria-label="Adicionar primeiro item"
             >
               <Plus className="w-5 h-5" strokeWidth={3} /> Adicionar Item
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-10 pb-32">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-10 pb-nav-safe md:pb-12">
             {items.map((item, index) => (
               <div
                 key={item.id}
@@ -254,7 +256,7 @@ export function AmbienteDetailView({ ambienteId }: AmbienteDetailViewProps) {
                   setIsFormOpen(true);
                 }}
                 className={cn(
-                  'card-pop group flex flex-col p-10 gap-10 cursor-pointer relative overflow-hidden animate-pop border-slate-100/60',
+                  'card-pop group flex flex-col p-5 sm:p-10 gap-4 sm:gap-10 cursor-pointer relative overflow-hidden animate-pop border-slate-100/60 active:scale-[0.98] transition-transform',
                   item.adquirido ? 'bg-slate-50/50 opacity-60 grayscale-[0.5]' : 'bg-white',
                 )}
                 style={{ animationDelay: `${index * 50}ms` }}
@@ -286,7 +288,7 @@ export function AmbienteDetailView({ ambienteId }: AmbienteDetailViewProps) {
                   <div className="space-y-2">
                     <h3
                       className={cn(
-                        'text-3xl font-black leading-[1.15] tracking-tight group-hover:text-brand-pink-dark transition-colors break-words',
+                        'text-xl sm:text-3xl font-black leading-[1.15] tracking-tight group-hover:text-brand-pink-dark transition-colors break-words',
                         item.adquirido ? 'text-slate-300 line-through' : 'text-slate-900',
                       )}
                     >
@@ -300,13 +302,16 @@ export function AmbienteDetailView({ ambienteId }: AmbienteDetailViewProps) {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between pt-10 border-t border-slate-50/80 mt-auto">
+                <div className="flex items-center justify-between pt-4 sm:pt-10 border-t border-slate-50/80 mt-auto">
                   <div className="flex flex-col gap-1.5">
                     <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em]">
                       Investimento
                     </p>
                     <p
-                      className={`text-3xl font-black tracking-tighter ${item.adquirido ? 'text-slate-300' : 'text-slate-900'}`}
+                      className={cn(
+                        'text-2xl sm:text-3xl font-black tracking-tighter tabular-nums truncate',
+                        item.adquirido ? 'text-slate-300' : 'text-slate-900',
+                      )}
                     >
                       {formatCurrency(item.valorTotalAproximado)}
                     </p>
@@ -320,7 +325,7 @@ export function AmbienteDetailView({ ambienteId }: AmbienteDetailViewProps) {
                       comprasService.toggleAdquirido(item.id, item.adquirido);
                     }}
                     className={cn(
-                      'w-16 h-16 rounded-[24px] flex items-center justify-center transition-all shadow-sm active:scale-90',
+                      'w-12 h-12 sm:w-16 sm:h-16 rounded-[24px] flex items-center justify-center transition-all shadow-sm active:scale-90',
                       item.adquirido
                         ? 'bg-brand-green text-white shadow-brand-green/20'
                         : 'bg-slate-50 text-slate-200 hover:bg-brand-green-light hover:text-brand-green-dark hover:scale-110',
@@ -336,16 +341,25 @@ export function AmbienteDetailView({ ambienteId }: AmbienteDetailViewProps) {
           </div>
         )}
 
-        <button
-          onClick={() => {
-            setItemToEdit(undefined);
-            setIsFormOpen(true);
-          }}
-          className="md:hidden fixed fab-safe-bottom right-8 w-20 h-20 bg-slate-900 text-white rounded-[32px] shadow-2xl flex items-center justify-center active:scale-75 transition-all z-[110] border-4 border-white shadow-slate-900/30"
-          aria-label="Adicionar novo item"
-        >
-          <Plus className="w-10 h-10" strokeWidth={3} />
-        </button>
+        <AnimatePresence>
+          {!isFormOpen && (
+            <motion.button
+              initial={{ opacity: 0, scale: 0.9, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 10 }}
+              transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => {
+                setItemToEdit(undefined);
+                setIsFormOpen(true);
+              }}
+              className="md:hidden fixed fab-safe-bottom right-6 w-16 h-16 bg-slate-900 text-white rounded-2xl shadow-2xl flex items-center justify-center z-[110] border-2 border-white/10 shadow-slate-900/30"
+              aria-label="Adicionar novo item"
+            >
+              <Plus className="w-8 h-8" strokeWidth={3} />
+            </motion.button>
+          )}
+        </AnimatePresence>
 
         {isFormOpen && (
           <ItemForm

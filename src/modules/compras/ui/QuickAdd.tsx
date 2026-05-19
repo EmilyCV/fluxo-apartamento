@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Plus, Send } from 'lucide-react';
+import { Plus, Send, CheckCircle2 } from 'lucide-react';
 import { Ambiente } from '../types';
 import { CurrencyInput } from '@/components/CurrencyInput';
 
@@ -23,6 +23,7 @@ export function QuickAdd({ onAdd }: QuickAddProps) {
   const [itemQuantity, setItemQuantity] = useState(1);
   const [loading, setLoading] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [success, setSuccess] = useState(false);
 
   const totalPrice = unitPrice * itemQuantity;
 
@@ -36,6 +37,8 @@ export function QuickAdd({ onAdd }: QuickAddProps) {
       setUnitPrice(0);
       setItemQuantity(1);
       setIsExpanded(false);
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 1500);
     } catch {
       // Silencia — o form completo tem tratamento de erro adequado
     } finally {
@@ -56,17 +59,11 @@ export function QuickAdd({ onAdd }: QuickAddProps) {
           <input
             type="text"
             placeholder="Adicionar item rapidamente..."
-            className="flex-1 bg-transparent outline-none text-sm font-bold text-slate-900 placeholder:text-slate-300"
+            className="flex-1 min-w-0 bg-transparent outline-none text-base font-bold text-slate-900 placeholder:text-slate-300"
             value={itemName}
             onChange={(event) => setItemName(event.target.value)}
             onFocus={() => setIsExpanded(true)}
           />
-
-          {itemQuantity > 1 && unitPrice > 0 && (
-            <span className="text-xs font-black text-slate-400 animate-fade-in shrink-0">
-              = {formatCurrencyValue(totalPrice)}
-            </span>
-          )}
 
           {itemName.trim() && (
             <button
@@ -86,6 +83,17 @@ export function QuickAdd({ onAdd }: QuickAddProps) {
 
         {isExpanded && (
           <div className="px-4 pb-4 space-y-4 border-t border-slate-50 pt-3">
+            {unitPrice > 0 && (
+              <div className="flex items-center justify-between bg-brand-blue-light/50 rounded-2xl px-4 py-3 border border-brand-blue/10 animate-fade-in">
+                <span className="text-[10px] font-black text-brand-blue-dark uppercase tracking-widest">
+                  Total
+                </span>
+                <span className="text-lg font-black text-slate-900 tabular-nums tracking-tight">
+                  {formatCurrencyValue(totalPrice)}
+                </span>
+              </div>
+            )}
+            
             <div className="flex items-center gap-2">
               <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest shrink-0">
                 Cômodo:
@@ -96,7 +104,7 @@ export function QuickAdd({ onAdd }: QuickAddProps) {
                     key={option.value}
                     type="button"
                     onClick={() => setSelectedAmbiente(option.value)}
-                    className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all ${
+                    className={`px-3 py-1.5 min-h-[36px] rounded-xl text-[10px] font-black uppercase tracking-wider transition-all touch-manipulation ${
                       selectedAmbiente === option.value
                         ? 'bg-slate-900 text-white'
                         : 'bg-slate-50 text-slate-500 hover:bg-slate-100'
@@ -109,7 +117,7 @@ export function QuickAdd({ onAdd }: QuickAddProps) {
             </div>
 
             <div className="flex gap-3 items-end">
-              <div className="w-24 space-y-2">
+              <div className="w-24 min-w-0 space-y-2">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
                   Qtd.
                 </label>
@@ -125,13 +133,22 @@ export function QuickAdd({ onAdd }: QuickAddProps) {
                 label="Valor unitário"
                 value={unitPrice}
                 onChange={setUnitPrice}
-                className="flex-1 space-y-2"
-                inputClassName="h-10 text-sm rounded-xl px-4"
+                className="flex-1 min-w-0 space-y-2"
+                inputClassName="h-10 text-base rounded-xl px-4"
               />
             </div>
           </div>
         )}
       </form>
+
+      {success && (
+        <div className="bg-brand-green-light border-t border-brand-green/20 animate-fade-in">
+          <p className="px-4 py-3 text-xs font-bold text-brand-green-dark leading-relaxed flex items-center gap-2">
+            <CheckCircle2 className="w-3.5 h-3.5 shrink-0" strokeWidth={3} />
+            Item adicionado com sucesso
+          </p>
+        </div>
+      )}
     </div>
   );
 }

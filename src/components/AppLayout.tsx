@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { LayoutDashboard, Home, ShoppingCart, LogOut, Sparkles } from 'lucide-react';
 import { useFirebaseAuth } from '@/modules/auth/contexts/AuthContext';
 import { cn } from '@/utils/cn';
+import { hapticFeedback } from '@/utils/haptics';
 
 interface NavItemProps {
   href: string;
@@ -85,45 +86,52 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
       {/* --- MAIN CONTENT --- */}
       <div className="flex-1 flex flex-col min-w-0 bg-white md:bg-slate-50">
-        <main className="flex-1 relative z-0">
-          <div className="pb-40 md:pb-12">{children}</div>
+        <main className="flex-1 relative">
+          <div className="pb-nav-safe md:pb-12">{children}</div>
         </main>
       </div>
 
       {/* --- BOTTOM NAV (Mobile: <md) --- */}
       <nav
-        className="md:hidden fixed bottom-8 left-8 right-8 h-20 bg-slate-900/95 backdrop-blur-xl rounded-[32px] shadow-[0_20px_50px_rgba(0,0,0,0.3)] z-[100] flex items-center justify-around px-4 border border-white/10"
+        className="md:hidden fixed bottom-0 left-0 right-0 z-[100]"
+        style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
         aria-label="Navegação principal"
       >
-        {NAV_ITEMS.map((item) => {
-          const isActive = pathname === item.href;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              aria-label={item.label}
-              aria-current={isActive ? 'page' : undefined}
-              className={cn(
-                'flex flex-col items-center justify-center gap-1 w-14 h-14 rounded-2xl transition-all duration-300 active:scale-75',
-                isActive ? 'text-white' : 'text-slate-500',
-              )}
-            >
-              <item.icon className={cn('w-6 h-6', isActive && 'stroke-[2.5px]')} />
-              {isActive && <div className="w-1 h-1 bg-brand-pink rounded-full absolute bottom-3"></div>}
-            </Link>
-          );
-        })}
+        <div className="mx-4 mb-4 h-20 bg-slate-900/95 backdrop-blur-xl rounded-[32px] shadow-[0_20px_50px_rgba(0,0,0,0.3)] flex items-center justify-around px-4 border border-white/10">
+          {NAV_ITEMS.map((item) => {
+            const isActive = pathname === item.href;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                aria-label={item.label}
+                aria-current={isActive ? 'page' : undefined}
+                className={cn(
+                  'flex flex-col items-center justify-center gap-1 w-14 h-14 rounded-2xl transition-all duration-300 active:scale-75 touch-manipulation',
+                  isActive ? 'text-white' : 'text-slate-500',
+                )}
+              >
+                <item.icon className={cn('w-6 h-6', isActive && 'stroke-[2.5px]')} />
+                {isActive && (
+                  <span className="text-[9px] font-black uppercase tracking-widest text-white animate-fade-in">
+                    {item.label}
+                  </span>
+                )}
+              </Link>
+            );
+          })}
 
-        <div className="w-px h-8 bg-white/10 mx-2" />
+          <div className="w-px h-8 bg-white/10 mx-2" />
 
-        {/* Botão de Logout no Mobile direto na barra */}
-        <button
-          onClick={logout}
-          className="flex flex-col items-center justify-center w-14 h-14 rounded-2xl text-red-400 active:scale-75 transition-all"
-          aria-label="Sair da conta"
-        >
-          <LogOut className="w-6 h-6" />
-        </button>
+          {/* Botão de Logout no Mobile direto na barra */}
+          <button
+            onClick={() => { hapticFeedback('medium'); logout(); }}
+            className="flex flex-col items-center justify-center w-14 h-14 rounded-2xl text-red-400 active:scale-75 transition-all touch-manipulation"
+            aria-label="Sair da conta"
+          >
+            <LogOut className="w-6 h-6" />
+          </button>
+        </div>
       </nav>
     </div>
   );
