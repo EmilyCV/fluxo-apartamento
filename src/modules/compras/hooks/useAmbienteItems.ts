@@ -4,22 +4,42 @@ import { useState, useEffect, useMemo } from 'react';
 import { comprasService } from '../services/comprasService';
 import { CompraItem, Ambiente } from '../types';
 import { PRIORIDADE_ORDER } from '../constants';
+import { getIsHydrated } from '@/utils/hydration';
 
 export type SortOrder = 'recentes' | 'prioridade' | 'alfabetico' | 'preco';
 
 export function useAmbienteItems(ambienteId: Ambiente) {
-  const [items, setItems] = useState<CompraItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [items, setItems] = useState<CompraItem[]>(() => {
+    if (typeof window !== 'undefined' && getIsHydrated()) {
+      const cached = (comprasService as any).getCachedItems?.() || [];
+      return cached.filter((item: CompraItem) => item.ambiente === ambienteId);
+    }
+    return [];
+  });
+  const [loading, setLoading] = useState(() => {
+    if (typeof window !== 'undefined' && getIsHydrated()) {
+      return (comprasService as any).getCachedItems?.() === null;
+    }
+    return true;
+  });
   const [ordenacao, setOrdenacao] = useState<SortOrder>('recentes');
   const [alfabeticoAsc, setAlfabeticoAsc] = useState(true);
   const [precoAsc, setPrecoAsc] = useState(true);
 
   useEffect(() => {
+    let didReceiveSync = false;
+
     const unsubscribe = comprasService.subscribeToItems((itemList) => {
       const filtered = itemList.filter((item) => item.ambiente === ambienteId);
       setItems(filtered);
       setLoading(false);
+      didReceiveSync = true;
     });
+
+    if (didReceiveSync) {
+      setLoading(false);
+    }
+
     return () => unsubscribe();
   }, [ambienteId]);
 

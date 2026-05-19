@@ -5,6 +5,7 @@ import { comprasService } from '@/modules/compras/services/comprasService';
 import { homeAmbientesService } from '@/modules/ambientes/services/ambientesService';
 import { CompraItem, Categoria } from '@/modules/compras/types';
 import { HomeAmbiente } from '@/modules/ambientes/types';
+import { getIsHydrated } from '@/utils/hydration';
 
 const CATEGORIA_METRICS = [
   { label: 'Reforma', key: '1. Reforma' as Categoria, color: 'bg-purple-400' },
@@ -14,10 +15,30 @@ const CATEGORIA_METRICS = [
 ];
 
 export function useDashboardData() {
-  const [items, setItems] = useState<CompraItem[]>([]);
-  const [homeAmbientes, setHomeAmbientes] = useState<HomeAmbiente[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [homeAmbientesLoading, setHomeAmbientesLoading] = useState(true);
+  const [items, setItems] = useState<CompraItem[]>(() => {
+    if (typeof window !== 'undefined' && getIsHydrated()) {
+      return (comprasService as any).getCachedItems?.() || [];
+    }
+    return [];
+  });
+  const [homeAmbientes, setHomeAmbientes] = useState<HomeAmbiente[]>(() => {
+    if (typeof window !== 'undefined' && getIsHydrated()) {
+      return (homeAmbientesService as any).getCachedHomeAmbientes?.() || [];
+    }
+    return [];
+  });
+  const [loading, setLoading] = useState(() => {
+    if (typeof window !== 'undefined' && getIsHydrated()) {
+      return (comprasService as any).getCachedItems?.() === null;
+    }
+    return true;
+  });
+  const [homeAmbientesLoading, setHomeAmbientesLoading] = useState(() => {
+    if (typeof window !== 'undefined' && getIsHydrated()) {
+      return (homeAmbientesService as any).getCachedHomeAmbientes?.() === null;
+    }
+    return true;
+  });
 
   useEffect(() => {
     const initializeHome = async () => {
@@ -30,15 +51,23 @@ export function useDashboardData() {
 
     initializeHome();
 
+    let itemsSync = false;
+    let homeSync = false;
+
     const unsubscribeItems = comprasService.subscribeToItems((itemList) => {
       setItems(itemList);
       setLoading(false);
+      itemsSync = true;
     });
 
     const unsubscribeHomeAmbientes = homeAmbientesService.subscribeToHomeAmbientes((homeList) => {
       setHomeAmbientes(homeList);
       setHomeAmbientesLoading(false);
+      homeSync = true;
     });
+
+    if (itemsSync) setLoading(false);
+    if (homeSync) setHomeAmbientesLoading(false);
 
     return () => {
       unsubscribeItems();

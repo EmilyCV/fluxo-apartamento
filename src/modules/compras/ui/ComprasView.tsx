@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useState, useRef, useCallback, useLayoutEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { AppLayout } from '@/components/AppLayout';
 import { CompraItem, Ambiente, Categoria, Prioridade } from '@/modules/compras/types';
 import { ItemForm } from '@/modules/compras/ui/ItemForm';
@@ -23,6 +24,7 @@ import { cn } from '@/utils/cn';
 import { hapticFeedback } from '@/utils/haptics';
 import { comprasService } from '@/modules/compras/services/comprasService';
 import { motion, AnimatePresence } from 'framer-motion';
+import { getIsHydrated, setIsHydrated } from '@/utils/hydration';
 
 const AMBIENTES: Ambiente[] = [
   '1. Cozinha',
@@ -70,12 +72,50 @@ function FilterDropdownInner<T extends string>({
   placeholder,
   minWidth,
 }: FilterDropdownProps<T>) {
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const [coords, setCoords] = useState({ top: 0, left: 0, width: 0 });
+
+  const updateCoords = useCallback(() => {
+    if (containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      setCoords({
+        top: rect.bottom + window.scrollY,
+        left: rect.left,
+        width: rect.width,
+      });
+    }
+  }, []);
+
+  useLayoutEffect(() => {
+    if (isOpen) {
+      updateCoords();
+      window.addEventListener('scroll', updateCoords);
+      window.addEventListener('resize', updateCoords);
+
+      // Bloqueia scroll no mobile
+      if (window.innerWidth < 768) {
+        document.body.style.overflow = 'hidden';
+      }
+    } else {
+      document.body.style.overflow = '';
+    }
+
+    return () => {
+      window.removeEventListener('scroll', updateCoords);
+      window.removeEventListener('resize', updateCoords);
+      document.body.style.overflow = '';
+    };
+  }, [isOpen, updateCoords]);
 
   useEffect(() => {
     if (!isOpen) return;
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+      const isInsideContainer = containerRef.current?.contains(target);
+      const isInsidePanel = panelRef.current?.contains(target);
+
+      if (!isInsideContainer && !isInsidePanel) {
         onToggle(null);
       }
     };
@@ -102,7 +142,7 @@ function FilterDropdownInner<T extends string>({
   }
 
   return (
-    <div className="relative shrink-0" ref={dropdownRef} style={{ minWidth }}>
+    <div className="relative shrink-0" ref={containerRef} style={{ minWidth }}>
       <button
         onClick={() => onToggle(isOpen ? null : label)}
         aria-expanded={isOpen}
@@ -133,64 +173,75 @@ function FilterDropdownInner<T extends string>({
         />
       </button>
 
-      {isOpen && (
-        <div
-          className="absolute top-full left-0 mt-3 w-64 bg-white border border-slate-100 rounded-[24px] shadow-[0_20px_50px_rgba(0,0,0,0.15)] p-2 z-[200] animate-fade-in-up"
-          role="listbox"
-        >
-          <div className="max-h-72 overflow-y-auto no-scrollbar py-1">
-            {placeholder !== 'recentes' && (
-              <>
-                <button
-                  role="option"
-                  aria-selected={!isSelected}
-                  onClick={() => {
-                    onChange(placeholder);
-                    onToggle(null);
-                  }}
-                  className={cn(
-                    'w-full flex items-center justify-between px-4 py-3 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all mb-1',
-                    !isSelected ? 'bg-slate-50 text-slate-900' : 'text-slate-500 hover:bg-slate-50',
-                  )}
-                >
-                  <span>Ver Todos</span>
-                  {!isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-slate-900" />}
-                </button>
-                <div className="h-px bg-slate-100 my-2 mx-2" />
-              </>
-            )}
-            {options.map((opt) => {
-              const optLabel =
-                typeof opt === 'string'
-                  ? opt.split('. ').pop() || opt
-                  : (opt as FilterOption<T>).label;
-              const optValue = typeof opt === 'string' ? opt : (opt as FilterOption<T>).value;
-              const active = isOptionSelected(opt);
+      {isOpen &&
+        typeof document !== 'undefined' &&
+        createPortal(
+          <div
+            ref={panelRef}
+            style={{
+              position: 'fixed',
+              top: coords.top - window.scrollY,
+              left: coords.left,
+              width: '256px',
+              zIndex: 9999,
+            }}
+            className="bg-white border border-slate-100 rounded-[24px] shadow-[0_20px_50px_rgba(0,0,0,0.15)] p-2 animate-fade-in-up"
+            role="listbox"
+          >
+            <div className="max-h-72 overflow-y-auto no-scrollbar py-1">
+              {placeholder !== 'recentes' && (
+                <>
+                  <button
+                    role="option"
+                    aria-selected={!isSelected}
+                    onClick={() => {
+                      onChange(placeholder);
+                      onToggle(null);
+                    }}
+                    className={cn(
+                      'w-full flex items-center justify-between px-4 py-3 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all mb-1',
+                      !isSelected ? 'bg-slate-50 text-slate-900' : 'text-slate-500 hover:bg-slate-50',
+                    )}
+                  >
+                    <span>Ver Todos</span>
+                    {!isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-slate-900" />}
+                  </button>
+                  <div className="h-px bg-slate-100 my-2 mx-2" />
+                </>
+              )}
+              {options.map((opt) => {
+                const optLabel =
+                  typeof opt === 'string'
+                    ? opt.split('. ').pop() || opt
+                    : (opt as FilterOption<T>).label;
+                const optValue = typeof opt === 'string' ? opt : (opt as FilterOption<T>).value;
+                const active = isOptionSelected(opt);
 
-              return (
-                <button
-                  key={optValue}
-                  role="option"
-                  aria-selected={active}
-                  onClick={() => {
-                    onChange(optValue);
-                    onToggle(null);
-                  }}
-                  className={cn(
-                    'w-full flex items-center justify-between px-4 py-3 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all mb-0.5',
-                    active
-                      ? 'bg-slate-900 text-white shadow-lg'
-                      : 'text-slate-600 hover:bg-slate-50 hover:pl-5',
-                  )}
-                >
-                  <span className="truncate pr-4">{optLabel}</span>
-                  {active && <CheckCircle2 className="w-3.5 h-3.5 text-white" />}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
+                return (
+                  <button
+                    key={optValue}
+                    role="option"
+                    aria-selected={active}
+                    onClick={() => {
+                      onChange(optValue);
+                      onToggle(null);
+                    }}
+                    className={cn(
+                      'w-full flex items-center justify-between px-4 py-3 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all mb-0.5',
+                      active
+                        ? 'bg-slate-900 text-white shadow-lg'
+                        : 'text-slate-600 hover:bg-slate-50 hover:pl-5',
+                    )}
+                  >
+                    <span className="truncate pr-4">{optLabel}</span>
+                    {active && <CheckCircle2 className="w-3.5 h-3.5 text-white" />}
+                  </button>
+                );
+              })}
+            </div>
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }
@@ -222,6 +273,12 @@ export function ComprasView() {
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
   const [itemToEdit, setItemToEdit] = useState<CompraItem | undefined>(undefined);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isMounted, setIsMounted] = useState(getIsHydrated());
+
+  useEffect(() => {
+    setIsMounted(true);
+    setIsHydrated();
+  }, []);
 
   const onSave = async (data: Omit<CompraItem, 'id' | 'createdAt' | 'updatedAt'>, id?: string) => {
     await handleSaveItem(data, id);
@@ -273,6 +330,9 @@ export function ComprasView() {
     { label: 'Maior Preço', value: 'preco-desc' },
   ];
 
+  const showQuickAdd = isMounted && !loading;
+  const isActuallyLoading = !isMounted || loading;
+
   return (
     <AppLayout>
       <div className="max-w-6xl mx-auto px-6 py-10 md:px-12 space-y-12">
@@ -316,7 +376,7 @@ export function ComprasView() {
             </div>
           </div>
 
-          {!loading && (
+          {showQuickAdd && (
             <div className="animate-pop [animation-delay:100ms]">
               <QuickAdd onAdd={handleQuickAdd} />
             </div>
@@ -428,7 +488,7 @@ export function ComprasView() {
           </div>
         </header>
 
-        {loading ? (
+        {isActuallyLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-10">
             {[1, 2, 3, 4, 5, 6].map((i) => (
               <div

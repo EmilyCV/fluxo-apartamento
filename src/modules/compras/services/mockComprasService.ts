@@ -57,6 +57,12 @@ const saveItems = (items: CompraItem[]) => {
 };
 
 export const mockComprasService = {
+  getCachedItems: () => {
+    if (typeof window === 'undefined') return null;
+    const stored = localStorage.getItem(STORAGE_KEY);
+    return stored ? JSON.parse(stored) : null;
+  },
+
   subscribeToItems: (callback: (items: CompraItem[]) => void) => {
     // Simula o onSnapshot do Firebase
     callback(getStoredItems()); // entrega dados imediatamente

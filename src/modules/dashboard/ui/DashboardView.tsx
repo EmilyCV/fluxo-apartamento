@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/modules/auth/contexts/AuthContext';
 import { AppLayout } from '@/components/AppLayout';
 import { CompraItem } from '@/modules/compras/types';
@@ -24,6 +24,7 @@ import { useRouter } from 'next/navigation';
 import { useDashboardData } from '@/modules/dashboard/hooks/useDashboardData';
 import { cn } from '@/utils/cn';
 import { motion, AnimatePresence } from 'framer-motion';
+import { getIsHydrated, setIsHydrated } from '@/utils/hydration';
 
 export function DashboardView() {
   const { userName } = useAuth();
@@ -50,6 +51,12 @@ export function DashboardView() {
 
   const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
   const [cardToRemove, setCardToRemove] = useState<string | null>(null);
+  const [isMounted, setIsMounted] = useState(getIsHydrated());
+
+  useEffect(() => {
+    setIsMounted(true);
+    setIsHydrated();
+  }, []);
 
   const formatCurrency = (val: number) =>
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
@@ -203,7 +210,7 @@ export function DashboardView() {
           </div>
 
           {/* Breakdown por Categoria */}
-          {items.length > 0 && (
+          {items.length > 0 && isMounted && (
             <div className="md:col-span-12 card-pop p-5 md:p-10 animate-pop [animation-delay:300ms]">
               <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-8">
                 Investimento por Categoria
@@ -248,7 +255,7 @@ export function DashboardView() {
           )}
 
           {/* Cards de Ambientes Dinâmicos */}
-          {homeAmbientesLoading ? (
+          {(!isMounted || homeAmbientesLoading) ? (
             <div className="md:col-span-12 grid grid-cols-1 md:grid-cols-3 gap-6 animate-pop [animation-delay:200ms]">
               {[1, 2, 3].map((skeletonIndex) => (
                 <div key={skeletonIndex} className="h-48 bg-slate-100 rounded-[32px] animate-pulse" />
@@ -277,7 +284,8 @@ export function DashboardView() {
                   <div
                     key={homeCard.id}
                     className={cn(
-                      'card-pop bg-gradient-to-br p-5 md:p-8 hover:scale-[1.03] cursor-pointer group relative overflow-hidden',
+                      'card-pop bg-gradient-to-br p-5 md:p-8 hover:scale-[1.03] cursor-pointer group relative animate-pop',
+                      isManageMode ? 'overflow-visible' : 'overflow-hidden',
                       masterAmbiente.colors.gradient,
                       masterAmbiente.colors.border,
                     )}
@@ -285,22 +293,6 @@ export function DashboardView() {
                       router.push(`/ambientes/${encodeURIComponent(homeCard.ambienteId)}`)
                     }
                   >
-                    {isManageMode && (
-                      <div className="absolute top-4 right-4 flex gap-2 z-20">
-                        <button
-                          onClick={(event) => handleEditCard(event, homeCard)}
-                          className="w-8 h-8 bg-white/80 backdrop-blur-md rounded-lg flex items-center justify-center text-slate-600 hover:text-slate-900 shadow-sm border border-slate-100"
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={(event) => handleRemoveClick(event, homeCard.id)}
-                          className="w-8 h-8 bg-red-50/80 backdrop-blur-md rounded-lg flex items-center justify-center text-red-500 hover:text-red-600 shadow-sm border border-red-100"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    )}
                     <div className="flex justify-between items-center mb-10">
                       <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm">
                         <masterAmbiente.icon
@@ -332,6 +324,25 @@ export function DashboardView() {
                         ></div>
                       </div>
                     </div>
+
+                    {isManageMode && (
+                      <div className="flex justify-end gap-2 mt-3 pt-3 border-t border-black/5 animate-fade-in">
+                        <button
+                          onClick={(event) => handleEditCard(event, homeCard)}
+                          className="w-10 h-10 bg-white/80 backdrop-blur-md rounded-xl flex items-center justify-center text-slate-600 hover:text-slate-900 shadow-sm border border-slate-100"
+                          title="Editar"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={(event) => handleRemoveClick(event, homeCard.id)}
+                          className="w-10 h-10 bg-red-50/80 backdrop-blur-md rounded-xl flex items-center justify-center text-red-500 hover:text-red-600 shadow-sm border border-red-100"
+                          title="Remover"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    )}
                   </div>
                 );
               })}

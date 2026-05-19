@@ -1,11 +1,12 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AppLayout } from '@/components/AppLayout';
 import { ChevronRight, CheckCircle2, LayoutGrid, Search, FilterX, RotateCcw, Clock, SortAsc, Zap } from 'lucide-react';
 import { useAmbientesData } from '@/modules/ambientes/hooks/useAmbientesData';
 import { cn } from '@/utils/cn';
+import { getIsHydrated, setIsHydrated } from '@/utils/hydration';
 
 export function AmbientesView() {
   const router = useRouter();
@@ -19,6 +20,15 @@ export function AmbientesView() {
     alfabeticoAsc,
     handleAlfabeticoClick
   } = useAmbientesData();
+
+  const [isMounted, setIsMounted] = useState(getIsHydrated());
+
+  useEffect(() => {
+    setIsMounted(true);
+    setIsHydrated();
+  }, []);
+
+  const isActuallyLoading = !isMounted || loading;
 
   return (
     <AppLayout>
@@ -114,7 +124,7 @@ export function AmbientesView() {
           </div>
         </header>
 
-        {loading ? (
+        {isActuallyLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-nav-safe md:pb-12">
             {[1, 2, 3, 4, 5, 6].map((skeletonIndex) => (
               <div

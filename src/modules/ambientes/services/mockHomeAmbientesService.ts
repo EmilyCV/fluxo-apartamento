@@ -32,6 +32,12 @@ const saveCards = (cards: HomeAmbiente[]) => {
 };
 
 export const mockHomeAmbientesService = {
+  getCachedHomeAmbientes: () => {
+    if (typeof window === 'undefined') return null;
+    const stored = localStorage.getItem(STORAGE_KEY);
+    return stored ? JSON.parse(stored) : null;
+  },
+
   subscribeToHomeAmbientes: (callback: (items: HomeAmbiente[]) => void) => {
     callback(getStoredCards());
     listeners.add(callback);
