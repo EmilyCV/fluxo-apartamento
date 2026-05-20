@@ -16,10 +16,7 @@ import {
   Edit2,
   Trash2,
   CheckCircle2,
-  StickyNote,
-  Pin,
 } from 'lucide-react';
-import { NOTAS_CORES } from '@/modules/notas/constants';
 import { ItemForm } from '@/modules/compras/ui/ItemForm';
 import { AmbienteForm } from '@/modules/ambientes/ui/AmbienteForm';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
@@ -38,7 +35,6 @@ export function DashboardView() {
     homeAmbientes,
     loading,
     homeAmbientesLoading,
-    notasRecentes,
     totalInvestido,
     totalOrcado,
     percentualProgresso,
@@ -212,62 +208,6 @@ export function DashboardView() {
               <ArrowUpRight className="w-4 h-4" />
             </button>
           </div>
-
-          {/* Widget Notas Recentes */}
-          {isMounted && notasRecentes.length > 0 && (
-            <div className="md:col-span-4 card-pop p-6 md:p-8 flex flex-col gap-4 animate-pop [animation-delay:150ms]">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 bg-brand-pink-light rounded-xl flex items-center justify-center text-brand-pink-dark border border-brand-pink/20">
-                    <StickyNote className="w-4 h-4" />
-                  </div>
-                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                    Notas Recentes
-                  </span>
-                </div>
-                <button
-                  onClick={() => router.push('/notas')}
-                  className="flex items-center gap-1.5 text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-slate-900 transition-colors"
-                  aria-label="Ver todas as notas"
-                >
-                  Ver todas
-                  <ArrowUpRight className="w-3.5 h-3.5" />
-                </button>
-              </div>
-              <div className="space-y-2">
-                {notasRecentes.map((nota) => {
-                  const cores = NOTAS_CORES[nota.cor];
-                  return (
-                    <div
-                      key={nota.id}
-                      onClick={() => router.push('/notas')}
-                      role="button"
-                      tabIndex={0}
-                      onKeyDown={(e) => e.key === 'Enter' && router.push('/notas')}
-                      className={cn(
-                        'flex items-center gap-3 p-3 rounded-2xl border cursor-pointer transition-all hover:shadow-sm active:scale-[0.98]',
-                        cores.bg,
-                        cores.border,
-                      )}
-                    >
-                      <div className={cn('w-2 h-2 rounded-full shrink-0', cores.dot)} />
-                      <span className="flex-1 text-sm font-black text-slate-800 truncate">
-                        {nota.titulo}
-                      </span>
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        {nota.pinned && (
-                          <Pin className="w-3 h-3 text-slate-400 fill-current" aria-hidden="true" />
-                        )}
-                        <span className={cn('text-[9px] font-black uppercase tracking-wide', cores.text)}>
-                          {nota.tipo === 'todo' ? 'To-do' : 'Nota'}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
 
           {/* Breakdown por Categoria */}
           {items.length > 0 && isMounted && (
