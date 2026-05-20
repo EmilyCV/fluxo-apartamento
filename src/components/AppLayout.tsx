@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Home, ShoppingCart, LogOut, Sparkles } from 'lucide-react';
+import { LayoutDashboard, Home, ShoppingCart, StickyNote, LogOut, Sparkles } from 'lucide-react';
 import { useFirebaseAuth } from '@/modules/auth/contexts/AuthContext';
 import { cn } from '@/utils/cn';
 import { hapticFeedback } from '@/utils/haptics';
@@ -17,6 +17,7 @@ interface NavItemProps {
 const NAV_ITEMS: NavItemProps[] = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Home' },
   { href: '/ambientes', icon: Home, label: 'Cômodos' },
+  { href: '/notas', icon: StickyNote, label: 'Notas' },
   { href: '/compras', icon: ShoppingCart, label: 'Lista' },
 ];
 
