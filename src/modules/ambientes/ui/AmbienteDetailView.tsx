@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { AppLayout } from '@/components/AppLayout';
 import { CompraItem, Ambiente } from '@/modules/compras/types';
@@ -17,6 +17,7 @@ import {
   ArrowUpNarrowWide,
   StickyNote,
   ArrowUpRight,
+  ChevronRight,
 } from 'lucide-react';
 import { hapticFeedback } from '@/utils/haptics';
 import { cn } from '@/utils/cn';
@@ -50,6 +51,17 @@ export function AmbienteDetailView({ ambienteId }: AmbienteDetailViewProps) {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [itemToEdit, setItemToEdit] = useState<CompraItem | undefined>(undefined);
   const [notasDoAmbiente, setNotasDoAmbiente] = useState<Nota[]>([]);
+
+  const [itensPorPagina, setItensPorPagina] = useState<10 | 20 | 30 | 40 | null>(10);
+  const [paginaAtual, setPaginaAtual] = useState(1);
+
+  useEffect(() => { setPaginaAtual(1); }, [ordenacao, itensPorPagina]);
+
+  const totalPaginas = itensPorPagina ? Math.ceil(items.length / itensPorPagina) : 1;
+  const paginatedItems = useMemo(
+    () => itensPorPagina ? items.slice((paginaAtual - 1) * itensPorPagina, paginaAtual * itensPorPagina) : items,
+    [items, itensPorPagina, paginaAtual],
+  );
 
   useEffect(() => {
     const unsubscribe = notasService.subscribeToNotas((notaList) => {
@@ -131,96 +143,120 @@ export function AmbienteDetailView({ ambienteId }: AmbienteDetailViewProps) {
 
           {items.length > 0 && (
             <div className="overflow-x-auto -mx-6 px-6 md:mx-0 md:px-0 pb-1 no-scrollbar">
-            <div
-              className="flex bg-slate-100 p-1 rounded-2xl w-fit shadow-sm border border-slate-200/50"
-              role="group"
-              aria-label="Ordenação de itens"
-            >
-              <button
-                onClick={() => setOrdenacao('recentes')}
-                className={cn(
-                  'flex items-center gap-2 h-10 px-4 rounded-[14px] text-[10px] font-black uppercase tracking-widest transition-all duration-300',
-                  ordenacao === 'recentes'
-                    ? 'bg-white text-slate-900 shadow-sm'
-                    : 'text-slate-400 hover:text-slate-600',
-                )}
+            <div className="flex items-center gap-3 w-fit">
+              <div
+                className="flex bg-slate-100 p-1 rounded-2xl shadow-sm border border-slate-200/50"
+                role="group"
+                aria-label="Ordenação de itens"
               >
-                <Clock className="w-3.5 h-3.5" />
-                <span
-                  className={cn('hidden sm:inline', ordenacao === 'recentes' ? 'inline' : 'hidden')}
+                <button
+                  onClick={() => setOrdenacao('recentes')}
+                  className={cn(
+                    'flex items-center gap-2 h-10 px-4 rounded-[14px] text-[10px] font-black uppercase tracking-widest transition-all duration-300',
+                    ordenacao === 'recentes'
+                      ? 'bg-white text-slate-900 shadow-sm'
+                      : 'text-slate-400 hover:text-slate-600',
+                  )}
                 >
-                  Recentes
-                </span>
-              </button>
+                  <Clock className="w-3.5 h-3.5" />
+                  <span
+                    className={cn('hidden sm:inline', ordenacao === 'recentes' ? 'inline' : 'hidden')}
+                  >
+                    Recentes
+                  </span>
+                </button>
 
-              <button
-                onClick={() => setOrdenacao('prioridade')}
-                className={cn(
-                  'flex items-center gap-2 h-10 px-4 rounded-[14px] text-[10px] font-black uppercase tracking-widest transition-all duration-300',
-                  ordenacao === 'prioridade'
-                    ? 'bg-white text-slate-900 shadow-sm'
-                    : 'text-slate-400 hover:text-slate-600',
-                )}
-              >
-                <Zap className="w-3.5 h-3.5" />
-                <span
+                <button
+                  onClick={() => setOrdenacao('prioridade')}
                   className={cn(
-                    'hidden sm:inline',
-                    ordenacao === 'prioridade' ? 'inline' : 'hidden',
+                    'flex items-center gap-2 h-10 px-4 rounded-[14px] text-[10px] font-black uppercase tracking-widest transition-all duration-300',
+                    ordenacao === 'prioridade'
+                      ? 'bg-white text-slate-900 shadow-sm'
+                      : 'text-slate-400 hover:text-slate-600',
                   )}
                 >
-                  Prioridade
-                </span>
-              </button>
+                  <Zap className="w-3.5 h-3.5" />
+                  <span
+                    className={cn(
+                      'hidden sm:inline',
+                      ordenacao === 'prioridade' ? 'inline' : 'hidden',
+                    )}
+                  >
+                    Prioridade
+                  </span>
+                </button>
 
-              <button
-                onClick={handleAlfabetico}
-                className={cn(
-                  'flex items-center gap-2 h-10 px-4 rounded-[14px] text-[10px] font-black uppercase tracking-widest transition-all duration-300',
-                  ordenacao === 'alfabetico'
-                    ? 'bg-white text-slate-900 shadow-sm'
-                    : 'text-slate-400 hover:text-slate-600',
-                )}
-                title={alfabeticoAsc ? 'Ordenar Z-A' : 'Ordenar A-Z'}
-              >
-                <ArrowUpNarrowWide
+                <button
+                  onClick={handleAlfabetico}
                   className={cn(
-                    'w-3.5 h-3.5 transition-transform duration-300',
-                    ordenacao === 'alfabetico' && !alfabeticoAsc && 'rotate-180',
+                    'flex items-center gap-2 h-10 px-4 rounded-[14px] text-[10px] font-black uppercase tracking-widest transition-all duration-300',
+                    ordenacao === 'alfabetico'
+                      ? 'bg-white text-slate-900 shadow-sm'
+                      : 'text-slate-400 hover:text-slate-600',
                   )}
-                />
-                <span
-                  className={cn(
-                    'hidden sm:inline',
-                    ordenacao === 'alfabetico' ? 'inline' : 'hidden',
-                  )}
+                  title={alfabeticoAsc ? 'Ordenar Z-A' : 'Ordenar A-Z'}
                 >
-                  A-Z
-                </span>
-              </button>
+                  <ArrowUpNarrowWide
+                    className={cn(
+                      'w-3.5 h-3.5 transition-transform duration-300',
+                      ordenacao === 'alfabetico' && !alfabeticoAsc && 'rotate-180',
+                    )}
+                  />
+                  <span
+                    className={cn(
+                      'hidden sm:inline',
+                      ordenacao === 'alfabetico' ? 'inline' : 'hidden',
+                    )}
+                  >
+                    A-Z
+                  </span>
+                </button>
 
-              <button
-                onClick={handlePreco}
-                className={cn(
-                  'flex items-center gap-2 h-10 px-4 rounded-[14px] text-[10px] font-black uppercase tracking-widest transition-all duration-300',
-                  ordenacao === 'preco'
-                    ? 'bg-white text-slate-900 shadow-sm'
-                    : 'text-slate-400 hover:text-slate-600',
-                )}
-                title={precoAsc ? 'Preço decrescente' : 'Preço crescente'}
-              >
-                <ArrowUpNarrowWide
+                <button
+                  onClick={handlePreco}
                   className={cn(
-                    'w-3.5 h-3.5 transition-transform duration-300',
-                    ordenacao === 'preco' && !precoAsc && 'rotate-180',
+                    'flex items-center gap-2 h-10 px-4 rounded-[14px] text-[10px] font-black uppercase tracking-widest transition-all duration-300',
+                    ordenacao === 'preco'
+                      ? 'bg-white text-slate-900 shadow-sm'
+                      : 'text-slate-400 hover:text-slate-600',
                   )}
-                />
-                <span
-                  className={cn('hidden sm:inline', ordenacao === 'preco' ? 'inline' : 'hidden')}
+                  title={precoAsc ? 'Preço decrescente' : 'Preço crescente'}
                 >
-                  Preço
-                </span>
-              </button>
+                  <ArrowUpNarrowWide
+                    className={cn(
+                      'w-3.5 h-3.5 transition-transform duration-300',
+                      ordenacao === 'preco' && !precoAsc && 'rotate-180',
+                    )}
+                  />
+                  <span
+                    className={cn('hidden sm:inline', ordenacao === 'preco' ? 'inline' : 'hidden')}
+                  >
+                    Preço
+                  </span>
+                </button>
+              </div>
+
+              {/* Seletor de itens por página */}
+              <div
+                className="flex bg-slate-100 p-1 rounded-2xl shadow-sm border border-slate-200/50"
+                role="group"
+                aria-label="Itens por página"
+              >
+                {([10, 20, 30, 40, null] as const).map((qtd) => (
+                  <button
+                    key={qtd ?? 'tudo'}
+                    onClick={() => setItensPorPagina(qtd)}
+                    className={cn(
+                      'h-10 px-3 rounded-[14px] text-[10px] font-black uppercase tracking-widest transition-all duration-300',
+                      itensPorPagina === qtd
+                        ? 'bg-white text-slate-900 shadow-sm'
+                        : 'text-slate-400 hover:text-slate-600',
+                    )}
+                  >
+                    {qtd ?? 'Tudo'}
+                  </button>
+                ))}
+              </div>
             </div>
             </div>
           )}
@@ -256,7 +292,7 @@ export function AmbienteDetailView({ ambienteId }: AmbienteDetailViewProps) {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10 pb-nav-safe md:pb-12">
-            {items.map((item, index) => (
+            {paginatedItems.map((item, index) => (
               <div
                 key={item.id}
                 role="button"
@@ -351,6 +387,48 @@ export function AmbienteDetailView({ ambienteId }: AmbienteDetailViewProps) {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* Paginação */}
+        {totalPaginas > 1 && (
+          <div className="flex items-center justify-center gap-3">
+            <button
+              onClick={() => setPaginaAtual((p) => Math.max(1, p - 1))}
+              disabled={paginaAtual === 1}
+              aria-label="Página anterior"
+              className="w-10 h-10 rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-900 hover:border-slate-300 disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm active:scale-90"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+
+            <div className="flex items-center gap-1.5">
+              {Array.from({ length: totalPaginas }, (_, i) => i + 1).map((pagina) => (
+                <button
+                  key={pagina}
+                  onClick={() => setPaginaAtual(pagina)}
+                  aria-label={`Página ${pagina}`}
+                  aria-current={pagina === paginaAtual ? 'page' : undefined}
+                  className={cn(
+                    'w-9 h-9 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all',
+                    pagina === paginaAtual
+                      ? 'bg-slate-900 text-white shadow-sm'
+                      : 'bg-white border border-slate-100 text-slate-400 hover:text-slate-900 hover:border-slate-300 shadow-sm',
+                  )}
+                >
+                  {pagina}
+                </button>
+              ))}
+            </div>
+
+            <button
+              onClick={() => setPaginaAtual((p) => Math.min(totalPaginas, p + 1))}
+              disabled={paginaAtual === totalPaginas}
+              aria-label="Próxima página"
+              className="w-10 h-10 rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-900 hover:border-slate-300 disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm active:scale-90"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
           </div>
         )}
 
