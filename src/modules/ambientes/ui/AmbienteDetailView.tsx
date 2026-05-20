@@ -383,10 +383,10 @@ export function AmbienteDetailView({ ambienteId }: AmbienteDetailViewProps) {
                 return (
                   <div
                     key={nota.id}
-                    onClick={() => router.push('/notas')}
+                    onClick={() => router.push(`/notas?notaId=${nota.id}`)}
                     role="button"
                     tabIndex={0}
-                    onKeyDown={(e) => e.key === 'Enter' && router.push('/notas')}
+                    onKeyDown={(e) => e.key === 'Enter' && router.push(`/notas?notaId=${nota.id}`)}
                     className={cn(
                       'rounded-[28px] border p-5 cursor-pointer transition-all',
                       'hover:-translate-y-0.5 hover:shadow-lg active:scale-[0.98]',
