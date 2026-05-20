@@ -15,6 +15,9 @@ import { mockNotasService } from './mockNotasService';
 
 const COLLECTION_NAME = 'notas';
 
+const stripUndefined = <T extends object>(obj: T): T =>
+  Object.fromEntries(Object.entries(obj).filter(([, v]) => v !== undefined)) as T;
+
 let cachedNotas: Nota[] | null = null;
 
 const realNotasService = {
@@ -49,11 +52,11 @@ const realNotasService = {
 
   addNota: async (nota: Omit<Nota, 'id' | 'criadoEm' | 'atualizadoEm'>) => {
     try {
-      const docRef = await addDoc(collection(db, COLLECTION_NAME), {
+      const docRef = await addDoc(collection(db, COLLECTION_NAME), stripUndefined({
         ...nota,
         criadoEm: serverTimestamp(),
         atualizadoEm: serverTimestamp(),
-      });
+      }));
       return docRef.id;
     } catch (error) {
       console.error('Erro ao adicionar nota:', error);
@@ -64,10 +67,10 @@ const realNotasService = {
   updateNota: async (id: string, data: Partial<Nota>) => {
     try {
       const docRef = doc(db, COLLECTION_NAME, id);
-      await updateDoc(docRef, {
+      await updateDoc(docRef, stripUndefined({
         ...data,
         atualizadoEm: serverTimestamp(),
-      });
+      }));
     } catch (error) {
       console.error('Erro ao atualizar nota:', error);
       throw error;

@@ -281,6 +281,7 @@ export function NotasView() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [notaToEdit, setNotaToEdit] = useState<Nota | undefined>(undefined);
   const [isMounted, setIsMounted] = useState(getIsHydrated());
+  const handledNotaIdRef = useRef<string | null>(null);
 
   // Inicializa filtros via URL params
   useEffect(() => {
@@ -290,6 +291,18 @@ export function NotasView() {
     else if (tipo === 'nota') setFiltroTipo('nota');
     if (ambiente) setFiltroAmbiente(decodeURIComponent(ambiente));
   }, [searchParams, setFiltroTipo, setFiltroAmbiente]);
+
+  // Abre nota específica via ?notaId=
+  const notaIdParam = searchParams.get('notaId');
+  useEffect(() => {
+    if (!notaIdParam || loading || handledNotaIdRef.current === notaIdParam) return;
+    const nota = notas.find((n) => n.id === notaIdParam);
+    if (nota) {
+      handledNotaIdRef.current = notaIdParam;
+      setNotaToEdit(nota);
+      setIsFormOpen(true);
+    }
+  }, [notaIdParam, notas, loading]);
 
   useEffect(() => {
     setIsMounted(true);
