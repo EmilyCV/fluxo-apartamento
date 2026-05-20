@@ -77,20 +77,12 @@ export function NotaForm({ onSave, onClose, initialData, userName, userUid }: No
   const [newTodoText, setNewTodoText] = useState('');
   const [textSort, setTextSort] = useState<'default' | 'asc' | 'desc'>('default');
   const [statusSort, setStatusSort] = useState<'default' | 'done-last' | 'done-first'>('default');
-  const [canScrollTodos, setCanScrollTodos] = useState(false);
 
   const titleRef = useRef<HTMLTextAreaElement>(null);
   const contentRef = useRef<HTMLTextAreaElement>(null);
   const newTodoInputRef = useRef<HTMLInputElement>(null);
   const colorInputRef = useRef<HTMLInputElement>(null);
   const todosListRef = useRef<HTMLDivElement>(null);
-
-  const checkTodosScroll = useCallback(() => {
-    if (todosListRef.current) {
-      const el = todosListRef.current;
-      setCanScrollTodos(el.scrollHeight > el.clientHeight + 4);
-    }
-  }, []);
 
   useEffect(() => {
     const el = titleRef.current;
@@ -118,11 +110,6 @@ export function NotaForm({ onSave, onClose, initialData, userName, userUid }: No
     }
     return result;
   }, [localTodos, textSort, statusSort]);
-
-  useEffect(() => {
-    const raf = requestAnimationFrame(checkTodosScroll);
-    return () => cancelAnimationFrame(raf);
-  }, [displayTodos, checkTodosScroll]);
 
   const handleAddTodo = () => {
     const text = newTodoText.trim();
@@ -405,11 +392,10 @@ export function NotaForm({ onSave, onClose, initialData, userName, userUid }: No
                 <div className={cn('relative', localTodos.length > 0 ? 'flex-1 min-h-0' : '')}>
                   <div
                     ref={todosListRef}
-                    onScroll={checkTodosScroll}
                     role="list"
                     className={cn(
                       'space-y-0.5',
-                      localTodos.length > 0 ? 'h-full overflow-y-auto no-scrollbar' : '',
+                      localTodos.length > 0 ? 'h-full overflow-y-auto thin-scrollbar' : '',
                     )}
                   >
                   <AnimatePresence mode="popLayout">
@@ -454,19 +440,14 @@ export function NotaForm({ onSave, onClose, initialData, userName, userUid }: No
                           type="button"
                           onClick={() => handleDeleteTodo(todo.id)}
                           aria-label={`Remover "${todo.texto}"`}
-                          className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 w-6 h-6 rounded-lg text-slate-300 hover:text-red-400 transition-all flex items-center justify-center"
+                          className="opacity-40 group-hover:opacity-100 focus-visible:opacity-100 w-7 h-7 rounded-xl text-slate-500 hover:text-red-400 hover:bg-red-50 active:scale-90 transition-all flex items-center justify-center shrink-0"
                         >
-                          <X className="w-3 h-3" />
+                          <X className="w-4 h-4" />
                         </button>
                       </motion.div>
                     ))}
                   </AnimatePresence>
                   </div>
-                  {canScrollTodos && localTodos.length > 0 && (
-                    <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-white to-transparent pointer-events-none flex items-end justify-center pb-1">
-                      <ChevronDown className="w-3.5 h-3.5 text-slate-300" aria-hidden="true" />
-                    </div>
-                  )}
                 </div>
 
                 {/* Linha de adição (sempre visível) */}

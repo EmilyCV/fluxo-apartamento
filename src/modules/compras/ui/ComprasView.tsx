@@ -208,7 +208,7 @@ function FilterDropdownInner<T extends string>({
             className="bg-white border border-slate-100 rounded-[24px] shadow-[0_20px_50px_rgba(0,0,0,0.15)] overflow-hidden p-[1px] animate-fade-in-up"
             role="listbox"
           >
-            <div className="max-h-72 overflow-y-auto no-scrollbar pt-4 px-3 pb-3">
+            <div className="max-h-72 overflow-y-auto thin-scrollbar thin-scrollbar-rounded pt-4 px-3 pb-3">
               {placeholder !== 'recentes' && (
                 <>
                   <button

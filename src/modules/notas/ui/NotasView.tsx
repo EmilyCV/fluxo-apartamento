@@ -57,16 +57,7 @@ function FilterDropdownInner<T extends string>({
 }: FilterDropdownProps<T>) {
   const containerRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
-  const scrollRef = useRef<HTMLDivElement>(null);
   const [coords, setCoords] = useState({ top: 0, left: 0 });
-  const [canScrollDown, setCanScrollDown] = useState(false);
-
-  const checkScroll = useCallback(() => {
-    if (scrollRef.current) {
-      const el = scrollRef.current;
-      setCanScrollDown(el.scrollHeight > el.clientHeight + 4);
-    }
-  }, []);
 
   const updateCoords = useCallback(() => {
     if (containerRef.current) {
@@ -107,15 +98,6 @@ function FilterDropdownInner<T extends string>({
       document.body.style.overflow = '';
     };
   }, [isOpen, updateCoords]);
-
-  useEffect(() => {
-    if (!isOpen) {
-      setCanScrollDown(false);
-      return;
-    }
-    const raf = requestAnimationFrame(checkScroll);
-    return () => cancelAnimationFrame(raf);
-  }, [isOpen, checkScroll]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -188,9 +170,7 @@ function FilterDropdownInner<T extends string>({
           >
             <div className="relative">
               <div
-                ref={scrollRef}
-                onScroll={checkScroll}
-                className="max-h-72 overflow-y-auto no-scrollbar pt-4 px-3 pb-3"
+                className="max-h-72 overflow-y-auto thin-scrollbar thin-scrollbar-rounded pt-4 px-3 pb-3"
               >
                 <button
                   role="option"
@@ -233,11 +213,6 @@ function FilterDropdownInner<T extends string>({
                   );
                 })}
               </div>
-              {canScrollDown && (
-                <div className="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-white to-transparent pointer-events-none rounded-b-[24px] flex items-end justify-center pb-1.5">
-                  <ChevronDown className="w-3.5 h-3.5 text-slate-400" aria-hidden="true" />
-                </div>
-              )}
             </div>
           </div>,
           document.body,
