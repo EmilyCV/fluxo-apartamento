@@ -3,10 +3,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import { comprasService } from '@/modules/compras/services/comprasService';
 import { homeAmbientesService } from '@/modules/ambientes/services/ambientesService';
-import { notasService } from '@/modules/notas/services/notasService';
 import { CompraItem, Categoria } from '@/modules/compras/types';
 import { HomeAmbiente } from '@/modules/ambientes/types';
-import { Nota } from '@/modules/notas/types';
 import { getIsHydrated } from '@/utils/hydration';
 
 const CATEGORIA_METRICS = [
@@ -41,20 +39,6 @@ export function useDashboardData() {
     }
     return true;
   });
-  const [notasRecentes, setNotasRecentes] = useState<Nota[]>(() => {
-    if (typeof window !== 'undefined' && getIsHydrated()) {
-      const cached = (notasService as any).getCachedNotas?.() as Nota[] | null;
-      return cached ? cached.slice(0, 3) : [];
-    }
-    return [];
-  });
-  const [notasLoading, setNotasLoading] = useState(() => {
-    if (typeof window !== 'undefined' && getIsHydrated()) {
-      return (notasService as any).getCachedNotas?.() === null;
-    }
-    return true;
-  });
-
   useEffect(() => {
     const initializeHome = async () => {
       try {
@@ -81,29 +65,12 @@ export function useDashboardData() {
       homeSync = true;
     });
 
-    const unsubscribeNotas = notasService.subscribeToNotas((notaList) => {
-      const sorted = [...notaList].sort((a, b) => {
-        const toMs = (ts: unknown): number => {
-          if (!ts) return 0;
-          if (ts instanceof Date) return ts.getTime();
-          if (typeof ts === 'string') return new Date(ts).getTime();
-          if (typeof ts === 'object' && ts !== null && 'seconds' in ts)
-            return (ts as { seconds: number }).seconds * 1000;
-          return 0;
-        };
-        return toMs(b.atualizadoEm) - toMs(a.atualizadoEm);
-      });
-      setNotasRecentes(sorted.slice(0, 3));
-      setNotasLoading(false);
-    });
-
     if (itemsSync) setLoading(false);
     if (homeSync) setHomeAmbientesLoading(false);
 
     return () => {
       unsubscribeItems();
       unsubscribeHomeAmbientes();
-      unsubscribeNotas();
     };
   }, []);
 
@@ -166,8 +133,6 @@ export function useDashboardData() {
     homeAmbientes,
     loading,
     homeAmbientesLoading,
-    notasRecentes,
-    notasLoading,
     totalInvestido,
     totalOrcado,
     percentualProgresso,
