@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { AppLayout } from '@/components/AppLayout';
 import { CompraItem, Ambiente } from '@/modules/compras/types';
@@ -15,10 +15,15 @@ import {
   Clock,
   Zap,
   ArrowUpNarrowWide,
+  StickyNote,
+  ArrowUpRight,
 } from 'lucide-react';
 import { hapticFeedback } from '@/utils/haptics';
 import { cn } from '@/utils/cn';
 import { comprasService } from '@/modules/compras/services/comprasService';
+import { notasService } from '@/modules/notas/services/notasService';
+import { Nota } from '@/modules/notas/types';
+import { NOTAS_CORES } from '@/modules/notas/constants';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface AmbienteDetailViewProps {
@@ -44,6 +49,14 @@ export function AmbienteDetailView({ ambienteId }: AmbienteDetailViewProps) {
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [itemToEdit, setItemToEdit] = useState<CompraItem | undefined>(undefined);
+  const [notasDoAmbiente, setNotasDoAmbiente] = useState<Nota[]>([]);
+
+  useEffect(() => {
+    const unsubscribe = notasService.subscribeToNotas((notaList) => {
+      setNotasDoAmbiente(notaList.filter((n) => n.linkedAmbiente === ambienteId).slice(0, 3));
+    });
+    return () => unsubscribe();
+  }, [ambienteId]);
 
   const formatCurrency = (amount: number) =>
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(amount);
@@ -338,6 +351,72 @@ export function AmbienteDetailView({ ambienteId }: AmbienteDetailViewProps) {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* Seção de Notas do Cômodo */}
+        {notasDoAmbiente.length > 0 && (
+          <div className="space-y-6 animate-pop">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <StickyNote className="w-4 h-4 text-slate-400" aria-hidden="true" />
+                <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">
+                  Notas deste Cômodo
+                </h2>
+              </div>
+              <button
+                onClick={() =>
+                  router.push(`/notas?ambiente=${encodeURIComponent(ambienteId)}`)
+                }
+                className="flex items-center gap-1.5 text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-slate-900 transition-colors"
+                aria-label="Ver todas as notas deste cômodo"
+              >
+                Ver todas
+                <ArrowUpRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {notasDoAmbiente.map((nota) => {
+                const cores = NOTAS_CORES[nota.cor];
+                const doneTodos = nota.todos?.filter((t) => t.status === 'feito').length || 0;
+                const totalTodos = nota.todos?.length || 0;
+                return (
+                  <div
+                    key={nota.id}
+                    onClick={() => router.push('/notas')}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => e.key === 'Enter' && router.push('/notas')}
+                    className={cn(
+                      'rounded-[28px] border p-5 cursor-pointer transition-all',
+                      'hover:-translate-y-0.5 hover:shadow-lg active:scale-[0.98]',
+                      cores.bg,
+                      cores.border,
+                    )}
+                  >
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className={cn('w-2 h-2 rounded-full', cores.dot)} />
+                      <span className={cn('text-[9px] font-black uppercase tracking-wide', cores.text)}>
+                        {nota.tipo === 'todo' ? 'To-do' : 'Nota'}
+                      </span>
+                    </div>
+                    <p className="text-sm font-black text-slate-800 leading-tight mb-2">
+                      {nota.titulo}
+                    </p>
+                    {nota.tipo === 'nota' && nota.conteudo && (
+                      <p className="text-xs text-slate-400 font-medium line-clamp-2">
+                        {nota.conteudo}
+                      </p>
+                    )}
+                    {nota.tipo === 'todo' && totalTodos > 0 && (
+                      <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">
+                        {doneTodos}/{totalTodos} feitos
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
 
