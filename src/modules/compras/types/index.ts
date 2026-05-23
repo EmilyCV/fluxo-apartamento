@@ -49,7 +49,10 @@ export interface CompraItem {
   adquirido: boolean;
   prioridade: Prioridade;
   link?: string;
+  links?: string[];
   observacoes?: string;
+  imagemUrl?: string;
+  imagemPosition?: string;
   createdAt?: FirestoreTimestamp; // Timestamp do Firestore
   updatedAt?: FirestoreTimestamp;
 }
