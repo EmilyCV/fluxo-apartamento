@@ -187,8 +187,8 @@ export function ItemForm({ onSave, onClose, initialData, defaultAmbiente }: Item
       await onSave(
         {
           ...formData,
-          imagemUrl,
-          imagemPosition: currentImagePosition,
+          ...(imagemUrl !== undefined ? { imagemUrl } : {}),
+          ...(currentImagePosition !== undefined ? { imagemPosition: currentImagePosition } : {}),
           links: savedLinks,
           link: savedLinks[0],
           prioridade: finalPrioridade,
