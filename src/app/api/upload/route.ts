@@ -35,7 +35,6 @@ export async function POST(request: NextRequest) {
     const dataUri = `data:${file.type};base64,${base64}`;
 
     const result = await cloudinary.uploader.upload(dataUri, {
-      upload_preset: 'ape2026_items',
       folder: 'ape2026/items',
     });
 
