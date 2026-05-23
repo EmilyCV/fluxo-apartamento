@@ -39,6 +39,7 @@ export async function POST(request: NextRequest) {
     const dataUri = `data:${file.type};base64,${base64}`;
 
     const result = await cloudinary.uploader.upload(dataUri, {
+      upload_preset: 'ape2026_items',
       folder: 'ape2026/items',
     });
 
@@ -48,6 +49,18 @@ export async function POST(request: NextRequest) {
     console.error('Erro no upload Cloudinary:', detail);
     return NextResponse.json({ error: 'Erro interno no servidor.', detail }, { status: 500 });
   }
+}
+
+export async function GET() {
+  return NextResponse.json({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME ?? 'AUSENTE',
+    api_key: process.env.CLOUDINARY_API_KEY
+      ? `${process.env.CLOUDINARY_API_KEY.slice(0, 4)}... (${process.env.CLOUDINARY_API_KEY.length} chars)`
+      : 'AUSENTE',
+    api_secret: process.env.CLOUDINARY_API_SECRET
+      ? `set (${process.env.CLOUDINARY_API_SECRET.length} chars)`
+      : 'AUSENTE',
+  });
 }
 
 export async function DELETE(request: NextRequest) {
