@@ -9,6 +9,9 @@ import {
   orderBy,
   serverTimestamp,
 } from 'firebase/firestore';
+
+const stripUndefined = <T extends object>(obj: T): Partial<T> =>
+  Object.fromEntries(Object.entries(obj).filter(([, v]) => v !== undefined)) as Partial<T>;
 import { db } from '@/services/firebase';
 import { CompraItem } from '../types';
 import { mockComprasService } from './mockComprasService';
@@ -71,7 +74,7 @@ const realComprasService = {
   addItem: async (item: Omit<CompraItem, 'id' | 'createdAt' | 'updatedAt'>) => {
     try {
       const docRef = await addDoc(collection(db, COLLECTION_NAME), {
-        ...normalizeAcquisitionState(item),
+        ...stripUndefined(normalizeAcquisitionState(item)),
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
@@ -107,7 +110,7 @@ const realComprasService = {
     try {
       const docRef = doc(db, COLLECTION_NAME, id);
       await updateDoc(docRef, {
-        ...normalizeAcquisitionState(data),
+        ...stripUndefined(normalizeAcquisitionState(data)),
         updatedAt: serverTimestamp(),
       });
     } catch (error) {
