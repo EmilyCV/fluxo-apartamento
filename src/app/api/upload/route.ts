@@ -1,71 +1,49 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { v2 as cloudinary } from 'cloudinary';
+import { put } from '@vercel/blob';
+import { NextResponse } from 'next/server';
 
-cloudinary.config(process.env.CLOUDINARY_URL ?? '');
-
-const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
-const MAX_SIZE = 5 * 1024 * 1024;
-
-export async function POST(request: NextRequest) {
+export async function POST(request: Request): Promise<NextResponse> {
   try {
     const formData = await request.formData();
-    const file = formData.get('file') as File | null;
+    const file = formData.get('file') as File;
 
     if (!file) {
       return NextResponse.json({ error: 'Nenhum arquivo enviado.' }, { status: 400 });
     }
 
-    if (!ALLOWED_TYPES.includes(file.type)) {
-      return NextResponse.json(
-        { error: 'Tipo de arquivo não permitido. Use JPEG, PNG ou WebP.' },
-        { status: 400 },
-      );
-    }
-
-    if (file.size > MAX_SIZE) {
-      return NextResponse.json(
-        { error: 'Arquivo muito grande. O tamanho máximo é 5MB.' },
-        { status: 400 },
-      );
-    }
-
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-    const base64 = buffer.toString('base64');
-    const dataUri = `data:${file.type};base64,${base64}`;
-
-    const result = await cloudinary.uploader.upload(dataUri, {
-      folder: 'ape2026/items',
+    // O método put do @vercel/blob faz o upload e retorna os metadados
+    const blob = await put(`items/${Date.now()}-${file.name}`, file, {
+      access: 'public',
     });
 
-    return NextResponse.json({ url: result.secure_url });
+    // Retorna exatamente o formato esperado pelo frontend { url: string }
+    return NextResponse.json({ url: blob.url });
   } catch (error) {
-    const detail = error instanceof Error ? error.message : JSON.stringify(error);
-    console.error('Erro no upload Cloudinary:', detail);
-    return NextResponse.json({ error: 'Erro interno no servidor.', detail }, { status: 500 });
+    console.error('Erro no upload Vercel Blob:', error);
+    return NextResponse.json(
+      { error: 'Erro interno ao processar o upload.' },
+      { status: 500 }
+    );
   }
 }
 
-export async function GET() {
-  return NextResponse.json({
-    cloudinary_url: process.env.CLOUDINARY_URL
-      ? `set (${process.env.CLOUDINARY_URL.length} chars)`
-      : 'AUSENTE',
-  });
-}
-
-export async function DELETE(request: NextRequest) {
+/**
+ * Rota para deletar blobs da Vercel
+ * O frontend pode chamar esta rota passando a URL do blob
+ */
+export async function DELETE(request: Request): Promise<NextResponse> {
   try {
-    const body = (await request.json()) as { publicId?: string };
-
-    if (!body.publicId) {
-      return NextResponse.json({ error: 'publicId não fornecido.' }, { status: 400 });
+    const { url } = await request.json();
+    
+    if (!url) {
+      return NextResponse.json({ error: 'URL não fornecida.' }, { status: 400 });
     }
 
-    await cloudinary.uploader.destroy(body.publicId);
+    const { del } = await import('@vercel/blob');
+    await del(url);
+
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Erro ao deletar imagem:', error);
-    return NextResponse.json({ error: 'Erro ao deletar imagem.' }, { status: 500 });
+    console.error('Erro ao deletar blob:', error);
+    return NextResponse.json({ error: 'Erro ao deletar arquivo.' }, { status: 500 });
   }
 }

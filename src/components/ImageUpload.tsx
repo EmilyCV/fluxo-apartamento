@@ -61,15 +61,6 @@ export const ImageUpload = forwardRef<ImageUploadHandle, ImageUploadProps>(
       upload: async (): Promise<string | undefined> => {
         if (!pendingFile) return value;
 
-        // Mock mode: reuse the existing preview blob URL as the final URL
-        if (process.env.NEXT_PUBLIC_USE_MOCKS === 'true') {
-          const url = previewUrl!;
-          setPreviewUrl(undefined);
-          setPendingFile(null);
-          onChange(url);
-          return url;
-        }
-
         const url = await uploadImage(pendingFile);
         if (previewUrl) URL.revokeObjectURL(previewUrl);
         setPreviewUrl(undefined);

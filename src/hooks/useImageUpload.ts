@@ -27,6 +27,9 @@ export function useImageUpload() {
     return null;
   }, []);
 
+  /**
+   * Faz o upload para a nossa rota de API que agora usa Vercel Blob
+   */
   const uploadImage = useCallback(
     async (file: File): Promise<string> => {
       const validationError = validateFile(file);
@@ -39,9 +42,10 @@ export function useImageUpload() {
       setProgress(0);
       setError(null);
 
+      // Simulação de progresso para Vercel Blob (que não expõe progresso nativo no lado do servidor)
       const progressInterval = setInterval(() => {
-        setProgress((prev) => (prev < 85 ? prev + 15 : prev));
-      }, 300);
+        setProgress((prev) => (prev < 90 ? prev + 10 : prev));
+      }, 200);
 
       try {
         const formData = new FormData();
@@ -73,5 +77,20 @@ export function useImageUpload() {
     [validateFile, setErrorWithTimeout],
   );
 
-  return { uploading, progress, error, uploadImage, validateFile };
+  /**
+   * Deleta um arquivo via API route
+   */
+  const deleteImage = useCallback(async (url: string) => {
+    try {
+      await fetch('/api/upload', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url }),
+      });
+    } catch (err) {
+      console.error('Erro ao deletar imagem:', err);
+    }
+  }, []);
+
+  return { uploading, progress, error, uploadImage, deleteImage, validateFile };
 }
