@@ -40,13 +40,22 @@ export async function POST(request: NextRequest) {
 
     const result = await cloudinary.uploader.upload(dataUri, {
       folder: 'ape2026/items',
+<<<<<<< HEAD
+=======
+      transformation: [{ width: 1200, quality: 'auto', fetch_format: 'auto' }],
+>>>>>>> 5cce42ae463780ec0c4d32aa5d30f4fbfc736d24
     });
 
     return NextResponse.json({ url: result.secure_url });
   } catch (error) {
+<<<<<<< HEAD
     const detail = error instanceof Error ? error.message : JSON.stringify(error);
     console.error('Erro no upload Cloudinary:', detail);
     return NextResponse.json({ error: 'Erro interno no servidor.', detail }, { status: 500 });
+=======
+    console.error('Erro no upload:', error);
+    return NextResponse.json({ error: 'Erro interno no servidor.' }, { status: 500 });
+>>>>>>> 5cce42ae463780ec0c4d32aa5d30f4fbfc736d24
   }
 }
 
