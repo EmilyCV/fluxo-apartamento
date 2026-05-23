@@ -34,17 +34,13 @@ import { CustomSelect, SelectOption } from '@/components/CustomSelect';
 import { CurrencyInput } from '@/components/CurrencyInput';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { ImageUpload, ImageUploadHandle } from '@/components/ImageUpload';
+import { useImageUpload } from '@/hooks/useImageUpload';
 import {
   ALL_AMBIENTES,
   ALL_CATEGORIAS,
   PRIORIDADE_ORDER,
   SUB_CATEGORIAS_BY_CATEGORIA,
 } from '../constants';
-
-function extractPublicId(url: string): string {
-  const match = url.match(/\/upload\/(?:v\d+\/)?(.+)\.[^.]+$/);
-  return match ? match[1] : '';
-}
 
 interface ItemFormProps {
   onSave: (item: Omit<CompraItem, 'id' | 'createdAt' | 'updatedAt'>, id?: string) => Promise<void>;
@@ -95,6 +91,7 @@ const CATEGORIAS_OPTIONS: SelectOption<Categoria>[] = [
 ];
 
 export function ItemForm({ onSave, onClose, initialData, defaultAmbiente }: ItemFormProps) {
+  const { deleteImage } = useImageUpload();
   const initialPrioridade = initialData?.adquirido
     ? 'Adquirido'
     : initialData?.prioridade || PRIORIDADE_ORDER[0];
@@ -144,16 +141,9 @@ export function ItemForm({ onSave, onClose, initialData, defaultAmbiente }: Item
     if (!initialData?.id) return;
     setLoading(true);
     try {
-      // Best-effort: delete image from Cloudinary without blocking
+      // Best-effort: delete image from Storage without blocking
       if (initialData.imagemUrl && !initialData.imagemUrl.startsWith('blob:')) {
-        const publicId = extractPublicId(initialData.imagemUrl);
-        if (publicId) {
-          fetch('/api/upload', {
-            method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ publicId }),
-          }).catch(() => {});
-        }
+        deleteImage(initialData.imagemUrl).catch(() => {});
       }
       await comprasService.deleteItem(initialData.id);
       setShowDeleteConfirm(false);
@@ -183,12 +173,24 @@ export function ItemForm({ onSave, onClose, initialData, defaultAmbiente }: Item
         }
       }
 
+      // Se havia uma imagem antes e agora ela foi removida OU substituída por uma nova
+      if (
+        initialData?.imagemUrl &&
+        initialData.imagemUrl !== imagemUrl &&
+        !initialData.imagemUrl.startsWith('blob:')
+      ) {
+        // Tentativa de deleção em background
+        deleteImage(initialData.imagemUrl).catch((err) =>
+          console.error('Falha ao deletar imagem antiga:', err),
+        );
+      }
+
       const savedLinks = formData.links.filter((l) => l.trim());
       await onSave(
         {
           ...formData,
-          ...(imagemUrl !== undefined ? { imagemUrl } : {}),
-          ...(currentImagePosition !== undefined ? { imagemPosition: currentImagePosition } : {}),
+          imagemUrl: imagemUrl || '', // Se for undefined/vazio, salva como string vazia para remover no banco
+          imagemPosition: currentImagePosition || '50% 50%',
           links: savedLinks,
           link: savedLinks[0],
           prioridade: finalPrioridade,
