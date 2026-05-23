@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { AppLayout } from '@/components/AppLayout';
 import { CompraItem, Ambiente } from '@/modules/compras/types';
 import { ItemForm } from '@/modules/compras/ui/ItemForm';
@@ -143,121 +144,121 @@ export function AmbienteDetailView({ ambienteId }: AmbienteDetailViewProps) {
 
           {items.length > 0 && (
             <div className="overflow-x-auto -mx-6 px-6 md:mx-0 md:px-0 pb-1 no-scrollbar">
-            <div className="flex items-center gap-3 w-fit">
-              <div
-                className="flex bg-slate-100 p-1 rounded-2xl shadow-sm border border-slate-200/50"
-                role="group"
-                aria-label="Ordenação de itens"
-              >
-                <button
-                  onClick={() => setOrdenacao('recentes')}
-                  className={cn(
-                    'flex items-center gap-2 h-10 px-4 rounded-[14px] text-[10px] font-black uppercase tracking-widest transition-all duration-300',
-                    ordenacao === 'recentes'
-                      ? 'bg-white text-slate-900 shadow-sm'
-                      : 'text-slate-400 hover:text-slate-600',
-                  )}
+              <div className="flex items-center gap-3 w-fit">
+                <div
+                  className="flex bg-slate-100 p-1 rounded-2xl shadow-sm border border-slate-200/50"
+                  role="group"
+                  aria-label="Ordenação de itens"
                 >
-                  <Clock className="w-3.5 h-3.5" />
-                  <span
-                    className={cn('hidden sm:inline', ordenacao === 'recentes' ? 'inline' : 'hidden')}
-                  >
-                    Recentes
-                  </span>
-                </button>
-
-                <button
-                  onClick={() => setOrdenacao('prioridade')}
-                  className={cn(
-                    'flex items-center gap-2 h-10 px-4 rounded-[14px] text-[10px] font-black uppercase tracking-widest transition-all duration-300',
-                    ordenacao === 'prioridade'
-                      ? 'bg-white text-slate-900 shadow-sm'
-                      : 'text-slate-400 hover:text-slate-600',
-                  )}
-                >
-                  <Zap className="w-3.5 h-3.5" />
-                  <span
-                    className={cn(
-                      'hidden sm:inline',
-                      ordenacao === 'prioridade' ? 'inline' : 'hidden',
-                    )}
-                  >
-                    Prioridade
-                  </span>
-                </button>
-
-                <button
-                  onClick={handleAlfabetico}
-                  className={cn(
-                    'flex items-center gap-2 h-10 px-4 rounded-[14px] text-[10px] font-black uppercase tracking-widest transition-all duration-300',
-                    ordenacao === 'alfabetico'
-                      ? 'bg-white text-slate-900 shadow-sm'
-                      : 'text-slate-400 hover:text-slate-600',
-                  )}
-                  title={alfabeticoAsc ? 'Ordenar Z-A' : 'Ordenar A-Z'}
-                >
-                  <ArrowUpNarrowWide
-                    className={cn(
-                      'w-3.5 h-3.5 transition-transform duration-300',
-                      ordenacao === 'alfabetico' && !alfabeticoAsc && 'rotate-180',
-                    )}
-                  />
-                  <span
-                    className={cn(
-                      'hidden sm:inline',
-                      ordenacao === 'alfabetico' ? 'inline' : 'hidden',
-                    )}
-                  >
-                    A-Z
-                  </span>
-                </button>
-
-                <button
-                  onClick={handlePreco}
-                  className={cn(
-                    'flex items-center gap-2 h-10 px-4 rounded-[14px] text-[10px] font-black uppercase tracking-widest transition-all duration-300',
-                    ordenacao === 'preco'
-                      ? 'bg-white text-slate-900 shadow-sm'
-                      : 'text-slate-400 hover:text-slate-600',
-                  )}
-                  title={precoAsc ? 'Preço decrescente' : 'Preço crescente'}
-                >
-                  <ArrowUpNarrowWide
-                    className={cn(
-                      'w-3.5 h-3.5 transition-transform duration-300',
-                      ordenacao === 'preco' && !precoAsc && 'rotate-180',
-                    )}
-                  />
-                  <span
-                    className={cn('hidden sm:inline', ordenacao === 'preco' ? 'inline' : 'hidden')}
-                  >
-                    Preço
-                  </span>
-                </button>
-              </div>
-
-              {/* Seletor de itens por página */}
-              <div
-                className="flex bg-slate-100 p-1 rounded-2xl shadow-sm border border-slate-200/50"
-                role="group"
-                aria-label="Itens por página"
-              >
-                {([10, 20, 30, 40, null] as const).map((qtd) => (
                   <button
-                    key={qtd ?? 'tudo'}
-                    onClick={() => setItensPorPagina(qtd)}
+                    onClick={() => setOrdenacao('recentes')}
                     className={cn(
-                      'h-10 px-3 rounded-[14px] text-[10px] font-black uppercase tracking-widest transition-all duration-300',
-                      itensPorPagina === qtd
+                      'flex items-center gap-2 h-10 px-4 rounded-[14px] text-[10px] font-black uppercase tracking-widest transition-all duration-300',
+                      ordenacao === 'recentes'
                         ? 'bg-white text-slate-900 shadow-sm'
                         : 'text-slate-400 hover:text-slate-600',
                     )}
                   >
-                    {qtd ?? 'Tudo'}
+                    <Clock className="w-3.5 h-3.5" />
+                    <span
+                      className={cn('hidden sm:inline', ordenacao === 'recentes' ? 'inline' : 'hidden')}
+                    >
+                      Recentes
+                    </span>
                   </button>
-                ))}
+
+                  <button
+                    onClick={() => setOrdenacao('prioridade')}
+                    className={cn(
+                      'flex items-center gap-2 h-10 px-4 rounded-[14px] text-[10px] font-black uppercase tracking-widest transition-all duration-300',
+                      ordenacao === 'prioridade'
+                        ? 'bg-white text-slate-900 shadow-sm'
+                        : 'text-slate-400 hover:text-slate-600',
+                    )}
+                  >
+                    <Zap className="w-3.5 h-3.5" />
+                    <span
+                      className={cn(
+                        'hidden sm:inline',
+                        ordenacao === 'prioridade' ? 'inline' : 'hidden',
+                      )}
+                    >
+                      Prioridade
+                    </span>
+                  </button>
+
+                  <button
+                    onClick={handleAlfabetico}
+                    className={cn(
+                      'flex items-center gap-2 h-10 px-4 rounded-[14px] text-[10px] font-black uppercase tracking-widest transition-all duration-300',
+                      ordenacao === 'alfabetico'
+                        ? 'bg-white text-slate-900 shadow-sm'
+                        : 'text-slate-400 hover:text-slate-600',
+                    )}
+                    title={alfabeticoAsc ? 'Ordenar Z-A' : 'Ordenar A-Z'}
+                  >
+                    <ArrowUpNarrowWide
+                      className={cn(
+                        'w-3.5 h-3.5 transition-transform duration-300',
+                        ordenacao === 'alfabetico' && !alfabeticoAsc && 'rotate-180',
+                      )}
+                    />
+                    <span
+                      className={cn(
+                        'hidden sm:inline',
+                        ordenacao === 'alfabetico' ? 'inline' : 'hidden',
+                      )}
+                    >
+                      A-Z
+                    </span>
+                  </button>
+
+                  <button
+                    onClick={handlePreco}
+                    className={cn(
+                      'flex items-center gap-2 h-10 px-4 rounded-[14px] text-[10px] font-black uppercase tracking-widest transition-all duration-300',
+                      ordenacao === 'preco'
+                        ? 'bg-white text-slate-900 shadow-sm'
+                        : 'text-slate-400 hover:text-slate-600',
+                    )}
+                    title={precoAsc ? 'Preço decrescente' : 'Preço crescente'}
+                  >
+                    <ArrowUpNarrowWide
+                      className={cn(
+                        'w-3.5 h-3.5 transition-transform duration-300',
+                        ordenacao === 'preco' && !precoAsc && 'rotate-180',
+                      )}
+                    />
+                    <span
+                      className={cn('hidden sm:inline', ordenacao === 'preco' ? 'inline' : 'hidden')}
+                    >
+                      Preço
+                    </span>
+                  </button>
+                </div>
+
+                {/* Seletor de itens por página */}
+                <div
+                  className="flex bg-slate-100 p-1 rounded-2xl shadow-sm border border-slate-200/50"
+                  role="group"
+                  aria-label="Itens por página"
+                >
+                  {([10, 20, 30, 40, null] as const).map((qtd) => (
+                    <button
+                      key={qtd ?? 'tudo'}
+                      onClick={() => setItensPorPagina(qtd)}
+                      className={cn(
+                        'h-10 px-3 rounded-[14px] text-[10px] font-black uppercase tracking-widest transition-all duration-300',
+                        itensPorPagina === qtd
+                          ? 'bg-white text-slate-900 shadow-sm'
+                          : 'text-slate-400 hover:text-slate-600',
+                      )}
+                    >
+                      {qtd ?? 'Tudo'}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
             </div>
           )}
         </header>
@@ -310,6 +311,22 @@ export function AmbienteDetailView({ ambienteId }: AmbienteDetailViewProps) {
                 )}
                 style={{ animationDelay: `${index * 50}ms` }}
               >
+                {item.imagemUrl && (
+                  <div className="-mx-5 sm:-mx-10 -mt-5 sm:-mt-10 h-32 shrink-0">
+                    <Image
+                      src={item.imagemUrl}
+                      alt={item.nome}
+                      width={400}
+                      height={128}
+                      className="w-full h-32 object-cover"
+                      style={{ objectPosition: item.imagemPosition }}
+                      priority={false}
+                      loading="lazy"
+                      unoptimized={item.imagemUrl.startsWith('blob:')}
+                    />
+                  </div>
+                )}
+
                 {item.adquirido && (
                   <div className="absolute top-0 right-0 bg-brand-green text-brand-green-dark px-6 py-2.5 rounded-bl-[24px] text-[10px] font-black uppercase tracking-widest shadow-sm z-10">
                     Adquirido

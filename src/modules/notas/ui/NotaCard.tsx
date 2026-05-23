@@ -40,6 +40,19 @@ const formatDate = (ts: FirestoreTimestamp | undefined): string => {
 
 const MAX_VISIBLE_TODOS = 4;
 
+function stripHtml(html: string): string {
+  return html
+    .replace(/<\/p>/gi, ' ')
+    .replace(/<br\s*\/?>/gi, ' ')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 export function NotaCard({ nota, onEdit, onTogglePin, onToggleTodo }: NotaCardProps) {
   const cores = NOTAS_CORES[nota.cor];
 
@@ -125,7 +138,7 @@ export function NotaCard({ nota, onEdit, onTogglePin, onToggleTodo }: NotaCardPr
       <div className="flex-1 min-h-0 overflow-hidden flex flex-col gap-2">
         {nota.conteudo && (
           <p className="text-sm text-slate-500 font-medium line-clamp-3 leading-relaxed shrink-0">
-            {nota.conteudo}
+            {stripHtml(nota.conteudo)}
           </p>
         )}
 

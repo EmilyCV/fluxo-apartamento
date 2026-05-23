@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { Ambiente, Categoria, SubCategoria, Prioridade, CompraItem } from '../types';
 import {
   X,
@@ -26,17 +26,25 @@ import {
   Shirt,
   AlertCircle,
   ExternalLink,
+  ImageIcon,
+  Plus,
 } from 'lucide-react';
 import { comprasService } from '../services/comprasService';
 import { CustomSelect, SelectOption } from '@/components/CustomSelect';
 import { CurrencyInput } from '@/components/CurrencyInput';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { ImageUpload, ImageUploadHandle } from '@/components/ImageUpload';
 import {
   ALL_AMBIENTES,
   ALL_CATEGORIAS,
   PRIORIDADE_ORDER,
   SUB_CATEGORIAS_BY_CATEGORIA,
 } from '../constants';
+
+function extractPublicId(url: string): string {
+  const match = url.match(/\/upload\/(?:v\d+\/)?(.+)\.[^.]+$/);
+  return match ? match[1] : '';
+}
 
 interface ItemFormProps {
   onSave: (item: Omit<CompraItem, 'id' | 'createdAt' | 'updatedAt'>, id?: string) => Promise<void>;
@@ -95,6 +103,13 @@ export function ItemForm({ onSave, onClose, initialData, defaultAmbiente }: Item
   const [loading, setLoading] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [currentImageUrl, setCurrentImageUrl] = useState<string | undefined>(
+    initialData?.imagemUrl,
+  );
+  const [currentImagePosition, setCurrentImagePosition] = useState<string | undefined>(
+    initialData?.imagemPosition,
+  );
+  const imageUploadRef = useRef<ImageUploadHandle>(null);
   const [formData, setFormData] = useState({
     nome: initialData?.nome || '',
     ambiente: initialData?.ambiente || defaultAmbiente || ALL_AMBIENTES[0],
@@ -105,7 +120,7 @@ export function ItemForm({ onSave, onClose, initialData, defaultAmbiente }: Item
     valorUnitario: initialData?.valorUnitario || 0,
     modelo: initialData?.modelo || '',
     fabricante: initialData?.fabricante || '',
-    link: initialData?.link || '',
+    links: initialData?.links ?? (initialData?.link ? [initialData.link] : ['']),
     observacoes: initialData?.observacoes || '',
     adquirido: initialAdquirido,
   });
@@ -129,6 +144,17 @@ export function ItemForm({ onSave, onClose, initialData, defaultAmbiente }: Item
     if (!initialData?.id) return;
     setLoading(true);
     try {
+      // Best-effort: delete image from Cloudinary without blocking
+      if (initialData.imagemUrl && !initialData.imagemUrl.startsWith('blob:')) {
+        const publicId = extractPublicId(initialData.imagemUrl);
+        if (publicId) {
+          fetch('/api/upload', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ publicId }),
+          }).catch(() => {});
+        }
+      }
       await comprasService.deleteItem(initialData.id);
       setShowDeleteConfirm(false);
       onClose();
@@ -145,9 +171,26 @@ export function ItemForm({ onSave, onClose, initialData, defaultAmbiente }: Item
     setSaveError(null);
     try {
       const finalPrioridade = formData.adquirido ? 'Adquirido' : formData.prioridade;
+
+      let imagemUrl = currentImageUrl;
+      if (imageUploadRef.current) {
+        try {
+          imagemUrl = await imageUploadRef.current.upload();
+        } catch {
+          // Upload error is displayed inside the ImageUpload component
+          setLoading(false);
+          return;
+        }
+      }
+
+      const savedLinks = formData.links.filter((l) => l.trim());
       await onSave(
         {
           ...formData,
+          imagemUrl,
+          imagemPosition: currentImagePosition,
+          links: savedLinks,
+          link: savedLinks[0],
           prioridade: finalPrioridade,
           adquirido: finalPrioridade === 'Adquirido',
           valorTotalAproximado: valorTotalAproximado,
@@ -209,7 +252,7 @@ export function ItemForm({ onSave, onClose, initialData, defaultAmbiente }: Item
         {/* Body */}
         <form
           onSubmit={handleSubmit}
-          className="flex-1 overflow-y-auto px-10 py-8 space-y-8 no-scrollbar scroll-smooth pb-40 bg-white"
+          className="flex-1 min-h-0 overflow-y-auto px-10 py-8 space-y-8 no-scrollbar scroll-smooth pb-40 bg-white"
         >
           <div className="space-y-3">
             <label
@@ -326,32 +369,61 @@ export function ItemForm({ onSave, onClose, initialData, defaultAmbiente }: Item
           </div>
 
           <div className="space-y-3">
-            {formData.link ? (
-              <a
-                href={formData.link}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-[10px] font-black text-slate-400 hover:text-brand-blue-dark uppercase tracking-widest ml-1 flex items-center gap-2 transition-colors w-fit"
-              >
-                <LinkIcon className="w-4 h-4" aria-hidden="true" /> Link do Produto
-                <ExternalLink className="w-3 h-3" aria-hidden="true" />
-              </a>
-            ) : (
-              <label
-                htmlFor="item-link"
-                className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-2"
-              >
-                <LinkIcon className="w-4 h-4" aria-hidden="true" /> Link do Produto
+            <div className="flex items-center justify-between ml-1 mr-1">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                <LinkIcon className="w-4 h-4" aria-hidden="true" /> Links do Produto
               </label>
-            )}
-            <input
-              id="item-link"
-              type="url"
-              placeholder="https://..."
-              className="w-full h-16 bg-slate-50 border-2 border-transparent rounded-[24px] px-6 text-sm font-bold text-slate-900 outline-none shadow-sm focus:border-brand-blue focus:bg-white transition-all"
-              value={formData.link}
-              onChange={(e) => setFormData({ ...formData, link: e.target.value })}
-            />
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, links: [...formData.links, ''] })}
+                className="flex items-center gap-1 text-[10px] font-black text-slate-400 hover:text-brand-blue-dark uppercase tracking-widest transition-colors"
+              >
+                <Plus className="w-3.5 h-3.5" /> Adicionar
+              </button>
+            </div>
+            <div className="space-y-2">
+              {formData.links.map((link, index) => (
+                <div key={index} className="flex items-center gap-2">
+                  <input
+                    type="url"
+                    placeholder="https://..."
+                    className="flex-1 h-16 bg-slate-50 border-2 border-transparent rounded-[24px] px-6 text-sm font-bold text-slate-900 outline-none shadow-sm focus:border-brand-blue focus:bg-white transition-all"
+                    value={link}
+                    onChange={(e) => {
+                      const links = [...formData.links];
+                      links[index] = e.target.value;
+                      setFormData({ ...formData, links });
+                    }}
+                  />
+                  {link.trim() && (
+                    <a
+                      href={link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label="Abrir link"
+                      className="shrink-0 w-11 h-11 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400 hover:text-brand-blue-dark hover:bg-slate-100 transition-all shadow-sm border border-white"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                    </a>
+                  )}
+                  {formData.links.length > 1 && (
+                    <button
+                      type="button"
+                      aria-label="Remover link"
+                      onClick={() =>
+                        setFormData({
+                          ...formData,
+                          links: formData.links.filter((_, i) => i !== index),
+                        })
+                      }
+                      className="shrink-0 w-11 h-11 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-300 hover:text-red-400 hover:bg-red-50 transition-all shadow-sm border border-white"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
 
           <div className="space-y-3">
@@ -363,10 +435,24 @@ export function ItemForm({ onSave, onClose, initialData, defaultAmbiente }: Item
             </label>
             <textarea
               id="item-observacoes"
-              rows={3}
+              rows={5}
               className="w-full bg-slate-50 border-2 border-transparent rounded-[24px] p-6 text-sm font-bold text-slate-900 outline-none shadow-sm focus:border-slate-300 focus:bg-white transition-all resize-none"
               value={formData.observacoes}
               onChange={(e) => setFormData({ ...formData, observacoes: e.target.value })}
+            />
+          </div>
+
+          <div className="space-y-3">
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+              <ImageIcon className="w-4 h-4" aria-hidden="true" /> Foto do Item{' '}
+              <span className="text-[8px] opacity-50 ml-1">(Opcional)</span>
+            </label>
+            <ImageUpload
+              ref={imageUploadRef}
+              value={currentImageUrl}
+              onChange={(url) => setCurrentImageUrl(url)}
+              imagePosition={currentImagePosition}
+              onPositionChange={(pos) => setCurrentImagePosition(pos)}
             />
           </div>
         </form>
