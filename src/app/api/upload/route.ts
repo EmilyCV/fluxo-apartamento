@@ -1,11 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { v2 as cloudinary } from 'cloudinary';
 
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
+cloudinary.config(process.env.CLOUDINARY_URL ?? '');
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const MAX_SIZE = 5 * 1024 * 1024;
@@ -53,12 +49,8 @@ export async function POST(request: NextRequest) {
 
 export async function GET() {
   return NextResponse.json({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME ?? 'AUSENTE',
-    api_key: process.env.CLOUDINARY_API_KEY
-      ? `${process.env.CLOUDINARY_API_KEY.slice(0, 4)}... (${process.env.CLOUDINARY_API_KEY.length} chars)`
-      : 'AUSENTE',
-    api_secret: process.env.CLOUDINARY_API_SECRET
-      ? `set (${process.env.CLOUDINARY_API_SECRET.length} chars)`
+    cloudinary_url: process.env.CLOUDINARY_URL
+      ? `set (${process.env.CLOUDINARY_URL.length} chars)`
       : 'AUSENTE',
   });
 }
