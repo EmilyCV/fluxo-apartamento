@@ -40,13 +40,13 @@ export async function POST(request: NextRequest) {
 
     const result = await cloudinary.uploader.upload(dataUri, {
       folder: 'ape2026/items',
-      transformation: [{ width: 1200, quality: 'auto', fetch_format: 'auto' }],
     });
 
     return NextResponse.json({ url: result.secure_url });
   } catch (error) {
-    console.error('Erro no upload:', error);
-    return NextResponse.json({ error: 'Erro interno no servidor.' }, { status: 500 });
+    const detail = error instanceof Error ? error.message : JSON.stringify(error);
+    console.error('Erro no upload Cloudinary:', detail);
+    return NextResponse.json({ error: 'Erro interno no servidor.', detail }, { status: 500 });
   }
 }
 
