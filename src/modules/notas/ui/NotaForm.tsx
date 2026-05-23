@@ -1,6 +1,11 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
+import { useEditor } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
+import Underline from '@tiptap/extension-underline';
+import { TextStyle, FontFamily, Color, FontSize } from '@tiptap/extension-text-style';
+import Placeholder from '@tiptap/extension-placeholder';
 import {
   ArrowLeft,
   Trash2,
@@ -23,6 +28,8 @@ import { NOTAS_CORES, NOTAS_CORES_OPTIONS } from '../constants';
 import { MASTER_AMBIENTES } from '@/modules/ambientes/types/masterData';
 import { notasService } from '../services/notasService';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { RichTextEditor } from '@/components/RichTextEditor';
+import { RichTextToolbar } from '@/components/RichTextToolbar';
 import { FirestoreTimestamp } from '@/types';
 
 interface NotaFormProps {
@@ -60,6 +67,12 @@ const formatTimestamp = (ts: FirestoreTimestamp | undefined): string => {
   return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' });
 };
 
+function normalizeContent(content?: string): string {
+  if (!content) return '';
+  if (content.startsWith('<')) return content;
+  return content.split('\n').map((line) => `<p>${line || '<br>'}</p>`).join('');
+}
+
 export function NotaForm({ onSave, onClose, initialData, userName, userUid }: NotaFormProps) {
   const [loading, setLoading] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -79,8 +92,26 @@ export function NotaForm({ onSave, onClose, initialData, userName, userUid }: No
   const [statusSort, setStatusSort] = useState<'default' | 'done-last' | 'done-first'>('default');
 
   const titleRef = useRef<HTMLTextAreaElement>(null);
-  const contentRef = useRef<HTMLTextAreaElement>(null);
   const newTodoInputRef = useRef<HTMLInputElement>(null);
+
+  const editor = useEditor({
+    extensions: [
+      StarterKit,
+      Underline,
+      TextStyle,
+      FontFamily,
+      Color,
+      FontSize,
+      Placeholder.configure({ placeholder: 'Comece a escrever...', showOnlyCurrent: false }),
+    ],
+    content: normalizeContent(initialData?.conteudo),
+    onUpdate: ({ editor }) => {
+      setConteudo(editor.isEmpty ? '' : editor.getHTML());
+    },
+    editorProps: {
+      attributes: { class: 'tiptap outline-none min-h-[80px] text-base text-slate-600 leading-relaxed' },
+    },
+  });
   const colorInputRef = useRef<HTMLInputElement>(null);
   const todosListRef = useRef<HTMLDivElement>(null);
 
@@ -137,9 +168,11 @@ export function NotaForm({ onSave, onClose, initialData, userName, userUid }: No
   const handleDeleteTodo = (id: string) =>
     setLocalTodos((prev) => prev.filter((t) => t.id !== id));
 
+  const isConteudoEmpty = (html: string) => !html || html === '<p></p>' || html.trim() === '';
+
   const hasChanges = useCallback(() => {
     if (!initialData) {
-      return titulo.trim() !== '' || conteudo.trim() !== '' || localTodos.length > 0;
+      return titulo.trim() !== '' || !isConteudoEmpty(conteudo) || localTodos.length > 0;
     }
     return (
       titulo !== initialData.titulo ||
@@ -234,25 +267,32 @@ export function NotaForm({ onSave, onClose, initialData, userName, userUid }: No
           style={accentColor ? { backgroundColor: accentBg } : {}}
         />
 
-        {/* Top bar */}
+        {/* Nav bar */}
         <div
           className={cn(
-            'flex items-center justify-between px-4 py-3 flex-shrink-0 transition-colors duration-300',
+            'flex items-center gap-2 px-4 pt-3 pb-1 flex-shrink-0 transition-colors duration-300',
             !accentColor && NOTAS_CORES[cor].bg,
           )}
           style={accentColor ? { backgroundColor: hexToRgba(accentColor, 0.08) } : {}}
         >
+          {/* Voltar */}
           <button
             onClick={handleClose}
             aria-label="Voltar"
-            className="w-10 h-10 rounded-2xl flex items-center justify-center text-slate-500 hover:text-slate-900 hover:bg-slate-50 transition-all active:scale-90"
+            className="shrink-0 w-10 h-10 rounded-2xl flex items-center justify-center text-slate-500 hover:text-slate-900 hover:bg-black/5 transition-all active:scale-90"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
 
-          <div className="flex items-center gap-1">
+          {/* Toolbar de formatação — inline entre ← e ações */}
+          <div className="flex-1 flex items-center">
+            <RichTextToolbar editor={editor} />
+          </div>
+
+          {/* Data + ações */}
+          <div className="flex items-center gap-1 shrink-0">
             {initialData?.atualizadoEm && (
-              <span className="text-[10px] font-bold text-slate-300 mr-2">
+              <span className="text-[10px] font-bold text-slate-300">
                 {formatTimestamp(initialData.atualizadoEm)}
               </span>
             )}
@@ -262,7 +302,7 @@ export function NotaForm({ onSave, onClose, initialData, userName, userUid }: No
               aria-pressed={pinned}
               className={cn(
                 'w-10 h-10 rounded-2xl flex items-center justify-center transition-all active:scale-90',
-                pinned ? 'text-slate-700 bg-slate-100' : 'text-slate-300 hover:text-slate-600 hover:bg-slate-50',
+                pinned ? 'text-slate-700 bg-black/10' : 'text-slate-300 hover:text-slate-600 hover:bg-black/5',
               )}
             >
               <Pin className={cn('w-4 h-4', pinned && 'fill-current')} />
@@ -295,7 +335,7 @@ export function NotaForm({ onSave, onClose, initialData, userName, userUid }: No
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                   e.preventDefault();
-                  contentRef.current?.focus();
+                  editor?.commands.focus();
                 }
               }}
             />
@@ -303,23 +343,8 @@ export function NotaForm({ onSave, onClose, initialData, userName, userUid }: No
             {/* Container split */}
             <div className="flex-1 min-h-0 flex flex-col">
 
-              {/* Painel de texto — scroll independente */}
-              <div className="flex-1 min-h-0 overflow-y-auto no-scrollbar">
-                <textarea
-                  ref={contentRef}
-                  placeholder="Comece a escrever..."
-                  aria-label="Conteúdo da nota"
-                  className="w-full min-h-full outline-none resize-none bg-transparent text-base text-slate-600 leading-relaxed placeholder-slate-200"
-                  value={conteudo}
-                  onChange={(e) => setConteudo(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Tab') {
-                      e.preventDefault();
-                      newTodoInputRef.current?.focus();
-                    }
-                  }}
-                />
-              </div>
+              {/* Editor rico — scroll independente */}
+              <RichTextEditor editor={editor} className="flex-1 min-h-0" />
 
               {/* Painel de checklist */}
               <div

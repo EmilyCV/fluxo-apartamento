@@ -7,6 +7,7 @@ import { CompraItem, Ambiente, Categoria, Prioridade } from '@/modules/compras/t
 import { ItemForm } from '@/modules/compras/ui/ItemForm';
 import { QuickAdd } from '@/modules/compras/ui/QuickAdd';
 import { useComprasItems, SortOrder } from '@/modules/compras/hooks/useComprasItems';
+import Image from 'next/image';
 import {
   Search,
   CheckCircle2,
@@ -554,6 +555,22 @@ export function ComprasView() {
                   item.adquirido ? 'bg-slate-50/50 opacity-60 grayscale-[0.5]' : 'bg-white',
                 )}
               >
+                {item.imagemUrl && (
+                  <div className="-mx-5 sm:-mx-10 -mt-5 sm:-mt-10 h-32 shrink-0">
+                    <Image
+                      src={item.imagemUrl}
+                      alt={item.nome}
+                      width={400}
+                      height={128}
+                      className="w-full h-32 object-cover"
+                      style={{ objectPosition: item.imagemPosition }}
+                      priority={false}
+                      loading="lazy"
+                      unoptimized={item.imagemUrl.startsWith('blob:')}
+                    />
+                  </div>
+                )}
+
                 {item.adquirido && (
                   <div className="absolute top-0 right-0 bg-brand-green text-brand-green-dark px-6 py-2.5 rounded-bl-[24px] text-[10px] font-black uppercase tracking-widest shadow-sm z-10">
                     Adquirido
