@@ -1,6 +1,9 @@
 'use client';
 
 import React, { useRef, useState } from 'react';
+import { createLogger, generateCorrelationId } from '@/utils/logger';
+
+const logger = createLogger('ItemForm');
 import { Ambiente, Categoria, SubCategoria, Prioridade, CompraItem } from '../types';
 import {
   X,
@@ -43,7 +46,11 @@ import {
 } from '../constants';
 
 interface ItemFormProps {
-  onSave: (item: Omit<CompraItem, 'id' | 'createdAt' | 'updatedAt'>, id?: string) => Promise<void>;
+  onSave: (
+    item: Omit<CompraItem, 'id' | 'createdAt' | 'updatedAt'>,
+    id?: string,
+    correlationId?: string,
+  ) => Promise<void>;
   onClose: () => void;
   initialData?: CompraItem;
   defaultAmbiente?: Ambiente;
@@ -139,17 +146,23 @@ export function ItemForm({ onSave, onClose, initialData, defaultAmbiente }: Item
 
   const confirmDelete = async () => {
     if (!initialData?.id) return;
+    const correlationId = generateCorrelationId();
     setLoading(true);
+    logger.info('Excluir', `Usuário confirmou exclusão do item "${initialData.id}"`, {
+      correlationId,
+      data: { id: initialData.id, nome: initialData.nome },
+    });
     try {
       // Best-effort: delete image from Storage without blocking
       if (initialData.imagemUrl && !initialData.imagemUrl.startsWith('blob:')) {
         deleteImage(initialData.imagemUrl).catch(() => {});
       }
-      await comprasService.deleteItem(initialData.id);
+      await comprasService.deleteItem(initialData.id, correlationId);
+      logger.info('Excluir', 'Item excluído e formulário fechado', { correlationId });
       setShowDeleteConfirm(false);
       onClose();
     } catch (error) {
-      console.error('Erro ao deletar item:', error);
+      logger.error('Excluir', 'Falha ao excluir item', { correlationId, error });
     } finally {
       setLoading(false);
     }
@@ -157,17 +170,35 @@ export function ItemForm({ onSave, onClose, initialData, defaultAmbiente }: Item
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+    const correlationId = generateCorrelationId();
+    const isEditing = Boolean(initialData?.id);
+
+    logger.info('Enviar', `Usuário submeteu formulário de ${isEditing ? 'edição' : 'criação'} de item`, {
+      correlationId,
+      data: {
+        id: initialData?.id,
+        nome: formData.nome,
+        ambiente: formData.ambiente,
+        prioridade: formData.prioridade,
+        quantidade: formData.quantidade,
+      },
+    });
+
     setLoading(true);
     setSaveError(null);
+
     try {
       const finalPrioridade = formData.adquirido ? 'Adquirido' : formData.prioridade;
 
       let imagemUrl = currentImageUrl;
       if (imageUploadRef.current) {
+        logger.debug('Enviar', 'Upload de imagem pendente — enviando antes de salvar', { correlationId });
         try {
           imagemUrl = await imageUploadRef.current.upload();
+          logger.debug('Enviar', 'Imagem enviada com sucesso', { correlationId });
         } catch {
           // Upload error is displayed inside the ImageUpload component
+          logger.warn('Enviar', 'Upload de imagem falhou — cancelando salvamento', { correlationId });
           setLoading(false);
           return;
         }
@@ -179,9 +210,14 @@ export function ItemForm({ onSave, onClose, initialData, defaultAmbiente }: Item
         initialData.imagemUrl !== imagemUrl &&
         !initialData.imagemUrl.startsWith('blob:')
       ) {
-        // Tentativa de deleção em background
+        logger.debug('Enviar', 'Imagem anterior substituída — excluindo blob antigo em segundo plano', {
+          correlationId,
+        });
         deleteImage(initialData.imagemUrl).catch((err) =>
-          console.error('Falha ao deletar imagem antiga:', err),
+          logger.warn('Enviar', 'Exclusão em segundo plano da imagem antiga falhou', {
+            correlationId,
+            error: err,
+          }),
         );
       }
 
@@ -189,7 +225,7 @@ export function ItemForm({ onSave, onClose, initialData, defaultAmbiente }: Item
       await onSave(
         {
           ...formData,
-          imagemUrl: imagemUrl || '', // Se for undefined/vazio, salva como string vazia para remover no banco
+          imagemUrl: imagemUrl || '',
           imagemPosition: currentImagePosition || '50% 50%',
           links: savedLinks,
           link: savedLinks[0],
@@ -198,10 +234,16 @@ export function ItemForm({ onSave, onClose, initialData, defaultAmbiente }: Item
           valorTotalAproximado: valorTotalAproximado,
         },
         initialData?.id,
+        correlationId,
       );
+
+      logger.info('Enviar', `Item ${isEditing ? 'atualizado' : 'criado'} com sucesso`, {
+        correlationId,
+        data: { nome: formData.nome },
+      });
       // NÃO chamar onClose() aqui — o pai fecha via onSave
     } catch (error) {
-      console.error('Erro ao salvar item:', error);
+      logger.error('Enviar', 'Falha ao salvar item', { correlationId, error });
       setSaveError('Não foi possível salvar. Verifique sua conexão e tente novamente.');
     } finally {
       setLoading(false);

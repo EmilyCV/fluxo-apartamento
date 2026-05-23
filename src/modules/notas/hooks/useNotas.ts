@@ -4,6 +4,9 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { notasService } from '../services/notasService';
 import { Nota, NotaType, TodoStatus } from '../types';
 import { getIsHydrated } from '@/utils/hydration';
+import { createLogger, generateCorrelationId } from '@/utils/logger';
+
+const logger = createLogger('useNotas');
 
 const SEARCH_DEBOUNCE_MS = 300;
 
@@ -19,14 +22,18 @@ const toMs = (ts: unknown): number => {
 export function useNotas() {
   const [notas, setNotas] = useState<Nota[]>(() => {
     if (typeof window !== 'undefined' && getIsHydrated()) {
-      return (notasService as { getCachedNotas?: () => Nota[] | null }).getCachedNotas?.() || [];
+      return (
+        (notasService as { getCachedNotas?: () => Nota[] | null }).getCachedNotas?.() || []
+      );
     }
     return [];
   });
 
   const [loading, setLoading] = useState(() => {
     if (typeof window !== 'undefined' && getIsHydrated()) {
-      return (notasService as { getCachedNotas?: () => Nota[] | null }).getCachedNotas?.() === null;
+      return (
+        (notasService as { getCachedNotas?: () => Nota[] | null }).getCachedNotas?.() === null
+      );
     }
     return true;
   });
@@ -38,17 +45,26 @@ export function useNotas() {
   const [filtroAmbiente, setFiltroAmbiente] = useState<string | 'Todos'>('Todos');
 
   useEffect(() => {
+    logger.debug('Assinar', 'Assinando lista de notas');
+
     const unsubscribe = notasService.subscribeToNotas(
       (notaList) => {
         setNotas(notaList);
         setLoading(false);
+        logger.info('Assinar', 'Dados de notas recebidos', {
+          data: { total: notaList.length },
+        });
       },
       (error) => {
-        console.error('Erro ao carregar notas:', error);
+        logger.error('Assinar', 'Falha ao carregar notas', { error });
         setLoading(false);
       },
     );
-    return () => unsubscribe();
+
+    return () => {
+      logger.debug('Assinar', 'Encerrando assinatura de notas');
+      unsubscribe();
+    };
   }, []);
 
   useEffect(() => {
@@ -66,7 +82,6 @@ export function useNotas() {
         nota.titulo.toLowerCase().includes(search) ||
         (nota.conteudo?.toLowerCase().includes(search) ?? false);
       const matchTipo = filtroTipo === 'Todas' || nota.tipo === filtroTipo;
-      // '' = mostrar notas sem cômodo vinculado
       const matchAmbiente =
         filtroAmbiente === 'Todos'
           ? true
@@ -83,9 +98,7 @@ export function useNotas() {
   }, [notas, debouncedSearch, filtroTipo, filtroAmbiente]);
 
   const hasActiveFilters =
-    searchTerm !== '' ||
-    filtroTipo !== 'Todas' ||
-    filtroAmbiente !== 'Todos';
+    searchTerm !== '' || filtroTipo !== 'Todas' || filtroAmbiente !== 'Todos';
 
   const clearFilters = useCallback(() => {
     setSearchTerm('');
@@ -97,32 +110,48 @@ export function useNotas() {
   const handleSaveNota = async (
     data: Omit<Nota, 'id' | 'criadoEm' | 'atualizadoEm'>,
     id?: string,
+    correlationId?: string,
   ) => {
+    const cid = correlationId ?? generateCorrelationId();
     if (id) {
-      await notasService.updateNota(id, data);
+      logger.debug('SalvarNota', `Delegando atualização da nota "${id}" ao serviço`, {
+        correlationId: cid,
+      });
+      await notasService.updateNota(id, data, cid);
     } else {
-      await notasService.addNota(data);
+      logger.debug('SalvarNota', `Delegando criação da nota "${data.titulo}" ao serviço`, {
+        correlationId: cid,
+      });
+      await notasService.addNota(data, cid);
     }
   };
 
   const handleDeleteNota = async (id: string) => {
-    await notasService.deleteNota(id);
+    const correlationId = generateCorrelationId();
+    logger.info('ExcluirNota', `Usuário solicitou exclusão da nota "${id}"`, { correlationId });
+    await notasService.deleteNota(id, correlationId);
   };
 
   const handleTogglePin = async (id: string, pinned: boolean) => {
-    await notasService.togglePin(id, pinned);
+    const correlationId = generateCorrelationId();
+    logger.debug('AlternarPin', `Usuário alternou pin da nota "${id}"`, { correlationId });
+    await notasService.togglePin(id, pinned, correlationId);
   };
 
   const handleToggleTodo = async (notaId: string, todoId: string, status: TodoStatus) => {
-    await notasService.toggleTodoItem(notaId, todoId, status);
+    const correlationId = generateCorrelationId();
+    await notasService.toggleTodoItem(notaId, todoId, status, correlationId);
   };
 
   const handleAddTodoItem = async (notaId: string, texto: string) => {
-    await notasService.addTodoItem(notaId, texto);
+    const correlationId = generateCorrelationId();
+    logger.debug('AdicionarTodo', `Usuário adicionando todo à nota "${notaId}"`, { correlationId });
+    await notasService.addTodoItem(notaId, texto, correlationId);
   };
 
   const handleDeleteTodoItem = async (notaId: string, todoId: string) => {
-    await notasService.deleteTodoItem(notaId, todoId);
+    const correlationId = generateCorrelationId();
+    await notasService.deleteTodoItem(notaId, todoId, correlationId);
   };
 
   return {

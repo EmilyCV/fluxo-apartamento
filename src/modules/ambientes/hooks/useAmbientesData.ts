@@ -5,6 +5,9 @@ import { comprasService } from '@/modules/compras/services/comprasService';
 import { CompraItem } from '@/modules/compras/types';
 import { MASTER_AMBIENTES } from '../types/masterData';
 import { getIsHydrated } from '@/utils/hydration';
+import { createLogger } from '@/utils/logger';
+
+const logger = createLogger('useAmbientesData');
 
 export type AmbientesSortOrder = 'original' | 'alfabetico' | 'progresso';
 
@@ -26,16 +29,22 @@ export function useAmbientesData() {
   const [alfabeticoAsc, setAlfabeticoAsc] = useState(true);
 
   useEffect(() => {
+    logger.debug('Assinar', 'Assinando itens de compras para estatísticas de ambientes');
     let didReceiveSync = false;
 
     const unsubscribe = comprasService.subscribeToItems(
       (itemList) => {
         setItems(itemList);
         setLoading(false);
+        if (!didReceiveSync) {
+          logger.info('Assinar', 'Dados iniciais recebidos para estatísticas de ambientes', {
+            data: { totalItens: itemList.length },
+          });
+        }
         didReceiveSync = true;
       },
       (error) => {
-        console.error('Erro ao carregar itens para estatísticas de ambientes:', error);
+        logger.error('Assinar', 'Falha ao carregar itens para estatísticas de ambientes', { error });
         setLoading(false);
       },
     );
@@ -44,7 +53,10 @@ export function useAmbientesData() {
       setLoading(false);
     }
 
-    return () => unsubscribe();
+    return () => {
+      logger.debug('Assinar', 'Encerrando assinatura dos itens de compras');
+      unsubscribe();
+    };
   }, []);
 
   const ambientesStats = useMemo(() => {
@@ -52,8 +64,12 @@ export function useAmbientesData() {
       const itemsInAmbiente = items.filter((item) => item.ambiente === ambienteInfo.id);
       const totalItemsCount = itemsInAmbiente.length;
       const completedItemsCount = itemsInAmbiente.filter((item) => item.adquirido).length;
-      const percentage = totalItemsCount > 0 ? Math.round((completedItemsCount / totalItemsCount) * 100) : 0;
-      const totalValueSum = itemsInAmbiente.reduce((sum, item) => sum + (item.valorTotalAproximado || 0), 0);
+      const percentage =
+        totalItemsCount > 0 ? Math.round((completedItemsCount / totalItemsCount) * 100) : 0;
+      const totalValueSum = itemsInAmbiente.reduce(
+        (sum, item) => sum + (item.valorTotalAproximado || 0),
+        0,
+      );
 
       return {
         ...ambienteInfo,
@@ -76,14 +92,12 @@ export function useAmbientesData() {
 
   const sortedAndFilteredAmbientes = useMemo(() => {
     let result = ambientesStats.filter((ambiente) =>
-      ambiente.label.toLowerCase().includes(searchTerm.toLowerCase())
+      ambiente.label.toLowerCase().includes(searchTerm.toLowerCase()),
     );
 
     if (ordenacao === 'alfabetico') {
       result.sort((a, b) =>
-        alfabeticoAsc
-          ? a.label.localeCompare(b.label)
-          : b.label.localeCompare(a.label)
+        alfabeticoAsc ? a.label.localeCompare(b.label) : b.label.localeCompare(a.label),
       );
     } else if (ordenacao === 'progresso') {
       result.sort((a, b) => b.percentage - a.percentage);

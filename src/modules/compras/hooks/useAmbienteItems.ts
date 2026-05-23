@@ -5,6 +5,9 @@ import { comprasService } from '../services/comprasService';
 import { CompraItem, Ambiente } from '../types';
 import { PRIORIDADE_ORDER } from '../constants';
 import { getIsHydrated } from '@/utils/hydration';
+import { createLogger, generateCorrelationId } from '@/utils/logger';
+
+const logger = createLogger('useAmbienteItems');
 
 export type SortOrder = 'recentes' | 'prioridade' | 'alfabetico' | 'preco';
 
@@ -27,12 +30,18 @@ export function useAmbienteItems(ambienteId: Ambiente) {
   const [precoAsc, setPrecoAsc] = useState(true);
 
   useEffect(() => {
+    logger.debug('Assinar', `Assinando itens do ambiente "${ambienteId}"`);
     let didReceiveSync = false;
 
     const unsubscribe = comprasService.subscribeToItems((itemList) => {
       const filtered = itemList.filter((item) => item.ambiente === ambienteId);
       setItems(filtered);
       setLoading(false);
+      if (!didReceiveSync) {
+        logger.info('Assinar', `Dados iniciais recebidos para o ambiente "${ambienteId}"`, {
+          data: { totalAmbiente: filtered.length, totalGeral: itemList.length },
+        });
+      }
       didReceiveSync = true;
     });
 
@@ -40,19 +49,29 @@ export function useAmbienteItems(ambienteId: Ambiente) {
       setLoading(false);
     }
 
-    return () => unsubscribe();
+    return () => {
+      logger.debug('Assinar', `Encerrando assinatura dos itens do ambiente "${ambienteId}"`);
+      unsubscribe();
+    };
   }, [ambienteId]);
 
   const handleSaveItem = async (
     itemData: Omit<CompraItem, 'id' | 'createdAt' | 'updatedAt'>,
     id?: string,
+    correlationId?: string,
   ) => {
-    if (id) await comprasService.updateItem(id, itemData);
-    else await comprasService.addItem(itemData);
+    const cid = correlationId ?? generateCorrelationId();
+    if (id) {
+      await comprasService.updateItem(id, itemData, cid);
+    } else {
+      await comprasService.addItem(itemData, cid);
+    }
   };
 
   const toggleAdquirido = async (id: string, currentStatus: boolean) => {
-    await comprasService.toggleAdquirido(id, currentStatus);
+    const correlationId = generateCorrelationId();
+    logger.debug('AlternarAdquirido', `Usuário alternou status de adquirido para o item "${id}"`, { correlationId });
+    await comprasService.toggleAdquirido(id, currentStatus, correlationId);
   };
 
   const handleAlfabetico = () => {

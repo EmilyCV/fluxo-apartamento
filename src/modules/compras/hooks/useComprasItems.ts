@@ -4,6 +4,9 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { comprasService } from '../services/comprasService';
 import { CompraItem, Ambiente, Categoria, Prioridade } from '../types';
 import { getIsHydrated } from '@/utils/hydration';
+import { createLogger, generateCorrelationId } from '@/utils/logger';
+
+const logger = createLogger('useComprasItems');
 
 export type SortOrder = 'nome-asc' | 'nome-desc' | 'preco-asc' | 'preco-desc' | 'recentes';
 
@@ -33,16 +36,22 @@ export function useComprasItems() {
   const [ordenacao, setOrdenacao] = useState<SortOrder>('recentes');
 
   useEffect(() => {
+    logger.debug('Assinar', 'Assinando lista de compras');
     let didReceiveSync = false;
 
     const unsubscribe = comprasService.subscribeToItems(
       (itemList) => {
         setItems(itemList);
         setLoading(false);
+        if (!didReceiveSync) {
+          logger.info('Assinar', 'Dados iniciais de compras recebidos', {
+            data: { totalItens: itemList.length },
+          });
+        }
         didReceiveSync = true;
       },
       (fetchError) => {
-        console.error('Erro ao carregar itens de compra:', fetchError);
+        logger.error('Assinar', 'Falha ao carregar lista de compras', { error: fetchError });
         setLoading(false);
       },
     );
@@ -51,7 +60,10 @@ export function useComprasItems() {
       setLoading(false);
     }
 
-    return () => unsubscribe();
+    return () => {
+      logger.debug('Assinar', 'Encerrando assinatura da lista de compras');
+      unsubscribe();
+    };
   }, []);
 
   useEffect(() => {
@@ -83,22 +95,25 @@ export function useComprasItems() {
           return (secondItem.valorTotalAproximado || 0) - (firstItem.valorTotalAproximado || 0);
         return 0;
       });
-  }, [
-    items,
-    debouncedSearch,
-    filtroAmbiente,
-    filtroCategoria,
-    filtroPrioridade,
-    verComprados,
-    ordenacao,
-  ]);
+  }, [items, debouncedSearch, filtroAmbiente, filtroCategoria, filtroPrioridade, verComprados, ordenacao]);
 
   const handleSaveItem = async (
     itemData: Omit<CompraItem, 'id' | 'createdAt' | 'updatedAt'>,
     id?: string,
+    correlationId?: string,
   ) => {
-    if (id) await comprasService.updateItem(id, itemData);
-    else await comprasService.addItem(itemData);
+    const cid = correlationId ?? generateCorrelationId();
+    if (id) {
+      logger.debug('SalvarItem', `Delegando atualização do item "${id}" ao serviço`, {
+        correlationId: cid,
+      });
+      await comprasService.updateItem(id, itemData, cid);
+    } else {
+      logger.debug('SalvarItem', `Delegando criação do item "${itemData.nome}" ao serviço`, {
+        correlationId: cid,
+      });
+      await comprasService.addItem(itemData, cid);
+    }
   };
 
   const handleQuickAdd = async (
@@ -107,17 +122,25 @@ export function useComprasItems() {
     valor: number,
     quantidade: number,
   ) => {
-    await comprasService.addItem({
-      nome,
-      ambiente,
-      categoria: '3. Utensílios',
-      subCategoria: 'Utensílios gerais',
-      prioridade: 'Quando der',
-      quantidade: quantidade,
-      valorUnitario: valor,
-      valorTotalAproximado: quantidade * valor,
-      adquirido: false,
+    const correlationId = generateCorrelationId();
+    logger.info('AdicionarRapido', `Adicionando item rápido "${nome}" em ${ambiente}`, {
+      correlationId,
+      data: { nome, ambiente, valor, quantidade },
     });
+    await comprasService.addItem(
+      {
+        nome,
+        ambiente,
+        categoria: '3. Utensílios',
+        subCategoria: 'Utensílios gerais',
+        prioridade: 'Quando der',
+        quantidade,
+        valorUnitario: valor,
+        valorTotalAproximado: quantidade * valor,
+        adquirido: false,
+      },
+      correlationId,
+    );
   };
 
   const clearFilters = useCallback(() => {

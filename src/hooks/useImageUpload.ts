@@ -80,11 +80,14 @@ export function useImageUpload() {
   /**
    * Deleta um arquivo via API route
    */
-  const deleteImage = useCallback(async (url: string) => {
+  const deleteImage = useCallback(async (url: string, correlationId?: string) => {
     try {
       await fetch('/api/upload', {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(correlationId ? { 'x-correlation-id': correlationId } : {}),
+        },
         body: JSON.stringify({ url }),
       });
     } catch (err) {
