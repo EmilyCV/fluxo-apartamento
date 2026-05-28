@@ -42,5 +42,4 @@ jobs:
             --head "$HEAD" \
             --base develop \
             --title "feat: $HEAD → develop" \
-            --body "$BODY" \
-            --label "auto-pr"
+            --body "$BODY"

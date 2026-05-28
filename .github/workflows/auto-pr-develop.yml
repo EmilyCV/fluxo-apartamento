@@ -40,5 +40,4 @@ jobs:
             --head develop \
             --base main \
             --title "release: develop → main" \
-            --body "$BODY" \
-            --label "auto-pr"
+            --body "$BODY"
