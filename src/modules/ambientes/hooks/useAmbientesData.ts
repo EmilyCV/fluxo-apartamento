@@ -52,7 +52,11 @@ export function useAmbientesData() {
       const itemsInAmbiente = items.filter((item) => item.ambiente === ambienteInfo.id);
       const totalItemsCount = itemsInAmbiente.length;
       const completedItemsCount = itemsInAmbiente.filter((item) => item.adquirido).length;
-      const percentage = totalItemsCount > 0 ? Math.round((completedItemsCount / totalItemsCount) * 100) : 0;
+      const completedUnits = itemsInAmbiente.reduce((sum, item) => {
+        return sum + (item.quantidadeAdquirida ?? (item.adquirido ? item.quantidade : 0));
+      }, 0);
+      const totalUnits = itemsInAmbiente.reduce((sum, item) => sum + item.quantidade, 0);
+      const percentage = totalUnits > 0 ? Math.round((completedUnits / totalUnits) * 100) : 0;
       const totalValueSum = itemsInAmbiente.reduce((sum, item) => sum + (item.valorTotalAproximado || 0), 0);
 
       return {

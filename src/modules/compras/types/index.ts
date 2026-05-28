@@ -42,6 +42,7 @@ export interface CompraItem {
   modelo?: string;
   fabricante?: string;
   quantidade: number;
+  quantidadeAdquirida?: number;
   valorUnitario: number;
   valorTotalAproximado: number;
   categoria: Categoria;

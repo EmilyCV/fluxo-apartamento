@@ -109,9 +109,11 @@ export function useDashboardData() {
 
   const totalInvestido = useMemo(
     () =>
-      items
-        .filter((item) => item.adquirido)
-        .reduce((total, currentItem) => total + (currentItem.valorTotalAproximado || 0), 0),
+      items.reduce((total, item) => {
+        const qtdAdquirida = item.quantidadeAdquirida ?? (item.adquirido ? item.quantidade : 0);
+        const proporcao = item.quantidade > 0 ? qtdAdquirida / item.quantidade : 0;
+        return total + (item.valorTotalAproximado || 0) * proporcao;
+      }, 0),
     [items],
   );
 
@@ -131,8 +133,12 @@ export function useDashboardData() {
           .filter((item) => item.categoria === categoriaInfo.key)
           .reduce((total, item) => total + (item.valorTotalAproximado || 0), 0),
         adquirido: items
-          .filter((item) => item.categoria === categoriaInfo.key && item.adquirido)
-          .reduce((total, item) => total + (item.valorTotalAproximado || 0), 0),
+          .filter((item) => item.categoria === categoriaInfo.key)
+          .reduce((total, item) => {
+            const qtdAdquirida = item.quantidadeAdquirida ?? (item.adquirido ? item.quantidade : 0);
+            const proporcao = item.quantidade > 0 ? qtdAdquirida / item.quantidade : 0;
+            return total + (item.valorTotalAproximado || 0) * proporcao;
+          }, 0),
       })),
     [items],
   );
