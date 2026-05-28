@@ -74,6 +74,7 @@ export const generateMockItems = (count: number = 20): CompraItem[] => {
       categoria,
       subCategoria,
       adquirido: prioridade === 'Adquirido',
+      quantidadeAdquirida: prioridade === 'Adquirido' ? quantidade : 0,
       prioridade,
       link: 'https://example.com',
       observacoes: 'Item gerado automaticamente para testes.',
