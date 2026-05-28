@@ -24,6 +24,9 @@ const normalizeAcquisitionState = <T extends Partial<CompraItem>>(data: T): T =>
   if (normalized.prioridade === 'Adquirido' || normalized.adquirido === true) {
     normalized.prioridade = 'Adquirido';
     normalized.adquirido = true;
+    if (normalized.quantidade !== undefined) {
+      (normalized as Partial<CompraItem>).quantidadeAdquirida = normalized.quantidade;
+    }
   }
 
   return normalized;
@@ -88,17 +91,37 @@ const realComprasService = {
   /**
    * Atualiza o status de adquirido (toggle)
    */
-  toggleAdquirido: async (id: string, currentStatus: boolean) => {
+  toggleAdquirido: async (id: string, currentStatus: boolean, quantidade?: number) => {
     try {
       const nextStatus = !currentStatus;
       const docRef = doc(db, COLLECTION_NAME, id);
       await updateDoc(docRef, {
         adquirido: nextStatus,
+        quantidadeAdquirida: nextStatus ? (quantidade ?? 1) : 0,
         prioridade: getToggledPrioridade(nextStatus),
         updatedAt: serverTimestamp(),
       });
     } catch (error) {
       console.error('Erro ao atualizar status:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Atualiza a quantidade parcialmente adquirida
+   */
+  updateQuantidadeAdquirida: async (id: string, quantidadeAdquirida: number, quantidadeTotal: number) => {
+    try {
+      const docRef = doc(db, COLLECTION_NAME, id);
+      const adquirido = quantidadeAdquirida >= quantidadeTotal;
+      await updateDoc(docRef, {
+        quantidadeAdquirida,
+        adquirido,
+        prioridade: adquirido ? 'Adquirido' : 'Quando der',
+        updatedAt: serverTimestamp(),
+      });
+    } catch (error) {
+      console.error('Erro ao atualizar quantidade adquirida:', error);
       throw error;
     }
   },

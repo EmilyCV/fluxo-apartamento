@@ -86,7 +86,7 @@ export const mockComprasService = {
     return newItem.id;
   },
 
-  toggleAdquirido: async (id: string, currentStatus: boolean) => {
+  toggleAdquirido: async (id: string, currentStatus: boolean, quantidade?: number) => {
     const items = getStoredItems();
     const nextStatus = !currentStatus;
     const updatedItems = items.map((item) =>
@@ -94,7 +94,26 @@ export const mockComprasService = {
         ? {
             ...item,
             adquirido: nextStatus,
+            quantidadeAdquirida: nextStatus ? (quantidade ?? 1) : 0,
             prioridade: getToggledPrioridade(nextStatus),
+            updatedAt: new Date(),
+          }
+        : item,
+    );
+    saveItems(updatedItems);
+    notify();
+  },
+
+  updateQuantidadeAdquirida: async (id: string, quantidadeAdquirida: number, quantidadeTotal: number) => {
+    const items = getStoredItems();
+    const adquirido = quantidadeAdquirida >= quantidadeTotal;
+    const updatedItems = items.map((item) =>
+      item.id === id
+        ? {
+            ...item,
+            quantidadeAdquirida,
+            adquirido,
+            prioridade: adquirido ? 'Adquirido' : item.prioridade === 'Adquirido' ? 'Quando der' : item.prioridade as CompraItem['prioridade'],
             updatedAt: new Date(),
           }
         : item,

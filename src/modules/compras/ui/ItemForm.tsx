@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { Ambiente, Categoria, SubCategoria, Prioridade, CompraItem } from '../types';
 import {
   X,
@@ -120,7 +120,30 @@ export function ItemForm({ onSave, onClose, initialData, defaultAmbiente }: Item
     links: initialData?.links ?? (initialData?.link ? [initialData.link] : ['']),
     observacoes: initialData?.observacoes || '',
     adquirido: initialAdquirido,
+    quantidadeAdquirida: initialData?.quantidadeAdquirida ?? 0,
   });
+
+  useEffect(() => {
+    setFormData((f) => {
+      if (f.quantidade <= 1) return f;
+      const qtdAdquirida = Math.min(f.quantidadeAdquirida, f.quantidade);
+      const isComplete = qtdAdquirida >= f.quantidade;
+      const prioridade = isComplete
+        ? 'Adquirido'
+        : f.prioridade === 'Adquirido'
+          ? 'Quando der'
+          : f.prioridade;
+      const adquirido = isComplete;
+      if (
+        qtdAdquirida === f.quantidadeAdquirida &&
+        prioridade === f.prioridade &&
+        adquirido === f.adquirido
+      ) {
+        return f;
+      }
+      return { ...f, quantidadeAdquirida: qtdAdquirida, prioridade, adquirido };
+    });
+  }, [formData.quantidadeAdquirida, formData.quantidade]);
 
   const valorTotalAproximado = formData.quantidade * formData.valorUnitario;
 
@@ -186,15 +209,20 @@ export function ItemForm({ onSave, onClose, initialData, defaultAmbiente }: Item
       }
 
       const savedLinks = formData.links.filter((l) => l.trim());
+      const qtdTotal = formData.quantidade;
+      const qtdAdquirida = Math.min(formData.quantidadeAdquirida, qtdTotal);
+      const adquiridoFinal =
+        qtdTotal > 1 ? qtdAdquirida >= qtdTotal : finalPrioridade === 'Adquirido';
       await onSave(
         {
           ...formData,
-          imagemUrl: imagemUrl || '', // Se for undefined/vazio, salva como string vazia para remover no banco
+          imagemUrl: imagemUrl || '',
           imagemPosition: currentImagePosition || '50% 50%',
           links: savedLinks,
           link: savedLinks[0],
           prioridade: finalPrioridade,
-          adquirido: finalPrioridade === 'Adquirido',
+          adquirido: adquiridoFinal,
+          quantidadeAdquirida: qtdAdquirida,
           valorTotalAproximado: valorTotalAproximado,
         },
         initialData?.id,
@@ -288,10 +316,12 @@ export function ItemForm({ onSave, onClose, initialData, defaultAmbiente }: Item
               options={PRIORIDADES_OPTIONS}
               value={formData.prioridade}
               onChange={(selectedValue) => {
+                const isAdquirido = selectedValue === 'Adquirido';
                 setFormData({
                   ...formData,
                   prioridade: selectedValue,
-                  adquirido: selectedValue === 'Adquirido',
+                  adquirido: isAdquirido,
+                  quantidadeAdquirida: isAdquirido ? formData.quantidade : formData.quantidadeAdquirida,
                 });
               }}
               color="pink"
@@ -324,6 +354,54 @@ export function ItemForm({ onSave, onClose, initialData, defaultAmbiente }: Item
               onChange={(newAmount) => setFormData({ ...formData, valorUnitario: newAmount })}
             />
           </div>
+
+          {initialData && formData.quantidade > 1 && (
+            <div className="space-y-3">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                Quantidade já adquirida
+              </label>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() =>
+                    setFormData((f) => ({
+                      ...f,
+                      quantidadeAdquirida: Math.max(0, f.quantidadeAdquirida - 1),
+                    }))
+                  }
+                  className="w-14 h-14 bg-slate-50 rounded-2xl font-black text-xl text-slate-600 hover:bg-slate-100 active:scale-90 transition-all"
+                >
+                  −
+                </button>
+                <div className="flex-1 h-14 bg-slate-50 rounded-2xl flex items-center justify-center font-black text-2xl text-slate-900">
+                  {formData.quantidadeAdquirida}
+                  <span className="text-slate-300 font-bold text-base ml-1">
+                    /{formData.quantidade}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setFormData((f) => ({
+                      ...f,
+                      quantidadeAdquirida: Math.min(f.quantidade, f.quantidadeAdquirida + 1),
+                    }))
+                  }
+                  className="w-14 h-14 bg-slate-50 rounded-2xl font-black text-xl text-slate-600 hover:bg-slate-100 active:scale-90 transition-all"
+                >
+                  +
+                </button>
+              </div>
+              <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-brand-green rounded-full transition-all duration-300"
+                  style={{
+                    width: `${(formData.quantidadeAdquirida / formData.quantidade) * 100}%`,
+                  }}
+                />
+              </div>
+            </div>
+          )}
 
           {/* Valor Total com Estilo Chá Revelação */}
           <div

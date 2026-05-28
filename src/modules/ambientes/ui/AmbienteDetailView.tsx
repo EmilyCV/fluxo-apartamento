@@ -23,6 +23,7 @@ import {
 import { hapticFeedback } from '@/utils/haptics';
 import { cn } from '@/utils/cn';
 import { comprasService } from '@/modules/compras/services/comprasService';
+import { QuantidadeAdquiridaControl } from '@/modules/compras/ui/QuantidadeAdquiridaControl';
 import { notasService } from '@/modules/notas/services/notasService';
 import { Nota } from '@/modules/notas/types';
 import { NOTAS_CORES } from '@/modules/notas/constants';
@@ -332,6 +333,11 @@ export function AmbienteDetailView({ ambienteId }: AmbienteDetailViewProps) {
                     Adquirido
                   </div>
                 )}
+                {!item.adquirido && item.quantidade > 1 && (item.quantidadeAdquirida ?? 0) > 0 && (
+                  <div className="absolute top-0 right-0 bg-amber-100 text-amber-700 px-6 py-2.5 rounded-bl-[24px] text-[10px] font-black uppercase tracking-widest shadow-sm z-10">
+                    {item.quantidadeAdquirida}/{item.quantidade}
+                  </div>
+                )}
 
                 <div className="space-y-8 flex-1 min-w-0">
                   <div className="flex items-start justify-between">
@@ -368,39 +374,54 @@ export function AmbienteDetailView({ ambienteId }: AmbienteDetailViewProps) {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between pt-4 sm:pt-10 border-t border-slate-50/80 mt-auto">
-                  <div className="flex flex-col gap-1.5">
-                    <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em]">
-                      Investimento
-                    </p>
-                    <p
+                <div className="pt-4 sm:pt-6 border-t border-slate-50/80 mt-auto flex flex-col gap-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex flex-col gap-1.5">
+                      <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em]">
+                        Investimento
+                      </p>
+                      <p
+                        className={cn(
+                          'text-2xl md:text-xl font-black tracking-tighter tabular-nums leading-none',
+                          item.adquirido ? 'text-slate-300' : 'text-slate-900',
+                        )}
+                      >
+                        {formatCurrency(item.valorTotalAproximado)}
+                      </p>
+                    </div>
+                    <button
+                      aria-label={item.adquirido ? 'Marcar como pendente' : 'Marcar como adquirido'}
+                      aria-pressed={item.adquirido}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        hapticFeedback('success');
+                        comprasService.toggleAdquirido(item.id, item.adquirido, item.quantidade);
+                      }}
                       className={cn(
-                        'text-2xl sm:text-3xl font-black tracking-tighter tabular-nums truncate',
-                        item.adquirido ? 'text-slate-300' : 'text-slate-900',
+                        'w-12 h-12 sm:w-14 sm:h-14 rounded-[18px] sm:rounded-[24px] flex items-center justify-center transition-all shadow-sm active:scale-90 shrink-0',
+                        item.adquirido
+                          ? 'bg-brand-green text-brand-green-dark shadow-brand-green/20'
+                          : (item.quantidadeAdquirida ?? 0) > 0 && (item.quantidadeAdquirida ?? 0) < item.quantidade
+                            ? 'bg-amber-100 text-amber-600 hover:bg-amber-200'
+                            : 'bg-slate-50 text-slate-200 hover:bg-brand-green-light hover:text-brand-green-dark hover:scale-110',
                       )}
                     >
-                      {formatCurrency(item.valorTotalAproximado)}
-                    </p>
+                      <CheckCircle2
+                        className={cn('w-8 h-8', item.adquirido ? 'stroke-[3px]' : 'stroke-[2px]')}
+                      />
+                    </button>
                   </div>
-                  <button
-                    aria-label={item.adquirido ? 'Marcar como pendente' : 'Marcar como adquirido'}
-                    aria-pressed={item.adquirido}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      hapticFeedback('success');
-                      comprasService.toggleAdquirido(item.id, item.adquirido);
-                    }}
-                    className={cn(
-                      'w-12 h-12 sm:w-16 sm:h-16 rounded-[24px] flex items-center justify-center transition-all shadow-sm active:scale-90',
-                      item.adquirido
-                        ? 'bg-brand-green text-white shadow-brand-green/20'
-                        : 'bg-slate-50 text-slate-200 hover:bg-brand-green-light hover:text-brand-green-dark hover:scale-110',
-                    )}
-                  >
-                    <CheckCircle2
-                      className={cn('w-8 h-8', item.adquirido ? 'stroke-[3px]' : 'stroke-[2px]')}
+                  {item.quantidade > 1 && (
+                    <QuantidadeAdquiridaControl
+                      itemId={item.id}
+                      quantidade={item.quantidade}
+                      quantidadeAdquirida={item.quantidadeAdquirida ?? 0}
+                      adquirido={item.adquirido}
+                      onUpdate={(id, novaQtd, total) => {
+                        comprasService.updateQuantidadeAdquirida(id, novaQtd, total);
+                      }}
                     />
-                  </button>
+                  )}
                 </div>
               </div>
             ))}

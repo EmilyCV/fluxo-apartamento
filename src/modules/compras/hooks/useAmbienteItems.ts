@@ -51,8 +51,8 @@ export function useAmbienteItems(ambienteId: Ambiente) {
     else await comprasService.addItem(itemData);
   };
 
-  const toggleAdquirido = async (id: string, currentStatus: boolean) => {
-    await comprasService.toggleAdquirido(id, currentStatus);
+  const toggleAdquirido = async (id: string, currentStatus: boolean, quantidade?: number) => {
+    await comprasService.toggleAdquirido(id, currentStatus, quantidade);
   };
 
   const handleAlfabetico = () => {
@@ -107,9 +107,11 @@ export function useAmbienteItems(ambienteId: Ambiente) {
     (total, currentItem) => total + (currentItem.valorTotalAproximado || 0),
     0,
   );
-  const totalComprado = items
-    .filter((item) => item.adquirido)
-    .reduce((total, currentItem) => total + (currentItem.valorTotalAproximado || 0), 0);
+  const totalComprado = items.reduce((total, item) => {
+    const qtdAdquirida = item.quantidadeAdquirida ?? (item.adquirido ? item.quantidade : 0);
+    const proporcao = item.quantidade > 0 ? qtdAdquirida / item.quantidade : 0;
+    return total + (item.valorTotalAproximado || 0) * proporcao;
+  }, 0);
 
   return {
     items: sortedItems,
