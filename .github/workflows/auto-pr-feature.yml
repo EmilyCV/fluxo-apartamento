@@ -1,0 +1,46 @@
+name: Auto PR - Feature para Develop
+
+on:
+  push:
+    branches:
+      - 'feature/**'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  create-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Criar PR de feature para develop
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          HEAD="${{ github.ref_name }}"
+
+          EXISTING=$(gh pr list \
+            --head "$HEAD" \
+            --base develop \
+            --state open \
+            --json number \
+            --jq length)
+
+          if [ "$EXISTING" -gt 0 ]; then
+            echo "PR já existe para $HEAD → develop. Nenhuma ação necessária."
+            exit 0
+          fi
+
+          BODY=$(git log origin/develop..HEAD --pretty=format:"- %s" --no-merges)
+
+          gh pr create \
+            --head "$HEAD" \
+            --base develop \
+            --title "feat: $HEAD → develop" \
+            --body "$BODY" \
+            --label "auto-pr"

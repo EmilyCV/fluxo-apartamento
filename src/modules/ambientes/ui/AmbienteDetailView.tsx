@@ -415,7 +415,7 @@ export function AmbienteDetailView({ ambienteId }: AmbienteDetailViewProps) {
                     <QuantidadeAdquiridaControl
                       itemId={item.id}
                       quantidade={item.quantidade}
-                      quantidadeAdquirida={item.quantidadeAdquirida ?? 0}
+                      quantidadeAdquirida={item.adquirido ? item.quantidade : (item.quantidadeAdquirida ?? 0)}
                       adquirido={item.adquirido}
                       onUpdate={(id, novaQtd, total) => {
                         comprasService.updateQuantidadeAdquirida(id, novaQtd, total);
