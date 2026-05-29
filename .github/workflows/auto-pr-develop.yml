@@ -39,5 +39,5 @@ jobs:
           gh pr create \
             --head develop \
             --base main \
-            --title "release: develop → main" \
+            --title "develop → main" \
             --body "$BODY"

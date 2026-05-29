@@ -41,5 +41,5 @@ jobs:
           gh pr create \
             --head "$HEAD" \
             --base develop \
-            --title "feat: $HEAD → develop" \
+            --title "$HEAD → develop" \
             --body "$BODY"
