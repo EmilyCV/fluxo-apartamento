@@ -3,7 +3,15 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Home, ShoppingCart, StickyNote, LogOut, Sparkles } from 'lucide-react';
+import {
+  LayoutDashboard,
+  Home,
+  ShoppingCart,
+  StickyNote,
+  LogOut,
+  Sparkles,
+  Receipt,
+} from 'lucide-react';
 import { useFirebaseAuth } from '@/modules/auth/contexts/AuthContext';
 import { cn } from '@/utils/cn';
 import { hapticFeedback } from '@/utils/haptics';
@@ -19,6 +27,7 @@ const NAV_ITEMS: NavItemProps[] = [
   { href: '/ambientes', icon: Home, label: 'Cômodos' },
   { href: '/notas', icon: StickyNote, label: 'Notas' },
   { href: '/compras', icon: ShoppingCart, label: 'Lista' },
+  { href: '/financeiro', icon: Receipt, label: 'Financeiro' },
 ];
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
@@ -126,7 +135,10 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
           {/* Botão de Logout no Mobile direto na barra */}
           <button
-            onClick={() => { hapticFeedback('medium'); logout(); }}
+            onClick={() => {
+              hapticFeedback('medium');
+              logout();
+            }}
             className="flex flex-col items-center justify-center w-14 h-14 rounded-2xl text-red-400 active:scale-75 transition-all touch-manipulation"
             aria-label="Sair da conta"
           >

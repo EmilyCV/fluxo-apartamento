@@ -176,7 +176,10 @@ export const mockNotasService = {
               t.id === todoId
                 ? {
                     ...t,
-                    status: currentStatus === 'pendente' ? ('feito' as TodoStatus) : ('pendente' as TodoStatus),
+                    status:
+                      currentStatus === 'pendente'
+                        ? ('feito' as TodoStatus)
+                        : ('pendente' as TodoStatus),
                   }
                 : t,
             ),

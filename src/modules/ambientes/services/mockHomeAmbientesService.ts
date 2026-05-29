@@ -62,9 +62,7 @@ export const mockHomeAmbientesService = {
   updateHomeCard: async (id: string, data: Partial<HomeAmbiente>) => {
     const cards = getStoredCards();
     const updatedCards = cards
-      .map((card) =>
-        card.id === id ? { ...card, ...data, updatedAt: new Date() } : card,
-      )
+      .map((card) => (card.id === id ? { ...card, ...data, updatedAt: new Date() } : card))
       .sort((a, b) => a.ordem - b.ordem);
     saveCards(updatedCards);
     notify();

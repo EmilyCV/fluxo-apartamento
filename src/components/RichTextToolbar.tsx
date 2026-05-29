@@ -41,7 +41,9 @@ export function RichTextToolbar({ editor }: { editor: Editor | null }) {
     if (!editor) return;
     const update = () => forceUpdate((n) => n + 1);
     editor.on('transaction', update);
-    return () => { editor.off('transaction', update); };
+    return () => {
+      editor.off('transaction', update);
+    };
   }, [editor]);
 
   // Close menus on outside click
@@ -86,7 +88,8 @@ export function RichTextToolbar({ editor }: { editor: Editor | null }) {
   };
 
   // Font family
-  const currentFontValue = (editor.getAttributes('textStyle').fontFamily as string | undefined) || '';
+  const currentFontValue =
+    (editor.getAttributes('textStyle').fontFamily as string | undefined) || '';
   const currentFont = FONT_FAMILIES.find((f) => f.value === currentFontValue)?.label ?? 'Padrão';
 
   const applyFont = (value: string) => {
@@ -102,7 +105,6 @@ export function RichTextToolbar({ editor }: { editor: Editor | null }) {
 
   return (
     <div className="flex items-center gap-0.5">
-
       {/* Tamanho da fonte — botão display + dropdown com input de precisão */}
       <div className="relative shrink-0" ref={sizeMenuRef}>
         <div
@@ -118,7 +120,9 @@ export function RichTextToolbar({ editor }: { editor: Editor | null }) {
             {currentFontSize}
           </span>
           <span className="h-full px-1 border-l border-black/10 text-slate-400 flex items-center">
-            <ChevronDown className={cn('w-2.5 h-2.5 transition-transform', showSizeMenu && 'rotate-180')} />
+            <ChevronDown
+              className={cn('w-2.5 h-2.5 transition-transform', showSizeMenu && 'rotate-180')}
+            />
           </span>
         </div>
 
@@ -152,7 +156,10 @@ export function RichTextToolbar({ editor }: { editor: Editor | null }) {
                   key={size}
                   type="button"
                   tabIndex={-1}
-                  onMouseDown={(e) => { e.preventDefault(); applyFontSize(String(size)); }}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    applyFontSize(String(size));
+                  }}
                   className={cn(
                     'w-full text-center px-3 py-1 text-[11px] font-bold transition-all',
                     String(size) === currentFontSize
@@ -173,10 +180,16 @@ export function RichTextToolbar({ editor }: { editor: Editor | null }) {
       {/* Negrito */}
       <button
         type="button"
-        onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().toggleBold().run(); }}
+        onMouseDown={(e) => {
+          e.preventDefault();
+          editor.chain().focus().toggleBold().run();
+        }}
         aria-label="Negrito"
         aria-pressed={editor.isActive('bold')}
-        className={cn('w-7 h-7 rounded-xl flex items-center justify-center transition-all shrink-0', editor.isActive('bold') ? activeBtn : idleBtn)}
+        className={cn(
+          'w-7 h-7 rounded-xl flex items-center justify-center transition-all shrink-0',
+          editor.isActive('bold') ? activeBtn : idleBtn,
+        )}
       >
         <Bold className="w-3.5 h-3.5" />
       </button>
@@ -184,10 +197,16 @@ export function RichTextToolbar({ editor }: { editor: Editor | null }) {
       {/* Itálico */}
       <button
         type="button"
-        onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().toggleItalic().run(); }}
+        onMouseDown={(e) => {
+          e.preventDefault();
+          editor.chain().focus().toggleItalic().run();
+        }}
         aria-label="Itálico"
         aria-pressed={editor.isActive('italic')}
-        className={cn('w-7 h-7 rounded-xl flex items-center justify-center transition-all shrink-0', editor.isActive('italic') ? activeBtn : idleBtn)}
+        className={cn(
+          'w-7 h-7 rounded-xl flex items-center justify-center transition-all shrink-0',
+          editor.isActive('italic') ? activeBtn : idleBtn,
+        )}
       >
         <Italic className="w-3.5 h-3.5" />
       </button>
@@ -195,10 +214,16 @@ export function RichTextToolbar({ editor }: { editor: Editor | null }) {
       {/* Sublinhado */}
       <button
         type="button"
-        onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().toggleUnderline().run(); }}
+        onMouseDown={(e) => {
+          e.preventDefault();
+          editor.chain().focus().toggleUnderline().run();
+        }}
         aria-label="Sublinhado"
         aria-pressed={editor.isActive('underline')}
-        className={cn('w-7 h-7 rounded-xl flex items-center justify-center transition-all shrink-0', editor.isActive('underline') ? activeBtn : idleBtn)}
+        className={cn(
+          'w-7 h-7 rounded-xl flex items-center justify-center transition-all shrink-0',
+          editor.isActive('underline') ? activeBtn : idleBtn,
+        )}
       >
         <UnderlineIcon className="w-3.5 h-3.5" />
       </button>
@@ -209,7 +234,12 @@ export function RichTextToolbar({ editor }: { editor: Editor | null }) {
       <div className="relative shrink-0" ref={colorMenuRef}>
         <button
           type="button"
-          onMouseDown={(e) => { e.preventDefault(); setShowColorMenu((s) => !s); setShowFontMenu(false); setShowSizeMenu(false); }}
+          onMouseDown={(e) => {
+            e.preventDefault();
+            setShowColorMenu((s) => !s);
+            setShowFontMenu(false);
+            setShowSizeMenu(false);
+          }}
           aria-label="Cor do texto"
           className="w-7 h-7 rounded-xl flex items-center justify-center text-slate-500 hover:bg-black/5 transition-all"
         >
@@ -227,7 +257,10 @@ export function RichTextToolbar({ editor }: { editor: Editor | null }) {
             {/* Reset */}
             <button
               type="button"
-              onMouseDown={(e) => { e.preventDefault(); applyColor(null); }}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                applyColor(null);
+              }}
               className="w-full text-left text-[9px] font-black text-slate-400 uppercase tracking-widest hover:text-slate-900 transition-colors mb-2 px-1"
             >
               Padrão
@@ -239,7 +272,10 @@ export function RichTextToolbar({ editor }: { editor: Editor | null }) {
                 <button
                   key={value}
                   type="button"
-                  onMouseDown={(e) => { e.preventDefault(); applyColor(value); }}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    applyColor(value);
+                  }}
                   aria-label={label}
                   className={cn(
                     'w-7 h-7 rounded-full transition-all hover:scale-110 active:scale-95',
@@ -267,7 +303,8 @@ export function RichTextToolbar({ editor }: { editor: Editor | null }) {
                 <div
                   className="w-full h-full flex items-center justify-center"
                   style={{
-                    background: 'conic-gradient(from 0deg, #f87171, #fb923c, #facc15, #4ade80, #60a5fa, #c084fc, #f87171)',
+                    background:
+                      'conic-gradient(from 0deg, #f87171, #fb923c, #facc15, #4ade80, #60a5fa, #c084fc, #f87171)',
                   }}
                 >
                   <Palette className="w-3 h-3 text-white/80" />
@@ -284,11 +321,18 @@ export function RichTextToolbar({ editor }: { editor: Editor | null }) {
       <div className="relative shrink-0" ref={fontMenuRef}>
         <button
           type="button"
-          onMouseDown={(e) => { e.preventDefault(); setShowFontMenu((s) => !s); setShowColorMenu(false); setShowSizeMenu(false); }}
+          onMouseDown={(e) => {
+            e.preventDefault();
+            setShowFontMenu((s) => !s);
+            setShowColorMenu(false);
+            setShowSizeMenu(false);
+          }}
           className="flex items-center gap-0.5 h-7 px-2 rounded-xl text-[10px] font-black text-slate-500 hover:bg-black/5 transition-all uppercase tracking-widest whitespace-nowrap"
         >
           {currentFont}
-          <ChevronDown className={cn('w-3 h-3 transition-transform shrink-0', showFontMenu && 'rotate-180')} />
+          <ChevronDown
+            className={cn('w-3 h-3 transition-transform shrink-0', showFontMenu && 'rotate-180')}
+          />
         </button>
         {showFontMenu && (
           <div className="absolute top-full left-0 mt-1.5 bg-white rounded-[18px] shadow-xl border border-slate-100 p-1.5 z-[300] min-w-[140px]">
@@ -296,11 +340,16 @@ export function RichTextToolbar({ editor }: { editor: Editor | null }) {
               <button
                 key={label}
                 type="button"
-                onMouseDown={(e) => { e.preventDefault(); applyFont(value); }}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  applyFont(value);
+                }}
                 style={{ fontFamily: value || undefined }}
                 className={cn(
                   'w-full text-left px-3 py-1.5 rounded-[12px] text-sm font-bold transition-all',
-                  currentFont === label ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-50',
+                  currentFont === label
+                    ? 'bg-slate-900 text-white'
+                    : 'text-slate-600 hover:bg-slate-50',
                 )}
               >
                 {label}

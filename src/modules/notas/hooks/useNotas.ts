@@ -83,9 +83,7 @@ export function useNotas() {
   }, [notas, debouncedSearch, filtroTipo, filtroAmbiente]);
 
   const hasActiveFilters =
-    searchTerm !== '' ||
-    filtroTipo !== 'Todas' ||
-    filtroAmbiente !== 'Todos';
+    searchTerm !== '' || filtroTipo !== 'Todas' || filtroAmbiente !== 'Todos';
 
   const clearFilters = useCallback(() => {
     setSearchTerm('');
