@@ -39,6 +39,5 @@ jobs:
           gh pr create \
             --head develop \
             --base main \
-            --title "release: develop → main" \
-            --body "$BODY" \
-            --label "auto-pr"
+            --title "develop → main" \
+            --body "$BODY"
