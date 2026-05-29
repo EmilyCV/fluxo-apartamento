@@ -70,7 +70,10 @@ const formatTimestamp = (ts: FirestoreTimestamp | undefined): string => {
 function normalizeContent(content?: string): string {
   if (!content) return '';
   if (content.startsWith('<')) return content;
-  return content.split('\n').map((line) => `<p>${line || '<br>'}</p>`).join('');
+  return content
+    .split('\n')
+    .map((line) => `<p>${line || '<br>'}</p>`)
+    .join('');
 }
 
 export function NotaForm({ onSave, onClose, initialData, userName, userUid }: NotaFormProps) {
@@ -109,7 +112,9 @@ export function NotaForm({ onSave, onClose, initialData, userName, userUid }: No
       setConteudo(editor.isEmpty ? '' : editor.getHTML());
     },
     editorProps: {
-      attributes: { class: 'tiptap outline-none min-h-[80px] text-base text-slate-600 leading-relaxed' },
+      attributes: {
+        class: 'tiptap outline-none min-h-[80px] text-base text-slate-600 leading-relaxed',
+      },
     },
   });
   const colorInputRef = useRef<HTMLInputElement>(null);
@@ -136,7 +141,7 @@ export function NotaForm({ onSave, onClose, initialData, userName, userUid }: No
         const aIsDone = a.status === 'feito';
         const bIsDone = b.status === 'feito';
         if (aIsDone === bIsDone) return 0;
-        return statusSort === 'done-first' ? (aIsDone ? -1 : 1) : (aIsDone ? 1 : -1);
+        return statusSort === 'done-first' ? (aIsDone ? -1 : 1) : aIsDone ? 1 : -1;
       });
     }
     return result;
@@ -165,8 +170,7 @@ export function NotaForm({ onSave, onClose, initialData, userName, userUid }: No
       ),
     );
 
-  const handleDeleteTodo = (id: string) =>
-    setLocalTodos((prev) => prev.filter((t) => t.id !== id));
+  const handleDeleteTodo = (id: string) => setLocalTodos((prev) => prev.filter((t) => t.id !== id));
 
   const isConteudoEmpty = (html: string) => !html || html === '<p></p>' || html.trim() === '';
 
@@ -263,7 +267,10 @@ export function NotaForm({ onSave, onClose, initialData, userName, userUid }: No
       >
         {/* Barra de cor */}
         <div
-          className={cn('h-3 w-full flex-shrink-0 transition-colors duration-300', !accentColor && NOTAS_CORES[cor].dot)}
+          className={cn(
+            'h-3 w-full flex-shrink-0 transition-colors duration-300',
+            !accentColor && NOTAS_CORES[cor].dot,
+          )}
           style={accentColor ? { backgroundColor: accentBg } : {}}
         />
 
@@ -302,7 +309,9 @@ export function NotaForm({ onSave, onClose, initialData, userName, userUid }: No
               aria-pressed={pinned}
               className={cn(
                 'w-10 h-10 rounded-2xl flex items-center justify-center transition-all active:scale-90',
-                pinned ? 'text-slate-700 bg-black/10' : 'text-slate-300 hover:text-slate-600 hover:bg-black/5',
+                pinned
+                  ? 'text-slate-700 bg-black/10'
+                  : 'text-slate-300 hover:text-slate-600 hover:bg-black/5',
               )}
             >
               <Pin className={cn('w-4 h-4', pinned && 'fill-current')} />
@@ -322,7 +331,6 @@ export function NotaForm({ onSave, onClose, initialData, userName, userUid }: No
         {/* Área de conteúdo — split independente quando há todos */}
         <div className="flex-1 overflow-hidden min-h-0">
           <div className="flex flex-col h-full px-5 pt-1 pb-3">
-
             {/* Título */}
             <textarea
               ref={titleRef}
@@ -342,7 +350,6 @@ export function NotaForm({ onSave, onClose, initialData, userName, userUid }: No
 
             {/* Container split */}
             <div className="flex-1 min-h-0 flex flex-col">
-
               {/* Editor rico — scroll independente */}
               <RichTextEditor editor={editor} className="flex-1 min-h-0" />
 
@@ -350,9 +357,7 @@ export function NotaForm({ onSave, onClose, initialData, userName, userUid }: No
               <div
                 className={cn(
                   'border-t border-slate-100 flex flex-col',
-                  localTodos.length > 0
-                    ? 'flex-1 min-h-0 pt-3'
-                    : 'shrink-0 pt-4 mt-4',
+                  localTodos.length > 0 ? 'flex-1 min-h-0 pt-3' : 'shrink-0 pt-4 mt-4',
                 )}
               >
                 {/* Cabeçalho (sempre visível) */}
@@ -373,7 +378,9 @@ export function NotaForm({ onSave, onClose, initialData, userName, userUid }: No
                       <button
                         type="button"
                         onClick={() =>
-                          setTextSort((s) => (s === 'default' ? 'asc' : s === 'asc' ? 'desc' : 'default'))
+                          setTextSort((s) =>
+                            s === 'default' ? 'asc' : s === 'asc' ? 'desc' : 'default',
+                          )
                         }
                         aria-label="Ordenar por texto"
                         className={cn(
@@ -395,7 +402,11 @@ export function NotaForm({ onSave, onClose, initialData, userName, userUid }: No
                         type="button"
                         onClick={() =>
                           setStatusSort((s) =>
-                            s === 'default' ? 'done-last' : s === 'done-last' ? 'done-first' : 'default',
+                            s === 'default'
+                              ? 'done-last'
+                              : s === 'done-last'
+                                ? 'done-first'
+                                : 'default',
                           )
                         }
                         aria-label="Ordenar por status"
@@ -407,7 +418,11 @@ export function NotaForm({ onSave, onClose, initialData, userName, userUid }: No
                         )}
                       >
                         <CheckCircle2 className="w-3 h-3" aria-hidden="true" />
-                        {statusSort === 'default' ? 'Status' : statusSort === 'done-last' ? '✓ Último' : '✓ 1°'}
+                        {statusSort === 'default'
+                          ? 'Status'
+                          : statusSort === 'done-last'
+                            ? '✓ Último'
+                            : '✓ 1°'}
                       </button>
                     </div>
                   )}
@@ -423,55 +438,70 @@ export function NotaForm({ onSave, onClose, initialData, userName, userUid }: No
                       localTodos.length > 0 ? 'h-full overflow-y-auto thin-scrollbar' : '',
                     )}
                   >
-                  <AnimatePresence mode="popLayout">
-                    {displayTodos.map((todo) => (
-                      <motion.div
-                        key={todo.id}
-                        role="listitem"
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0 }}
-                        transition={{ duration: 0.15 }}
-                        className="flex items-center gap-3 group py-1.5"
-                      >
-                        <button
-                          type="button"
-                          role="checkbox"
-                          aria-checked={todo.status === 'feito'}
-                          aria-label={todo.status === 'feito' ? 'Marcar como pendente' : 'Marcar como feito'}
-                          onClick={() => handleToggleTodo(todo.id)}
-                          className={cn(
-                            'w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all active:scale-90',
-                            todo.status === 'feito'
-                              ? 'bg-slate-900 border-slate-900'
-                              : 'border-slate-200 hover:border-slate-400',
-                          )}
+                    <AnimatePresence mode="popLayout">
+                      {displayTodos.map((todo) => (
+                        <motion.div
+                          key={todo.id}
+                          role="listitem"
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{ duration: 0.15 }}
+                          className="flex items-center gap-3 group py-1.5"
                         >
-                          {todo.status === 'feito' && (
-                            <svg className="w-2.5 h-2.5 text-white" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-                              <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
-                          )}
-                        </button>
-                        <span
-                          className={cn(
-                            'flex-1 text-sm leading-tight',
-                            todo.status === 'feito' ? 'line-through text-slate-300' : 'text-slate-700',
-                          )}
-                        >
-                          {todo.texto}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteTodo(todo.id)}
-                          aria-label={`Remover "${todo.texto}"`}
-                          className="opacity-40 group-hover:opacity-100 focus-visible:opacity-100 w-7 h-7 rounded-xl text-slate-500 hover:text-red-400 hover:bg-red-50 active:scale-90 transition-all flex items-center justify-center shrink-0"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </motion.div>
-                    ))}
-                  </AnimatePresence>
+                          <button
+                            type="button"
+                            role="checkbox"
+                            aria-checked={todo.status === 'feito'}
+                            aria-label={
+                              todo.status === 'feito' ? 'Marcar como pendente' : 'Marcar como feito'
+                            }
+                            onClick={() => handleToggleTodo(todo.id)}
+                            className={cn(
+                              'w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all active:scale-90',
+                              todo.status === 'feito'
+                                ? 'bg-slate-900 border-slate-900'
+                                : 'border-slate-200 hover:border-slate-400',
+                            )}
+                          >
+                            {todo.status === 'feito' && (
+                              <svg
+                                className="w-2.5 h-2.5 text-white"
+                                viewBox="0 0 12 12"
+                                fill="none"
+                                aria-hidden="true"
+                              >
+                                <path
+                                  d="M2 6l3 3 5-5"
+                                  stroke="currentColor"
+                                  strokeWidth="2.5"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+                              </svg>
+                            )}
+                          </button>
+                          <span
+                            className={cn(
+                              'flex-1 text-sm leading-tight',
+                              todo.status === 'feito'
+                                ? 'line-through text-slate-300'
+                                : 'text-slate-700',
+                            )}
+                          >
+                            {todo.texto}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteTodo(todo.id)}
+                            aria-label={`Remover "${todo.texto}"`}
+                            className="opacity-40 group-hover:opacity-100 focus-visible:opacity-100 w-7 h-7 rounded-xl text-slate-500 hover:text-red-400 hover:bg-red-50 active:scale-90 transition-all flex items-center justify-center shrink-0"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </motion.div>
+                      ))}
+                    </AnimatePresence>
                   </div>
                 </div>
 
@@ -494,7 +524,10 @@ export function NotaForm({ onSave, onClose, initialData, userName, userUid }: No
                     value={newTodoText}
                     onChange={(e) => setNewTodoText(e.target.value)}
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter') { e.preventDefault(); handleAddTodo(); }
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleAddTodo();
+                      }
                     }}
                   />
                   {newTodoText.trim() && (
@@ -509,7 +542,6 @@ export function NotaForm({ onSave, onClose, initialData, userName, userUid }: No
                   )}
                 </div>
               </div>
-
             </div>
           </div>
         </div>
@@ -534,21 +566,41 @@ export function NotaForm({ onSave, onClose, initialData, userName, userUid }: No
               >
                 <div className="p-2 space-y-0.5 max-h-60 overflow-y-auto no-scrollbar">
                   <button
-                    onClick={() => { setLinkedAmbiente(''); setShowAmbientePicker(false); }}
-                    className={cn('w-full flex items-center gap-3 px-4 py-2.5 rounded-2xl text-sm font-bold transition-all', !linkedAmbiente ? 'bg-slate-900 text-white' : 'text-slate-500 hover:bg-slate-50')}
+                    onClick={() => {
+                      setLinkedAmbiente('');
+                      setShowAmbientePicker(false);
+                    }}
+                    className={cn(
+                      'w-full flex items-center gap-3 px-4 py-2.5 rounded-2xl text-sm font-bold transition-all',
+                      !linkedAmbiente
+                        ? 'bg-slate-900 text-white'
+                        : 'text-slate-500 hover:bg-slate-50',
+                    )}
                   >
                     Nenhum
-                    {!linkedAmbiente && <CheckCircle2 className="w-4 h-4 ml-auto text-white" aria-hidden="true" />}
+                    {!linkedAmbiente && (
+                      <CheckCircle2 className="w-4 h-4 ml-auto text-white" aria-hidden="true" />
+                    )}
                   </button>
                   {MASTER_AMBIENTES.map((a) => (
                     <button
                       key={a.id}
-                      onClick={() => { setLinkedAmbiente(a.id); setShowAmbientePicker(false); }}
-                      className={cn('w-full flex items-center gap-3 px-4 py-2.5 rounded-2xl text-sm font-bold transition-all', linkedAmbiente === a.id ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-50')}
+                      onClick={() => {
+                        setLinkedAmbiente(a.id);
+                        setShowAmbientePicker(false);
+                      }}
+                      className={cn(
+                        'w-full flex items-center gap-3 px-4 py-2.5 rounded-2xl text-sm font-bold transition-all',
+                        linkedAmbiente === a.id
+                          ? 'bg-slate-900 text-white'
+                          : 'text-slate-600 hover:bg-slate-50',
+                      )}
                     >
                       <a.icon className="w-4 h-4 shrink-0" aria-hidden="true" />
                       {a.label}
-                      {linkedAmbiente === a.id && <CheckCircle2 className="w-4 h-4 ml-auto text-white" aria-hidden="true" />}
+                      {linkedAmbiente === a.id && (
+                        <CheckCircle2 className="w-4 h-4 ml-auto text-white" aria-hidden="true" />
+                      )}
                     </button>
                   ))}
                 </div>
@@ -569,7 +621,10 @@ export function NotaForm({ onSave, onClose, initialData, userName, userUid }: No
                   type="button"
                   aria-label={`Cor ${label}`}
                   aria-pressed={isActive}
-                  onClick={() => { setCor(value); setCorCustom(''); }}
+                  onClick={() => {
+                    setCor(value);
+                    setCorCustom('');
+                  }}
                   className={cn(
                     'w-6 h-6 rounded-full transition-all active:scale-90 shrink-0',
                     SWATCH_BG[value],
@@ -709,7 +764,10 @@ export function NotaForm({ onSave, onClose, initialData, userName, userUid }: No
                 </p>
                 <div className="flex flex-col gap-2">
                   <button
-                    onClick={() => { setShowUnsavedDialog(false); handleSave(); }}
+                    onClick={() => {
+                      setShowUnsavedDialog(false);
+                      handleSave();
+                    }}
                     disabled={!titulo.trim()}
                     className="w-full h-12 rounded-2xl bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-40 active:scale-95 transition-transform"
                   >
@@ -717,7 +775,10 @@ export function NotaForm({ onSave, onClose, initialData, userName, userUid }: No
                     Salvar
                   </button>
                   <button
-                    onClick={() => { setShowUnsavedDialog(false); onClose(); }}
+                    onClick={() => {
+                      setShowUnsavedDialog(false);
+                      onClose();
+                    }}
                     className="w-full h-12 rounded-2xl bg-red-50 text-red-500 text-[10px] font-black uppercase tracking-widest hover:bg-red-100 transition-colors active:scale-95"
                   >
                     Descartar

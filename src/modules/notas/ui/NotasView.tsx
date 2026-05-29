@@ -138,7 +138,10 @@ function FilterDropdownInner<T extends string>({
       >
         <div className="flex items-center gap-2.5 truncate">
           <Icon
-            className={cn('w-3.5 h-3.5 shrink-0', isSelected && !isOpen ? 'text-white' : 'text-slate-400')}
+            className={cn(
+              'w-3.5 h-3.5 shrink-0',
+              isSelected && !isOpen ? 'text-white' : 'text-slate-400',
+            )}
             aria-hidden="true"
           />
           <span className="truncate">{displayValue}</span>
@@ -169,13 +172,14 @@ function FilterDropdownInner<T extends string>({
             role="listbox"
           >
             <div className="relative">
-              <div
-                className="max-h-72 overflow-y-auto thin-scrollbar thin-scrollbar-rounded pt-4 px-3 pb-3"
-              >
+              <div className="max-h-72 overflow-y-auto thin-scrollbar thin-scrollbar-rounded pt-4 px-3 pb-3">
                 <button
                   role="option"
                   aria-selected={!isSelected}
-                  onClick={() => { onChange(placeholder); onToggle(null); }}
+                  onClick={() => {
+                    onChange(placeholder);
+                    onToggle(null);
+                  }}
                   className={cn(
                     'w-full flex items-center justify-between px-4 py-3 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all mb-1',
                     !isSelected
@@ -199,7 +203,10 @@ function FilterDropdownInner<T extends string>({
                       key={optValue}
                       role="option"
                       aria-selected={active}
-                      onClick={() => { onChange(optValue); onToggle(null); }}
+                      onClick={() => {
+                        onChange(optValue);
+                        onToggle(null);
+                      }}
                       className={cn(
                         'w-full flex items-center justify-between px-4 py-3 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all mb-0.5',
                         active
@@ -440,7 +447,10 @@ export function NotasView() {
               </button>
             ) : (
               <button
-                onClick={() => { setNotaToEdit(undefined); setIsFormOpen(true); }}
+                onClick={() => {
+                  setNotaToEdit(undefined);
+                  setIsFormOpen(true);
+                }}
                 className="flex items-center gap-3 px-8 h-14 rounded-2xl bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all active:scale-95"
                 aria-label="Criar primeira nota"
               >

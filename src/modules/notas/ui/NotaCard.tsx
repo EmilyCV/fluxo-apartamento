@@ -103,10 +103,7 @@ export function NotaCard({ nota, onEdit, onTogglePin, onToggleTodo }: NotaCardPr
 
         <div className="flex items-center gap-1.5 shrink-0">
           {totalTodos > 0 && (
-            <span
-              className={cn('text-[10px] opacity-70', countClass)}
-              style={countStyle}
-            >
+            <span className={cn('text-[10px] opacity-70', countClass)} style={countStyle}>
               {doneTodos}/{totalTodos}
             </span>
           )}
@@ -126,10 +123,7 @@ export function NotaCard({ nota, onEdit, onTogglePin, onToggleTodo }: NotaCardPr
                 : 'text-slate-300 hover:text-slate-500 hover:bg-black/5',
             )}
           >
-            <Pin
-              className={cn('w-3 h-3', nota.pinned && 'fill-current')}
-              aria-hidden="true"
-            />
+            <Pin className={cn('w-3 h-3', nota.pinned && 'fill-current')} aria-hidden="true" />
           </motion.button>
         </div>
       </div>
@@ -150,7 +144,9 @@ export function NotaCard({ nota, onEdit, onTogglePin, onToggleTodo }: NotaCardPr
                   type="button"
                   role="checkbox"
                   aria-checked={todo.status === 'feito'}
-                  aria-label={todo.status === 'feito' ? 'Marcar como pendente' : 'Marcar como feito'}
+                  aria-label={
+                    todo.status === 'feito' ? 'Marcar como pendente' : 'Marcar como feito'
+                  }
                   onClick={(e) => {
                     e.stopPropagation();
                     onToggleTodo(nota.id, todo.id, todo.status);
@@ -163,8 +159,19 @@ export function NotaCard({ nota, onEdit, onTogglePin, onToggleTodo }: NotaCardPr
                   )}
                 >
                   {todo.status === 'feito' && (
-                    <svg className="w-2 h-2 text-white" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-                      <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                    <svg
+                      className="w-2 h-2 text-white"
+                      viewBox="0 0 12 12"
+                      fill="none"
+                      aria-hidden="true"
+                    >
+                      <path
+                        d="M2 6l3 3 5-5"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
                     </svg>
                   )}
                 </button>

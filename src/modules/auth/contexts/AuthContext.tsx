@@ -104,7 +104,7 @@ export function FirebaseAuthProvider({ children }: { children: ReactNode }) {
     } catch (err: unknown) {
       console.error('Erro durante o login com Google:', err);
       const authError = err as { code?: string; message?: string };
-      
+
       if (authError.code !== 'auth/popup-closed-by-user') {
         setError(authError.message || 'Falha na autenticação com Google.');
       }
