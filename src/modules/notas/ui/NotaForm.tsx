@@ -4,6 +4,17 @@ import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import { useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
+import Link from '@tiptap/extension-link';
+
+// Extends Link so the mark is NOT inclusive at boundaries: typing at the end
+// (or start) of a link does not extend the link mark to the new characters.
+// autolink still works — it applies marks to text ranges directly, independent
+// of the inclusive flag.
+const CustomLink = Link.extend({
+  inclusive() {
+    return false;
+  },
+});
 import { TextStyle, FontFamily, Color, FontSize } from '@tiptap/extension-text-style';
 import Placeholder from '@tiptap/extension-placeholder';
 import {
@@ -98,6 +109,15 @@ export function NotaForm({ onSave, onClose, initialData, userName, userUid }: No
     extensions: [
       StarterKit,
       Underline,
+      CustomLink.configure({
+        openOnClick: false,
+        autolink: true,
+        defaultProtocol: 'https',
+        linkOnPaste: true,
+        HTMLAttributes: {
+          class: 'cursor-pointer text-blue-600 underline hover:text-blue-800 transition-colors',
+        },
+      }),
       TextStyle,
       FontFamily,
       Color,
@@ -110,6 +130,29 @@ export function NotaForm({ onSave, onClose, initialData, userName, userUid }: No
     },
     editorProps: {
       attributes: { class: 'tiptap outline-none min-h-[80px] text-base text-slate-600 leading-relaxed' },
+      // Intercept URL paste over a non-empty selection: apply the URL as a
+      // link mark on the selected text instead of replacing it.
+      // This runs before Tiptap's own linkOnPaste plugin so we control the
+      // plain-text clipboard value directly, avoiding edge-cases where the
+      // plugin receives HTML clipboard data and misidentifies the URL.
+      handlePaste(view, event) {
+        if (view.state.selection.empty) return false;
+        const text = event.clipboardData?.getData('text/plain')?.trim() ?? '';
+        if (!text) return false;
+        let parsed: URL;
+        try { parsed = new URL(text); } catch { return false; }
+        if (!['http:', 'https:', 'ftp:'].includes(parsed.protocol)) return false;
+        const linkMarkType = view.state.schema.marks['link'];
+        if (!linkMarkType) return false;
+        view.dispatch(
+          view.state.tr.addMark(
+            view.state.selection.from,
+            view.state.selection.to,
+            linkMarkType.create({ href: text }),
+          ),
+        );
+        return true; // prevent default paste (which would replace the selection)
+      },
     },
   });
   const colorInputRef = useRef<HTMLInputElement>(null);

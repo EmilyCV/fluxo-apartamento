@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Editor } from '@tiptap/react';
-import { Bold, Italic, Underline as UnderlineIcon, ChevronDown, Palette } from 'lucide-react';
+import { Bold, Italic, Underline as UnderlineIcon, ChevronDown, Palette, Link2 } from 'lucide-react';
 import { cn } from '@/utils/cn';
 
 const SIZE_PRESETS = [8, 9, 10, 11, 12, 14, 16, 18, 20, 24, 28, 32, 36, 48, 60, 72];
@@ -99,6 +99,25 @@ export function RichTextToolbar({ editor }: { editor: Editor | null }) {
 
   const activeBtn = 'bg-slate-900 text-white';
   const idleBtn = 'text-slate-400 hover:bg-black/5 hover:text-slate-700';
+
+  const setLink = () => {
+    const previousUrl = editor.getAttributes('link').href;
+    const url = window.prompt('URL:', previousUrl);
+
+    // cancelled
+    if (url === null) {
+      return;
+    }
+
+    // empty
+    if (url === '') {
+      editor.chain().focus().extendMarkRange('link').unsetLink().run();
+      return;
+    }
+
+    // update link
+    editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+  };
 
   return (
     <div className="flex items-center gap-0.5">
@@ -201,6 +220,18 @@ export function RichTextToolbar({ editor }: { editor: Editor | null }) {
         className={cn('w-7 h-7 rounded-xl flex items-center justify-center transition-all shrink-0', editor.isActive('underline') ? activeBtn : idleBtn)}
       >
         <UnderlineIcon className="w-3.5 h-3.5" />
+      </button>
+
+      {/* Link */}
+      <button
+        type="button"
+        onMouseDown={(e) => { e.preventDefault(); setLink(); }}
+        aria-label="Inserir link"
+        aria-pressed={editor.isActive('link')}
+        title="Inserir link (selecione o texto primeiro)"
+        className={cn('w-7 h-7 rounded-xl flex items-center justify-center transition-all shrink-0', editor.isActive('link') ? activeBtn : idleBtn)}
+      >
+        <Link2 className="w-3.5 h-3.5" />
       </button>
 
       <div className="w-px h-4 bg-black/10 mx-0.5 shrink-0" />
