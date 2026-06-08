@@ -25,7 +25,15 @@ const COLOR_PRESETS = [
   { label: 'Rosa', value: '#db2777' },
 ];
 
-export function RichTextToolbar({ editor }: { editor: Editor | null }) {
+export function RichTextToolbar({
+  editor,
+  linkPopoverOpen,
+  onLinkClick,
+}: {
+  editor: Editor | null;
+  linkPopoverOpen?: boolean;
+  onLinkClick?: () => void;
+}) {
   const [showFontMenu, setShowFontMenu] = useState(false);
   const [showColorMenu, setShowColorMenu] = useState(false);
   const [showSizeMenu, setShowSizeMenu] = useState(false);
@@ -99,25 +107,6 @@ export function RichTextToolbar({ editor }: { editor: Editor | null }) {
 
   const activeBtn = 'bg-slate-900 text-white';
   const idleBtn = 'text-slate-400 hover:bg-black/5 hover:text-slate-700';
-
-  const setLink = () => {
-    const previousUrl = editor.getAttributes('link').href;
-    const url = window.prompt('URL:', previousUrl);
-
-    // cancelled
-    if (url === null) {
-      return;
-    }
-
-    // empty
-    if (url === '') {
-      editor.chain().focus().extendMarkRange('link').unsetLink().run();
-      return;
-    }
-
-    // update link
-    editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
-  };
 
   return (
     <div className="flex items-center gap-0.5">
@@ -222,14 +211,19 @@ export function RichTextToolbar({ editor }: { editor: Editor | null }) {
         <UnderlineIcon className="w-3.5 h-3.5" />
       </button>
 
-      {/* Link */}
+      {/* Link — toggle: segundo clique fecha sem relê a seleção */}
       <button
         type="button"
-        onMouseDown={(e) => { e.preventDefault(); setLink(); }}
+        onMouseDown={(e) => {
+          e.preventDefault();
+          onLinkClick?.();
+        }}
         aria-label="Inserir link"
-        aria-pressed={editor.isActive('link')}
-        title="Inserir link (selecione o texto primeiro)"
-        className={cn('w-7 h-7 rounded-xl flex items-center justify-center transition-all shrink-0', editor.isActive('link') ? activeBtn : idleBtn)}
+        aria-pressed={linkPopoverOpen || editor.isActive('link')}
+        className={cn(
+          'w-7 h-7 rounded-xl flex items-center justify-center transition-all shrink-0',
+          linkPopoverOpen || editor.isActive('link') ? activeBtn : idleBtn,
+        )}
       >
         <Link2 className="w-3.5 h-3.5" />
       </button>

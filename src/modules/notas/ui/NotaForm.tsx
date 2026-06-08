@@ -39,6 +39,7 @@ import { NOTAS_CORES, NOTAS_CORES_OPTIONS } from '../constants';
 import { MASTER_AMBIENTES } from '@/modules/ambientes/types/masterData';
 import { notasService } from '../services/notasService';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { LinkPopover } from '@/components/LinkPopover';
 import { RichTextEditor } from '@/components/RichTextEditor';
 import { RichTextToolbar } from '@/components/RichTextToolbar';
 import { FirestoreTimestamp } from '@/types';
@@ -90,6 +91,10 @@ export function NotaForm({ onSave, onClose, initialData, userName, userUid }: No
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showAmbientePicker, setShowAmbientePicker] = useState(false);
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
+  const [linkPopoverOpen, setLinkPopoverOpen] = useState(false);
+  // Incrementing this key forces LinkPopover to remount and re-read editor state
+  // each time the user opens it (even if already open on a different link).
+  const [linkPopoverKey, setLinkPopoverKey] = useState(0);
 
   const [titulo, setTitulo] = useState(initialData?.titulo || '');
   const [conteudo, setConteudo] = useState(initialData?.conteudo || '');
@@ -104,6 +109,23 @@ export function NotaForm({ onSave, onClose, initialData, userName, userUid }: No
 
   const titleRef = useRef<HTMLTextAreaElement>(null);
   const newTodoInputRef = useRef<HTMLInputElement>(null);
+
+  // Toolbar → toggle: abre se fechado, fecha se aberto.
+  // Sem anti-padrão: não chama setState dentro de outro setState updater.
+  const toggleLinkPopover = useCallback(() => {
+    if (linkPopoverOpen) {
+      setLinkPopoverOpen(false);
+    } else {
+      setLinkPopoverKey((k) => k + 1);
+      setLinkPopoverOpen(true);
+    }
+  }, [linkPopoverOpen]);
+
+  // Clique num link no editor → sempre re-abre (força remount com novos dados).
+  const forceOpenLinkPopover = useCallback(() => {
+    setLinkPopoverKey((k) => k + 1);
+    setLinkPopoverOpen(true);
+  }, []);
 
   const editor = useEditor({
     extensions: [
@@ -329,7 +351,7 @@ export function NotaForm({ onSave, onClose, initialData, userName, userUid }: No
 
           {/* Toolbar de formatação — inline entre ← e ações */}
           <div className="flex-1 flex items-center">
-            <RichTextToolbar editor={editor} />
+            <RichTextToolbar editor={editor} linkPopoverOpen={linkPopoverOpen} onLinkClick={toggleLinkPopover} />
           </div>
 
           {/* Data + ações */}
@@ -362,6 +384,27 @@ export function NotaForm({ onSave, onClose, initialData, userName, userUid }: No
           </div>
         </div>
 
+        {/* Link popover — aparece abaixo da toolbar quando ativo */}
+        <AnimatePresence>
+          {linkPopoverOpen && (
+            <motion.div
+              key="link-popover"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.15 }}
+              className="flex-shrink-0 px-5 py-2 border-b border-slate-100 bg-white overflow-hidden"
+            >
+              <LinkPopover
+                key={linkPopoverKey}
+                editor={editor}
+                open={linkPopoverOpen}
+                onClose={() => setLinkPopoverOpen(false)}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Área de conteúdo — split independente quando há todos */}
         <div className="flex-1 overflow-hidden min-h-0">
           <div className="flex flex-col h-full px-5 pt-1 pb-3">
@@ -387,7 +430,7 @@ export function NotaForm({ onSave, onClose, initialData, userName, userUid }: No
             <div className="flex-1 min-h-0 flex flex-col">
 
               {/* Editor rico — scroll independente */}
-              <RichTextEditor editor={editor} className="flex-1 min-h-0" />
+              <RichTextEditor editor={editor} className="flex-1 min-h-0" onLinkClick={forceOpenLinkPopover} />
 
               {/* Painel de checklist */}
               <div
