@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Editor } from '@tiptap/react';
-import { Bold, Italic, Underline as UnderlineIcon, ChevronDown, Palette } from 'lucide-react';
+import { Bold, Italic, Underline as UnderlineIcon, ChevronDown, Palette, Link2 } from 'lucide-react';
 import { cn } from '@/utils/cn';
 
 const SIZE_PRESETS = [8, 9, 10, 11, 12, 14, 16, 18, 20, 24, 28, 32, 36, 48, 60, 72];
@@ -25,7 +25,15 @@ const COLOR_PRESETS = [
   { label: 'Rosa', value: '#db2777' },
 ];
 
-export function RichTextToolbar({ editor }: { editor: Editor | null }) {
+export function RichTextToolbar({
+  editor,
+  linkPopoverOpen,
+  onLinkClick,
+}: {
+  editor: Editor | null;
+  linkPopoverOpen?: boolean;
+  onLinkClick?: () => void;
+}) {
   const [showFontMenu, setShowFontMenu] = useState(false);
   const [showColorMenu, setShowColorMenu] = useState(false);
   const [showSizeMenu, setShowSizeMenu] = useState(false);
@@ -226,6 +234,23 @@ export function RichTextToolbar({ editor }: { editor: Editor | null }) {
         )}
       >
         <UnderlineIcon className="w-3.5 h-3.5" />
+      </button>
+
+      {/* Link — toggle: segundo clique fecha sem relê a seleção */}
+      <button
+        type="button"
+        onMouseDown={(e) => {
+          e.preventDefault();
+          onLinkClick?.();
+        }}
+        aria-label="Inserir link"
+        aria-pressed={linkPopoverOpen || editor.isActive('link')}
+        className={cn(
+          'w-7 h-7 rounded-xl flex items-center justify-center transition-all shrink-0',
+          linkPopoverOpen || editor.isActive('link') ? activeBtn : idleBtn,
+        )}
+      >
+        <Link2 className="w-3.5 h-3.5" />
       </button>
 
       <div className="w-px h-4 bg-black/10 mx-0.5 shrink-0" />

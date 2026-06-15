@@ -131,9 +131,14 @@ export function NotaCard({ nota, onEdit, onTogglePin, onToggleTodo }: NotaCardPr
       {/* Conteúdo — preenche o espaço disponível */}
       <div className="flex-1 min-h-0 overflow-hidden flex flex-col gap-2">
         {nota.conteudo && (
-          <p className="text-sm text-slate-500 font-medium line-clamp-3 leading-relaxed shrink-0">
-            {stripHtml(nota.conteudo)}
-          </p>
+          <div
+            className={cn(
+              'text-sm text-slate-500 font-medium line-clamp-3 leading-relaxed shrink-0',
+              '[&_ul]:list-disc [&_ul]:ml-4 [&_ol]:list-decimal [&_ol]:ml-4 [&_li]:mb-0',
+              '[&_a]:text-blue-600 [&_a]:underline [&_a]:hover:text-blue-800'
+            )}
+            dangerouslySetInnerHTML={{ __html: nota.conteudo }}
+          />
         )}
 
         {nota.todos && nota.todos.length > 0 && (

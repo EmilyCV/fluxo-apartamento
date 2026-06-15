@@ -4,6 +4,17 @@ import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import { useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
+import Link from '@tiptap/extension-link';
+
+// Extends Link so the mark is NOT inclusive at boundaries: typing at the end
+// (or start) of a link does not extend the link mark to the new characters.
+// autolink still works — it applies marks to text ranges directly, independent
+// of the inclusive flag.
+const CustomLink = Link.extend({
+  inclusive() {
+    return false;
+  },
+});
 import { TextStyle, FontFamily, Color, FontSize } from '@tiptap/extension-text-style';
 import Placeholder from '@tiptap/extension-placeholder';
 import {
@@ -28,6 +39,7 @@ import { NOTAS_CORES, NOTAS_CORES_OPTIONS } from '../constants';
 import { MASTER_AMBIENTES } from '@/modules/ambientes/types/masterData';
 import { notasService } from '../services/notasService';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { LinkPopover } from '@/components/LinkPopover';
 import { RichTextEditor } from '@/components/RichTextEditor';
 import { RichTextToolbar } from '@/components/RichTextToolbar';
 import { FirestoreTimestamp } from '@/types';
@@ -82,6 +94,10 @@ export function NotaForm({ onSave, onClose, initialData, userName, userUid }: No
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showAmbientePicker, setShowAmbientePicker] = useState(false);
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
+  const [linkPopoverOpen, setLinkPopoverOpen] = useState(false);
+  // Incrementing this key forces LinkPopover to remount and re-read editor state
+  // each time the user opens it (even if already open on a different link).
+  const [linkPopoverKey, setLinkPopoverKey] = useState(0);
 
   const [titulo, setTitulo] = useState(initialData?.titulo || '');
   const [conteudo, setConteudo] = useState(initialData?.conteudo || '');
@@ -97,10 +113,36 @@ export function NotaForm({ onSave, onClose, initialData, userName, userUid }: No
   const titleRef = useRef<HTMLTextAreaElement>(null);
   const newTodoInputRef = useRef<HTMLInputElement>(null);
 
+  // Toolbar → toggle: abre se fechado, fecha se aberto.
+  // Sem anti-padrão: não chama setState dentro de outro setState updater.
+  const toggleLinkPopover = useCallback(() => {
+    if (linkPopoverOpen) {
+      setLinkPopoverOpen(false);
+    } else {
+      setLinkPopoverKey((k) => k + 1);
+      setLinkPopoverOpen(true);
+    }
+  }, [linkPopoverOpen]);
+
+  // Clique num link no editor → sempre re-abre (força remount com novos dados).
+  const forceOpenLinkPopover = useCallback(() => {
+    setLinkPopoverKey((k) => k + 1);
+    setLinkPopoverOpen(true);
+  }, []);
+
   const editor = useEditor({
     extensions: [
       StarterKit,
       Underline,
+      CustomLink.configure({
+        openOnClick: false,
+        autolink: true,
+        defaultProtocol: 'https',
+        linkOnPaste: true,
+        HTMLAttributes: {
+          class: 'cursor-pointer text-blue-600 underline hover:text-blue-800 transition-colors',
+        },
+      }),
       TextStyle,
       FontFamily,
       Color,
@@ -112,8 +154,29 @@ export function NotaForm({ onSave, onClose, initialData, userName, userUid }: No
       setConteudo(editor.isEmpty ? '' : editor.getHTML());
     },
     editorProps: {
-      attributes: {
-        class: 'tiptap outline-none min-h-[80px] text-base text-slate-600 leading-relaxed',
+      attributes: { class: 'tiptap outline-none min-h-[80px] text-base text-slate-600 leading-relaxed' },
+      // Intercept URL paste over a non-empty selection: apply the URL as a
+      // link mark on the selected text instead of replacing it.
+      // This runs before Tiptap's own linkOnPaste plugin so we control the
+      // plain-text clipboard value directly, avoiding edge-cases where the
+      // plugin receives HTML clipboard data and misidentifies the URL.
+      handlePaste(view, event) {
+        if (view.state.selection.empty) return false;
+        const text = event.clipboardData?.getData('text/plain')?.trim() ?? '';
+        if (!text) return false;
+        let parsed: URL;
+        try { parsed = new URL(text); } catch { return false; }
+        if (!['http:', 'https:', 'ftp:'].includes(parsed.protocol)) return false;
+        const linkMarkType = view.state.schema.marks['link'];
+        if (!linkMarkType) return false;
+        view.dispatch(
+          view.state.tr.addMark(
+            view.state.selection.from,
+            view.state.selection.to,
+            linkMarkType.create({ href: text }),
+          ),
+        );
+        return true; // prevent default paste (which would replace the selection)
       },
     },
   });
@@ -293,7 +356,7 @@ export function NotaForm({ onSave, onClose, initialData, userName, userUid }: No
 
           {/* Toolbar de formatação — inline entre ← e ações */}
           <div className="flex-1 flex items-center">
-            <RichTextToolbar editor={editor} />
+            <RichTextToolbar editor={editor} linkPopoverOpen={linkPopoverOpen} onLinkClick={toggleLinkPopover} />
           </div>
 
           {/* Data + ações */}
@@ -328,6 +391,27 @@ export function NotaForm({ onSave, onClose, initialData, userName, userUid }: No
           </div>
         </div>
 
+        {/* Link popover — aparece abaixo da toolbar quando ativo */}
+        <AnimatePresence>
+          {linkPopoverOpen && (
+            <motion.div
+              key="link-popover"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.15 }}
+              className="flex-shrink-0 px-5 py-2 border-b border-slate-100 bg-white overflow-hidden"
+            >
+              <LinkPopover
+                key={linkPopoverKey}
+                editor={editor}
+                open={linkPopoverOpen}
+                onClose={() => setLinkPopoverOpen(false)}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Área de conteúdo — split independente quando há todos */}
         <div className="flex-1 overflow-hidden min-h-0">
           <div className="flex flex-col h-full px-5 pt-1 pb-3">
@@ -351,7 +435,7 @@ export function NotaForm({ onSave, onClose, initialData, userName, userUid }: No
             {/* Container split */}
             <div className="flex-1 min-h-0 flex flex-col">
               {/* Editor rico — scroll independente */}
-              <RichTextEditor editor={editor} className="flex-1 min-h-0" />
+              <RichTextEditor editor={editor} className="flex-1 min-h-0" onLinkClick={forceOpenLinkPopover} />
 
               {/* Painel de checklist */}
               <div
