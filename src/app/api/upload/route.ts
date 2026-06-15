@@ -19,10 +19,7 @@ export async function POST(request: Request): Promise<NextResponse> {
     return NextResponse.json({ url: blob.url });
   } catch (error) {
     console.error('Erro no upload Vercel Blob:', error);
-    return NextResponse.json(
-      { error: 'Erro interno ao processar o upload.' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Erro interno ao processar o upload.' }, { status: 500 });
   }
 }
 
@@ -33,7 +30,7 @@ export async function POST(request: Request): Promise<NextResponse> {
 export async function DELETE(request: Request): Promise<NextResponse> {
   try {
     const { url } = await request.json();
-    
+
     if (!url) {
       return NextResponse.json({ error: 'URL não fornecida.' }, { status: 400 });
     }

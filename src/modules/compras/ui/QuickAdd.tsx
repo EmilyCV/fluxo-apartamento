@@ -93,7 +93,7 @@ export function QuickAdd({ onAdd }: QuickAddProps) {
                 </span>
               </div>
             )}
-            
+
             <div className="flex items-center gap-2">
               <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest shrink-0">
                 Cômodo:

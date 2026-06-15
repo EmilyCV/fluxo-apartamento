@@ -449,64 +449,64 @@ export function ComprasView() {
               <div className="h-6 w-px bg-slate-200 hidden md:block mx-2 shrink-0"></div>
 
               <div className="overflow-x-auto -mx-6 px-6 md:mx-0 md:px-0 py-6 -my-6 no-scrollbar">
-              <div className="flex items-center gap-3 w-max">
-                <FilterDropdown<SortOrder>
-                  label="Ordenar"
-                  placeholder="recentes"
-                  value={ordenacao}
-                  options={SORT_OPTIONS}
-                  icon={ArrowUpDown}
-                  isOpen={activeFilter === 'Ordenar'}
-                  onToggle={handleToggleFilter}
-                  onChange={handleOrdenacao}
-                  minWidth="165px"
-                />
+                <div className="flex items-center gap-3 w-max">
+                  <FilterDropdown<SortOrder>
+                    label="Ordenar"
+                    placeholder="recentes"
+                    value={ordenacao}
+                    options={SORT_OPTIONS}
+                    icon={ArrowUpDown}
+                    isOpen={activeFilter === 'Ordenar'}
+                    onToggle={handleToggleFilter}
+                    onChange={handleOrdenacao}
+                    minWidth="165px"
+                  />
 
-                <FilterDropdown<Ambiente | 'Todos'>
-                  label="Cômodo"
-                  placeholder="Todos"
-                  value={filtroAmbiente}
-                  options={AMBIENTES}
-                  icon={HomeIcon}
-                  isOpen={activeFilter === 'Cômodo'}
-                  onToggle={handleToggleFilter}
-                  onChange={handleFiltroAmbiente}
-                  minWidth="140px"
-                />
-                <FilterDropdown<Categoria | 'Todas'>
-                  label="Categoria"
-                  placeholder="Todas"
-                  value={filtroCategoria}
-                  options={CATEGORIAS}
-                  icon={Tags}
-                  isOpen={activeFilter === 'Categoria'}
-                  onToggle={handleToggleFilter}
-                  onChange={handleFiltroCategoria}
-                  minWidth="140px"
-                />
-                <FilterDropdown<Prioridade | 'Todas'>
-                  label="Prioridade"
-                  placeholder="Todas"
-                  value={filtroPrioridade}
-                  options={PRIORIDADES}
-                  icon={AlertCircle}
-                  isOpen={activeFilter === 'Prioridade'}
-                  onToggle={handleToggleFilter}
-                  onChange={handleFiltroPrioridade}
-                  minWidth="160px"
-                />
+                  <FilterDropdown<Ambiente | 'Todos'>
+                    label="Cômodo"
+                    placeholder="Todos"
+                    value={filtroAmbiente}
+                    options={AMBIENTES}
+                    icon={HomeIcon}
+                    isOpen={activeFilter === 'Cômodo'}
+                    onToggle={handleToggleFilter}
+                    onChange={handleFiltroAmbiente}
+                    minWidth="140px"
+                  />
+                  <FilterDropdown<Categoria | 'Todas'>
+                    label="Categoria"
+                    placeholder="Todas"
+                    value={filtroCategoria}
+                    options={CATEGORIAS}
+                    icon={Tags}
+                    isOpen={activeFilter === 'Categoria'}
+                    onToggle={handleToggleFilter}
+                    onChange={handleFiltroCategoria}
+                    minWidth="140px"
+                  />
+                  <FilterDropdown<Prioridade | 'Todas'>
+                    label="Prioridade"
+                    placeholder="Todas"
+                    value={filtroPrioridade}
+                    options={PRIORIDADES}
+                    icon={AlertCircle}
+                    isOpen={activeFilter === 'Prioridade'}
+                    onToggle={handleToggleFilter}
+                    onChange={handleFiltroPrioridade}
+                    minWidth="160px"
+                  />
 
-                {hasActiveFilters && (
-                  <button
-                    onClick={clearFilters}
-                    className="flex items-center gap-2 h-12 px-5 rounded-2xl text-[10px] font-black uppercase tracking-widest text-red-500 hover:bg-red-50 border border-transparent hover:border-red-100 transition-all shrink-0 group animate-slide-in touch-manipulation"
-                    aria-label="Limpar todos os filtros"
-                  >
-                    <RotateCcw className="w-3.5 h-3.5 group-hover:rotate-[-45deg] transition-transform" />
-                    <span>Resetar</span>
-                  </button>
-                )}
-              </div>
+                  {hasActiveFilters && (
+                    <button
+                      onClick={clearFilters}
+                      className="flex items-center gap-2 h-12 px-5 rounded-2xl text-[10px] font-black uppercase tracking-widest text-red-500 hover:bg-red-50 border border-transparent hover:border-red-100 transition-all shrink-0 group animate-slide-in touch-manipulation"
+                      aria-label="Limpar todos os filtros"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5 group-hover:rotate-[-45deg] transition-transform" />
+                      <span>Resetar</span>
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -645,7 +645,8 @@ export function ComprasView() {
                         'w-12 h-12 sm:w-14 sm:h-14 rounded-[18px] sm:rounded-[24px] flex items-center justify-center transition-all shadow-sm active:scale-90 shrink-0',
                         item.adquirido
                           ? 'bg-brand-green text-brand-green-dark shadow-brand-green/20'
-                          : (item.quantidadeAdquirida ?? 0) > 0 && (item.quantidadeAdquirida ?? 0) < item.quantidade
+                          : (item.quantidadeAdquirida ?? 0) > 0 &&
+                              (item.quantidadeAdquirida ?? 0) < item.quantidade
                             ? 'bg-amber-100 text-amber-600 hover:bg-amber-200'
                             : 'bg-slate-50 text-slate-200 hover:bg-brand-green-light hover:text-brand-green-dark hover:scale-110',
                       )}
@@ -659,7 +660,9 @@ export function ComprasView() {
                     <QuantidadeAdquiridaControl
                       itemId={item.id}
                       quantidade={item.quantidade}
-                      quantidadeAdquirida={item.adquirido ? item.quantidade : (item.quantidadeAdquirida ?? 0)}
+                      quantidadeAdquirida={
+                        item.adquirido ? item.quantidade : (item.quantidadeAdquirida ?? 0)
+                      }
                       adquirido={item.adquirido}
                       onUpdate={(id, novaQtd, total) => {
                         comprasService.updateQuantidadeAdquirida(id, novaQtd, total);

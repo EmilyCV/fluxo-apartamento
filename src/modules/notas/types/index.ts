@@ -18,7 +18,7 @@ export interface Nota {
   conteudo?: string;
   todos?: TodoItem[];
   cor: NotaCor;
-  corCustom?: string;        // hex personalizado; substitui `cor` no display
+  corCustom?: string; // hex personalizado; substitui `cor` no display
   pinned: boolean;
   linkedAmbiente?: string;
   criadoPor: string;

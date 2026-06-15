@@ -233,9 +233,13 @@ export function DashboardView() {
                         </span>
                         <div className="flex items-center gap-2">
                           <div className="flex flex-col items-end sm:flex-row sm:items-center gap-0.5 sm:gap-3">
-                            <span className="text-xs text-slate-400 font-bold">{formatCurrency(categoriaMetric.adquirido)}</span>
+                            <span className="text-xs text-slate-400 font-bold">
+                              {formatCurrency(categoriaMetric.adquirido)}
+                            </span>
                             <span className="hidden sm:inline text-xs text-slate-300">/</span>
-                            <span className="text-xs text-slate-300 font-bold">{formatCurrency(categoriaMetric.total)}</span>
+                            <span className="text-xs text-slate-300 font-bold">
+                              {formatCurrency(categoriaMetric.total)}
+                            </span>
                           </div>
                           <span className="text-xs font-black text-slate-600 w-8 text-right">
                             {percentual}%
@@ -259,10 +263,13 @@ export function DashboardView() {
           )}
 
           {/* Cards de Ambientes Dinâmicos */}
-          {(!isMounted || homeAmbientesLoading) ? (
+          {!isMounted || homeAmbientesLoading ? (
             <div className="md:col-span-12 grid grid-cols-1 md:grid-cols-3 gap-6 animate-pop [animation-delay:200ms]">
               {[1, 2, 3].map((skeletonIndex) => (
-                <div key={skeletonIndex} className="h-48 bg-slate-100 rounded-[32px] animate-pulse" />
+                <div
+                  key={skeletonIndex}
+                  className="h-48 bg-slate-100 rounded-[32px] animate-pulse"
+                />
               ))}
             </div>
           ) : (
@@ -278,11 +285,15 @@ export function DashboardView() {
                 const masterAmbiente = MASTER_AMBIENTES.find((m) => m.id === homeCard.ambienteId);
                 if (!masterAmbiente) return null;
 
-                const itemsInAmbiente = items.filter((item) => item.ambiente === homeCard.ambienteId);
+                const itemsInAmbiente = items.filter(
+                  (item) => item.ambiente === homeCard.ambienteId,
+                );
                 const totalItemsCount = itemsInAmbiente.length;
                 const completedItemsCount = itemsInAmbiente.filter((item) => item.adquirido).length;
                 const percentage =
-                  totalItemsCount > 0 ? Math.round((completedItemsCount / totalItemsCount) * 100) : 0;
+                  totalItemsCount > 0
+                    ? Math.round((completedItemsCount / totalItemsCount) * 100)
+                    : 0;
 
                 return (
                   <div

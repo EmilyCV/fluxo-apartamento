@@ -104,7 +104,11 @@ export const mockComprasService = {
     notify();
   },
 
-  updateQuantidadeAdquirida: async (id: string, quantidadeAdquirida: number, quantidadeTotal: number) => {
+  updateQuantidadeAdquirida: async (
+    id: string,
+    quantidadeAdquirida: number,
+    quantidadeTotal: number,
+  ) => {
     const items = getStoredItems();
     const adquirido = quantidadeAdquirida >= quantidadeTotal;
     const updatedItems = items.map((item) =>
@@ -113,7 +117,11 @@ export const mockComprasService = {
             ...item,
             quantidadeAdquirida,
             adquirido,
-            prioridade: adquirido ? 'Adquirido' : item.prioridade === 'Adquirido' ? 'Quando der' : item.prioridade as CompraItem['prioridade'],
+            prioridade: adquirido
+              ? 'Adquirido'
+              : item.prioridade === 'Adquirido'
+                ? 'Quando der'
+                : (item.prioridade as CompraItem['prioridade']),
             updatedAt: new Date(),
           }
         : item,

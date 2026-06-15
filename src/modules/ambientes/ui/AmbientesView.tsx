@@ -3,7 +3,17 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AppLayout } from '@/components/AppLayout';
-import { ChevronRight, CheckCircle2, LayoutGrid, Search, FilterX, RotateCcw, Clock, SortAsc, Zap } from 'lucide-react';
+import {
+  ChevronRight,
+  CheckCircle2,
+  LayoutGrid,
+  Search,
+  FilterX,
+  RotateCcw,
+  Clock,
+  SortAsc,
+  Zap,
+} from 'lucide-react';
 import { useAmbientesData } from '@/modules/ambientes/hooks/useAmbientesData';
 import { cn } from '@/utils/cn';
 import { getIsHydrated, setIsHydrated } from '@/utils/hydration';
@@ -18,7 +28,7 @@ export function AmbientesView() {
     ordenacao,
     setOrdenacao,
     alfabeticoAsc,
-    handleAlfabeticoClick
+    handleAlfabeticoClick,
   } = useAmbientesData();
 
   const [isMounted, setIsMounted] = useState(getIsHydrated());
@@ -72,54 +82,62 @@ export function AmbientesView() {
 
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="overflow-x-auto -mx-6 px-6 md:mx-0 md:px-0 pb-1 no-scrollbar">
-            <div
-              className="flex bg-slate-100 p-1 rounded-2xl w-fit shadow-sm border border-slate-200/50 ml-auto"
-              role="group"
-              aria-label="Ordenação de cômodos"
-            >
-              <button
-                onClick={() => setOrdenacao('original')}
-                className={cn(
-                  'flex items-center gap-2 h-10 px-6 rounded-[14px] text-[10px] font-black uppercase tracking-widest transition-all duration-300',
-                  ordenacao === 'original'
-                    ? 'bg-white text-slate-900 shadow-sm'
-                    : 'text-slate-400 hover:text-slate-600',
-                )}
+              <div
+                className="flex bg-slate-100 p-1 rounded-2xl w-fit shadow-sm border border-slate-200/50 ml-auto"
+                role="group"
+                aria-label="Ordenação de cômodos"
               >
-                <Clock className="w-3.5 h-3.5" />
-                Original
-              </button>
+                <button
+                  onClick={() => setOrdenacao('original')}
+                  className={cn(
+                    'flex items-center gap-2 h-10 px-6 rounded-[14px] text-[10px] font-black uppercase tracking-widest transition-all duration-300',
+                    ordenacao === 'original'
+                      ? 'bg-white text-slate-900 shadow-sm'
+                      : 'text-slate-400 hover:text-slate-600',
+                  )}
+                >
+                  <Clock className="w-3.5 h-3.5" />
+                  Original
+                </button>
 
-              <button
-                onClick={handleAlfabeticoClick}
-                className={cn(
-                  'flex items-center gap-2 h-10 px-6 rounded-[14px] text-[10px] font-black uppercase tracking-widest transition-all duration-300',
-                  ordenacao === 'alfabetico'
-                    ? 'bg-white text-slate-900 shadow-sm'
-                    : 'text-slate-400 hover:text-slate-600',
-                )}
-                title={ordenacao === 'alfabetico' ? (alfabeticoAsc ? 'Ordenar Z-A' : 'Ordenar A-Z') : 'Ordenar A-Z'}
-              >
-                <SortAsc className={cn(
-                  "w-3.5 h-3.5 transition-transform duration-300",
-                  ordenacao === 'alfabetico' && !alfabeticoAsc && "rotate-180"
-                )} />
-                {ordenacao === 'alfabetico' ? (alfabeticoAsc ? 'A-Z' : 'Z-A') : 'A-Z'}
-              </button>
+                <button
+                  onClick={handleAlfabeticoClick}
+                  className={cn(
+                    'flex items-center gap-2 h-10 px-6 rounded-[14px] text-[10px] font-black uppercase tracking-widest transition-all duration-300',
+                    ordenacao === 'alfabetico'
+                      ? 'bg-white text-slate-900 shadow-sm'
+                      : 'text-slate-400 hover:text-slate-600',
+                  )}
+                  title={
+                    ordenacao === 'alfabetico'
+                      ? alfabeticoAsc
+                        ? 'Ordenar Z-A'
+                        : 'Ordenar A-Z'
+                      : 'Ordenar A-Z'
+                  }
+                >
+                  <SortAsc
+                    className={cn(
+                      'w-3.5 h-3.5 transition-transform duration-300',
+                      ordenacao === 'alfabetico' && !alfabeticoAsc && 'rotate-180',
+                    )}
+                  />
+                  {ordenacao === 'alfabetico' ? (alfabeticoAsc ? 'A-Z' : 'Z-A') : 'A-Z'}
+                </button>
 
-              <button
-                onClick={() => setOrdenacao('progresso')}
-                className={cn(
-                  'flex items-center gap-2 h-10 px-6 rounded-[14px] text-[10px] font-black uppercase tracking-widest transition-all duration-300',
-                  ordenacao === 'progresso'
-                    ? 'bg-white text-slate-900 shadow-sm'
-                    : 'text-slate-400 hover:text-slate-600',
-                )}
-              >
-                <Zap className="w-3.5 h-3.5" />
-                Progresso
-              </button>
-            </div>
+                <button
+                  onClick={() => setOrdenacao('progresso')}
+                  className={cn(
+                    'flex items-center gap-2 h-10 px-6 rounded-[14px] text-[10px] font-black uppercase tracking-widest transition-all duration-300',
+                    ordenacao === 'progresso'
+                      ? 'bg-white text-slate-900 shadow-sm'
+                      : 'text-slate-400 hover:text-slate-600',
+                  )}
+                >
+                  <Zap className="w-3.5 h-3.5" />
+                  Progresso
+                </button>
+              </div>
             </div>
           </div>
         </header>
@@ -143,7 +161,10 @@ export function AmbientesView() {
               Tente ajustar sua busca ou filtros
             </p>
             <button
-              onClick={() => { setSearchTerm(''); setOrdenacao('original'); }}
+              onClick={() => {
+                setSearchTerm('');
+                setOrdenacao('original');
+              }}
               className="flex items-center gap-3 px-8 h-14 rounded-2xl bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all active:scale-95 touch-manipulation"
             >
               <RotateCcw className="w-4 h-4" />

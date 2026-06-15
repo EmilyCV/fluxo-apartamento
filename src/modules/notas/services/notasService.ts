@@ -23,10 +23,7 @@ let cachedNotas: Nota[] | null = null;
 const realNotasService = {
   getCachedNotas: () => cachedNotas,
 
-  subscribeToNotas: (
-    callback: (notas: Nota[]) => void,
-    onError?: (error: Error) => void,
-  ) => {
+  subscribeToNotas: (callback: (notas: Nota[]) => void, onError?: (error: Error) => void) => {
     if (cachedNotas) {
       callback(cachedNotas);
     }
@@ -52,11 +49,14 @@ const realNotasService = {
 
   addNota: async (nota: Omit<Nota, 'id' | 'criadoEm' | 'atualizadoEm'>) => {
     try {
-      const docRef = await addDoc(collection(db, COLLECTION_NAME), stripUndefined({
-        ...nota,
-        criadoEm: serverTimestamp(),
-        atualizadoEm: serverTimestamp(),
-      }));
+      const docRef = await addDoc(
+        collection(db, COLLECTION_NAME),
+        stripUndefined({
+          ...nota,
+          criadoEm: serverTimestamp(),
+          atualizadoEm: serverTimestamp(),
+        }),
+      );
       return docRef.id;
     } catch (error) {
       console.error('Erro ao adicionar nota:', error);
@@ -67,10 +67,13 @@ const realNotasService = {
   updateNota: async (id: string, data: Partial<Nota>) => {
     try {
       const docRef = doc(db, COLLECTION_NAME, id);
-      await updateDoc(docRef, stripUndefined({
-        ...data,
-        atualizadoEm: serverTimestamp(),
-      }));
+      await updateDoc(
+        docRef,
+        stripUndefined({
+          ...data,
+          atualizadoEm: serverTimestamp(),
+        }),
+      );
     } catch (error) {
       console.error('Erro ao atualizar nota:', error);
       throw error;
@@ -125,7 +128,11 @@ const realNotasService = {
       if (!nota?.todos) return;
       const todos = nota.todos.map((t) =>
         t.id === todoId
-          ? { ...t, status: currentStatus === 'pendente' ? ('feito' as TodoStatus) : ('pendente' as TodoStatus) }
+          ? {
+              ...t,
+              status:
+                currentStatus === 'pendente' ? ('feito' as TodoStatus) : ('pendente' as TodoStatus),
+            }
           : t,
       );
       await updateDoc(doc(db, COLLECTION_NAME, notaId), {

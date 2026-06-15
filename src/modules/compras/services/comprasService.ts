@@ -110,7 +110,11 @@ const realComprasService = {
   /**
    * Atualiza a quantidade parcialmente adquirida
    */
-  updateQuantidadeAdquirida: async (id: string, quantidadeAdquirida: number, quantidadeTotal: number) => {
+  updateQuantidadeAdquirida: async (
+    id: string,
+    quantidadeAdquirida: number,
+    quantidadeTotal: number,
+  ) => {
     try {
       const docRef = doc(db, COLLECTION_NAME, id);
       const adquirido = quantidadeAdquirida >= quantidadeTotal;

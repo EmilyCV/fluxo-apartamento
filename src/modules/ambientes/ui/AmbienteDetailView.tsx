@@ -57,11 +57,16 @@ export function AmbienteDetailView({ ambienteId }: AmbienteDetailViewProps) {
   const [itensPorPagina, setItensPorPagina] = useState<10 | 20 | 30 | 40 | null>(10);
   const [paginaAtual, setPaginaAtual] = useState(1);
 
-  useEffect(() => { setPaginaAtual(1); }, [ordenacao, itensPorPagina]);
+  useEffect(() => {
+    setPaginaAtual(1);
+  }, [ordenacao, itensPorPagina]);
 
   const totalPaginas = itensPorPagina ? Math.ceil(items.length / itensPorPagina) : 1;
   const paginatedItems = useMemo(
-    () => itensPorPagina ? items.slice((paginaAtual - 1) * itensPorPagina, paginaAtual * itensPorPagina) : items,
+    () =>
+      itensPorPagina
+        ? items.slice((paginaAtual - 1) * itensPorPagina, paginaAtual * itensPorPagina)
+        : items,
     [items, itensPorPagina, paginaAtual],
   );
 
@@ -162,7 +167,10 @@ export function AmbienteDetailView({ ambienteId }: AmbienteDetailViewProps) {
                   >
                     <Clock className="w-3.5 h-3.5" />
                     <span
-                      className={cn('hidden sm:inline', ordenacao === 'recentes' ? 'inline' : 'hidden')}
+                      className={cn(
+                        'hidden sm:inline',
+                        ordenacao === 'recentes' ? 'inline' : 'hidden',
+                      )}
                     >
                       Recentes
                     </span>
@@ -231,7 +239,10 @@ export function AmbienteDetailView({ ambienteId }: AmbienteDetailViewProps) {
                       )}
                     />
                     <span
-                      className={cn('hidden sm:inline', ordenacao === 'preco' ? 'inline' : 'hidden')}
+                      className={cn(
+                        'hidden sm:inline',
+                        ordenacao === 'preco' ? 'inline' : 'hidden',
+                      )}
                     >
                       Preço
                     </span>
@@ -401,7 +412,8 @@ export function AmbienteDetailView({ ambienteId }: AmbienteDetailViewProps) {
                         'w-12 h-12 sm:w-14 sm:h-14 rounded-[18px] sm:rounded-[24px] flex items-center justify-center transition-all shadow-sm active:scale-90 shrink-0',
                         item.adquirido
                           ? 'bg-brand-green text-brand-green-dark shadow-brand-green/20'
-                          : (item.quantidadeAdquirida ?? 0) > 0 && (item.quantidadeAdquirida ?? 0) < item.quantidade
+                          : (item.quantidadeAdquirida ?? 0) > 0 &&
+                              (item.quantidadeAdquirida ?? 0) < item.quantidade
                             ? 'bg-amber-100 text-amber-600 hover:bg-amber-200'
                             : 'bg-slate-50 text-slate-200 hover:bg-brand-green-light hover:text-brand-green-dark hover:scale-110',
                       )}
@@ -415,7 +427,9 @@ export function AmbienteDetailView({ ambienteId }: AmbienteDetailViewProps) {
                     <QuantidadeAdquiridaControl
                       itemId={item.id}
                       quantidade={item.quantidade}
-                      quantidadeAdquirida={item.adquirido ? item.quantidade : (item.quantidadeAdquirida ?? 0)}
+                      quantidadeAdquirida={
+                        item.adquirido ? item.quantidade : (item.quantidadeAdquirida ?? 0)
+                      }
                       adquirido={item.adquirido}
                       onUpdate={(id, novaQtd, total) => {
                         comprasService.updateQuantidadeAdquirida(id, novaQtd, total);
@@ -481,9 +495,7 @@ export function AmbienteDetailView({ ambienteId }: AmbienteDetailViewProps) {
                 </h2>
               </div>
               <button
-                onClick={() =>
-                  router.push(`/notas?ambiente=${encodeURIComponent(ambienteId)}`)
-                }
+                onClick={() => router.push(`/notas?ambiente=${encodeURIComponent(ambienteId)}`)}
                 className="flex items-center gap-1.5 text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-slate-900 transition-colors"
                 aria-label="Ver todas as notas deste cômodo"
               >
@@ -512,7 +524,9 @@ export function AmbienteDetailView({ ambienteId }: AmbienteDetailViewProps) {
                   >
                     <div className="flex items-center gap-2 mb-3">
                       <div className={cn('w-2 h-2 rounded-full', cores.dot)} />
-                      <span className={cn('text-[9px] font-black uppercase tracking-wide', cores.text)}>
+                      <span
+                        className={cn('text-[9px] font-black uppercase tracking-wide', cores.text)}
+                      >
                         {nota.tipo === 'todo' ? 'To-do' : 'Nota'}
                       </span>
                     </div>

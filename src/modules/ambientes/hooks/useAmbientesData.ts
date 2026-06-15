@@ -57,7 +57,10 @@ export function useAmbientesData() {
       }, 0);
       const totalUnits = itemsInAmbiente.reduce((sum, item) => sum + item.quantidade, 0);
       const percentage = totalUnits > 0 ? Math.round((completedUnits / totalUnits) * 100) : 0;
-      const totalValueSum = itemsInAmbiente.reduce((sum, item) => sum + (item.valorTotalAproximado || 0), 0);
+      const totalValueSum = itemsInAmbiente.reduce(
+        (sum, item) => sum + (item.valorTotalAproximado || 0),
+        0,
+      );
 
       return {
         ...ambienteInfo,
@@ -80,14 +83,12 @@ export function useAmbientesData() {
 
   const sortedAndFilteredAmbientes = useMemo(() => {
     let result = ambientesStats.filter((ambiente) =>
-      ambiente.label.toLowerCase().includes(searchTerm.toLowerCase())
+      ambiente.label.toLowerCase().includes(searchTerm.toLowerCase()),
     );
 
     if (ordenacao === 'alfabetico') {
       result.sort((a, b) =>
-        alfabeticoAsc
-          ? a.label.localeCompare(b.label)
-          : b.label.localeCompare(a.label)
+        alfabeticoAsc ? a.label.localeCompare(b.label) : b.label.localeCompare(a.label),
       );
     } else if (ordenacao === 'progresso') {
       result.sort((a, b) => b.percentage - a.percentage);

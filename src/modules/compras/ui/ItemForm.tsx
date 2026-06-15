@@ -321,7 +321,9 @@ export function ItemForm({ onSave, onClose, initialData, defaultAmbiente }: Item
                   ...formData,
                   prioridade: selectedValue,
                   adquirido: isAdquirido,
-                  quantidadeAdquirida: isAdquirido ? formData.quantidade : formData.quantidadeAdquirida,
+                  quantidadeAdquirida: isAdquirido
+                    ? formData.quantidade
+                    : formData.quantidadeAdquirida,
                 });
               }}
               color="pink"
